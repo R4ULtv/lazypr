@@ -2,79 +2,146 @@
 
 [![version](https://img.shields.io/npm/v/lazypr.svg)](https://www.npmjs.com/package/lazypr)
 [![license](https://img.shields.io/github/license/r4ultv/lazypr.svg)](https://github.com/r4ultv/lazypr/blob/main/LICENSE)
+[![node](https://img.shields.io/badge/node-%3E%3D20.0-43853d?logo=node.js&logoColor=white)](https://nodejs.org)
 
-AI-powered CLI tool that automatically generates pull request titles and descriptions from your git commits.
+AI-powered CLI that turns your git commits into a polished pull request title and description.
 
-## Description
+## What is it? ℹ️
 
-`lazypr` is a command-line interface (CLI) tool designed to streamline your pull request workflow. It leverages the power of AI to analyze your git commits and automatically generate a concise and informative title and description for your pull request.
+`lazypr` analyzes your current branch's commits against a target branch and generates a concise, professional PR title and a markdown description. It also lets you copy either (or both) to your clipboard with a simple interactive prompt.
 
-Say goodbye to manually summarizing your changes and let `lazypr` do the heavy lifting for you.
+## Features ✨
 
-## Installation
+- **AI summarization:** Uses the Groq AI SDK to synthesize clear PR context from commits
+- **Concise titles + markdown descriptions:** Enforces length and style requirements
+- **Clipboard integration:** Copy title or description right from the prompt
+- **Alias included:** Use `lzp` as a short command
+- **Configurable locale:** Output language via `LOCALE` (en, es, pt, fr, de, it, ja, ko, zh)
+- **Resilience controls:** Tune `MAX_RETRIES` and `TIMEOUT`
 
-You can install `lazypr` globally using your favorite package manager:
+## Installation 📦
+
+Install globally with your preferred package manager:
 
 ```bash
-# Using bun
-bun install -g lazypr
-
-# Using npm
+# npm
 npm install -g lazypr
 
-# Using yarn
+# yarn
 yarn global add lazypr
+
+# pnpm
+pnpm add -g lazypr
+
+# bun
+bun install -g lazypr
 ```
 
-## Configuration
+Requires Node.js >= 20 (for ESM-only dependencies and clipboard support).
 
-Before you can start using `lazypr`, you need to configure your Groq API key. You can do this with the `config` command:
+## Quick start ⚡
+
+1) Set your Groq API key
 
 ```bash
 lazypr config set GROQ_API_KEY=<your-api-key>
 ```
 
-You can verify that the key has been set correctly by running:
+2) From a git repo on a feature branch, run:
 
 ```bash
-lazypr config get GROQ_API_KEY
+lazypr               # compares against 'master' by default
 ```
 
-## Usage
-
-Once `lazypr` is installed and configured, you can generate a pull request summary by running the following command in your project's directory:
-
-```bash
-lazypr
-```
-
-or the shorter alias:
+or use the alias:
 
 ```bash
 lzp
 ```
 
-By default, `lazypr` will compare your current branch with the `master` branch. If you want to specify a different target branch, you can pass it as an argument:
+To target a different base branch:
 
 ```bash
-lazypr <target-branch>
+lazypr main          # or develop, release/1.2, etc.
 ```
 
-The tool will then analyze the commits between your current branch and the target branch, generate a pull request title and description, and give you the option to copy them to your clipboard.
+## Configuration ⚙️
 
-## Features
+Settings are stored in `~/.lazypr` as simple `KEY=VALUE` lines. Manage them via the built-in command:
 
-- **AI-Powered Summarization:** Utilizes the Groq AI SDK to intelligently summarize your git commits.
-- **Automatic Title and Description Generation:** Creates clear and descriptive titles and descriptions for your pull requests in seconds.
-- **Clipboard Integration:** Easily copy the generated title, description, or both to your clipboard.
-- **Custom Target Branch:** Specify any branch as the target for your pull request.
-- **Configuration Management:** Securely store and manage your API keys.
-- **Streamlined Workflow:** Saves you time and mental energy during the pull request creation process.
+```bash
+# Set a value
+lazypr config set KEY=VALUE
 
-## Contributing
+# Get a value
+lazypr config get KEY
+```
 
-Contributions are welcome! If you have any ideas, suggestions, or bug reports, please open an issue on the [GitHub repository](https://github.com/r4ultv/lazypr/issues).
+Available keys:
 
-## License
+- `GROQ_API_KEY` (required): Your Groq API key
+- `LOCALE` (default: `en`): One of `en, es, pt, fr, de, it, ja, ko, zh`
+- `MAX_RETRIES` (default: `2`): Non-negative integer
+- `TIMEOUT` (default: `10000`): Milliseconds
 
-This project is licensed under the MIT License - see the [LICENSE](https://github.com/r4ultv/lazypr/blob/main/LICENSE) file for details.
+Examples:
+
+```bash
+lazypr config set LOCALE=es
+lazypr config set MAX_RETRIES=3
+lazypr config set TIMEOUT=15000
+```
+
+## How it works 🧠
+
+1. Verifies you are inside a git repository and not already on the target branch
+2. Ensures the target branch exists locally or remotely
+3. Collects commits in `HEAD` that are not in the target branch (oldest → newest)
+4. Sends commit messages to Groq and generates a title + markdown description
+5. Offers an interactive menu to copy the title or description to your clipboard
+
+## CLI 🛠️
+
+```bash
+lazypr [target]
+
+Options:
+  target   Target branch name (default: master)
+```
+
+## Troubleshooting 🛟
+
+- "Not a git repository" → Run inside a git project
+- "Already on target branch 'X'" → Switch to your feature branch before running
+- "Branch 'X' doesn't exist" → Ensure the target branch exists locally/remotely
+- "No commits found for pull request" → Your branch may have no unique commits
+- "Set the GROQ_API_KEY..." → Configure your API key with the config command
+- "Couldn't copy to clipboard" → Clipboard access may be restricted in your environment
+
+## Development 🧪
+
+This repo uses Bun for building, but consumers only need Node.js to run the published CLI.
+
+Common scripts:
+
+```bash
+# Install deps
+bun install
+
+# Dev (runs the TypeScript entry directly)
+bun run index.ts
+
+# Build ESM bundle to dist/
+bun run build
+
+# Build a standalone binary (experimental)
+bun run build:standalone
+```
+
+## Contributing 🤝
+
+Issues and PRs are welcome. Open one on the repository’s Issues page.
+
+## License 📄
+
+MIT © Raul Carini. See the `LICENSE` file for details.
