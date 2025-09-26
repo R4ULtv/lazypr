@@ -1,6 +1,6 @@
 import { Command } from "commander";
 import clipboardy from "clipboardy";
-import inquirer from "inquirer";
+import select from "@inquirer/select";
 import chalk from "chalk";
 
 import { pkg } from "./utils/info";
@@ -19,7 +19,7 @@ const program = new Command();
 // Simple error handler
 const exitWithError = (message: string): never => {
   console.error(chalk.red(`${message}`));
-  process.exit(1);
+  process.exit(0);
 };
 
 // Simple success message
@@ -80,7 +80,9 @@ const createPullRequest = async (
     const commitCount = commits.length;
     console.log(
       chalk.blue(
-        `You want to merge ${commitCount} commit${commitCount === 1 ? "" : "s"} into '${targetBranch}' from '${currentBranch}'`,
+        `You want to merge ${commitCount} commit${
+          commitCount === 1 ? "" : "s"
+        } into '${targetBranch}' from '${currentBranch}'`,
       ),
     );
 
@@ -94,31 +96,41 @@ const createPullRequest = async (
     console.log(pullRequest.description);
 
     // Ask what to copy
-    const { copyChoice } = await inquirer.prompt([
-      {
-        type: "list",
-        name: "copyChoice",
-        message: "Copy to clipboard:",
-        choices: [
-          "Title only",
-          "Description only",
-          "Both (title + description)",
-          "Nothing",
-        ],
-      },
-    ]);
+    const copyChoice = await select({
+      message: "Copy to clipboard:",
+      choices: [
+        {
+          name: "Title Only",
+          value: "title",
+        },
+        {
+          name: "Description Only",
+          value: "description",
+        },
+        {
+          name: "Both (title + description)",
+          value: "both",
+        },
+        {
+          name: "Nothing",
+          value: "none",
+        },
+      ],
+    });
 
     switch (copyChoice) {
-      case "Title only":
+      case "title":
         await copyToClipboard(pullRequest.title);
         break;
-      case "Description only":
+      case "description":
         await copyToClipboard(pullRequest.description);
         break;
-      case "Both (title + description)":
+      case "both":
         await copyToClipboard(
           `${pullRequest.title}\n\n${pullRequest.description}`,
         );
+        break;
+      case "none":
         break;
     }
 
