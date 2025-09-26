@@ -1,5 +1,10 @@
-import { readFile } from 'node:fs/promises';
+import { readFile } from "node:fs/promises";
+import { dirname, join } from "node:path";
+import { fileURLToPath } from "node:url";
 
-const pkg = JSON.parse(await readFile('package.json', 'utf-8'));
-
-export { pkg };
+export const pkg = JSON.parse(
+  await readFile(
+    join(dirname(fileURLToPath(import.meta.url)), "../package.json"),
+    "utf-8"
+  )
+);
