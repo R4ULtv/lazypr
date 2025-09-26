@@ -31,11 +31,6 @@ export const CONFIG_SCHEMA = {
       return locale;
     },
   },
-  DEBUG: {
-    default: "false",
-    validate: (v: string) =>
-      ["true", "false"].includes(v.toLowerCase()) ? v.toLowerCase() : "false",
-  },
   MAX_RETRIES: {
     default: "2",
     validate: (v: string) => {
