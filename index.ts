@@ -11,10 +11,9 @@ import {
   getCurrentBranch,
   getPullRequestCommits,
   isGitRepository,
-  type GitCommit,
 } from "./utils/git";
 import { generatePullRequest } from "./utils/groq";
-import { config, type ConfigKey, CONFIG_SCHEMA } from "./utils/config";
+import { config, CONFIG_SCHEMA, type ConfigKey } from "./utils/config";
 
 const program = new Command();
 
@@ -99,45 +98,38 @@ const createPullRequest = async (
     console.log("\n" + chalk.bold.cyan("Description:"));
     console.log(pullRequest.description);
 
-    // Ask what to copy
-    const copyChoice = await select({
-      message: "Copy to clipboard:",
-      choices: [
-        {
-          name: "Title Only",
-          value: "title",
-        },
-        {
-          name: "Description Only",
-          value: "description",
-        },
-        {
-          name: "Both (title + description)",
-          value: "both",
-        },
-        {
-          name: "Nothing",
-          value: "none",
-        },
-      ],
-    });
+    let keepCopying = true;
+    while (keepCopying) {
+      const copyChoice = await select({
+        message: "Copy to clipboard:",
+        choices: [
+          {
+            name: "Title Only",
+            value: "title",
+          },
+          {
+            name: "Description Only",
+            value: "description",
+          },
+          {
+            name: "Exit Copying",
+            value: "none",
+          },
+        ],
+      });
 
-    switch (copyChoice) {
-      case "title":
-        await copyToClipboard(pullRequest.title);
-        break;
-      case "description":
-        await copyToClipboard(pullRequest.description);
-        break;
-      case "both":
-        await copyToClipboard(
-          `${pullRequest.title}\n\n${pullRequest.description}`,
-        );
-        break;
-      case "none":
-        break;
+      switch (copyChoice) {
+        case "title":
+          await copyToClipboard(pullRequest.title);
+          break;
+        case "description":
+          await copyToClipboard(pullRequest.description);
+          break;
+        case "none":
+          keepCopying = false;
+          break;
+      }
     }
-
     success("Done!");
   } catch (error) {
     exitWithError(
