@@ -104,9 +104,7 @@ class Config {
         "required" in schema &&
         Boolean((schema as { required?: boolean }).required);
       if (isRequired) {
-        throw new Error(
-          `${key} is required but not set. Use: config set ${key} <value>`
-        );
+        throw new Error(`${key} is required but not set.`);
       }
       const def =
         "default" in schema
