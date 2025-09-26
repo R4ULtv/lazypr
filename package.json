@@ -1,16 +1,47 @@
 {
   "name": "lazypr",
   "version": "1.0.0",
-  "description": "",
+  "description": "AI-powered CLI tool that automatically generates pull request titles and descriptions from your git commits",
+  "keywords": ["cli", "git", "pull-request", "ai", "automation", "groq", "developer-tools"],
+  "author": "Raul Carini",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/r4ultv/lazypr.git"
+  },
+  "homepage": "https://github.com/r4ultv/lazypr#readme",
+  "bugs": {
+    "url": "https://github.com/r4ultv/lazypr/issues"
+  },
   "module": "index.ts",
   "type": "module",
+  "bin": {
+    "lazypr": "./dist/index.js"
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "bun build index.ts --outdir dist --target node --format esm --minify",
+    "build:standalone": "bun build index.ts --compile --outfile lazypr",
+    "dev": "bun run index.ts",
+    "start": "node dist/index.js",
+    "prepublishOnly": "bun run build"
+  },
   "devDependencies": {
-    "@types/bun": "latest"
+    "@types/bun": "latest",
+    "@types/inquirer": "^9.0.9"
   },
   "peerDependencies": {
     "typescript": "^5"
   },
   "dependencies": {
-    "commander": "^14.0.1"
+    "@ai-sdk/groq": "^2.0.22",
+    "ai": "^5.0.54",
+    "chalk": "^5.6.2",
+    "clipboardy": "4.0.0",
+    "commander": "^14.0.1",
+    "inquirer": "^12.9.6",
+    "zod": "^4.1.11"
   }
 }
