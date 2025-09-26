@@ -1,8 +1,9 @@
 import { z } from "zod/v4";
 import { generateObject } from "ai";
-import { groq } from "@ai-sdk/groq";
+import { createGroq } from "@ai-sdk/groq";
 
 import type { GitCommit } from "./git";
+import { readSpecificKey } from "./config";
 
 const pullRequestSchema = z.object({
   title: z.string().max(50).describe("The title of the pull request."),
@@ -16,6 +17,9 @@ export async function generatePullRequest(
   currentBranch: string,
   commits: GitCommit[]
 ) {
+  const groq = createGroq({
+    apiKey: await readSpecificKey("GROQ_API_KEY"),
+  });
   const commitsString = commits.map((commit) => commit.message).join("\n");
 
   const { object } = await generateObject({
