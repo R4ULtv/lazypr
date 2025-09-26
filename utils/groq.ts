@@ -6,7 +6,7 @@ import type { GitCommit } from "./git";
 import { config } from "./config";
 
 const pullRequestSchema = z.object({
-  title: z.string().check(z.minLength(10), z.maxLength(50)),
+  title: z.string().check(z.minLength(5), z.maxLength(50)),
   description: z.string().check(z.minLength(20)),
 });
 
@@ -17,6 +17,7 @@ export async function generatePullRequest(
   const groq = createGroq({
     apiKey: await config.get("GROQ_API_KEY"),
   });
+  const locale = await config.get("LOCALE");
   const commitsString = commits.map((commit) => commit.message).join("\n");
 
   const { object } = await generateObject({
@@ -24,38 +25,36 @@ export async function generatePullRequest(
     schema: pullRequestSchema,
     maxRetries: parseInt(await config.get("MAX_RETRIES")),
     abortSignal: AbortSignal.timeout(parseInt(await config.get("TIMEOUT"))),
+    system: `
+    You are an AI assistant that creates a pull-request title and description.
+
+    - The target branch name (e.g. \`feature/login\`, \`bugfix/auth-token\`) is a strong indicator of the overall intent.
+    - Use the commit messages (provided in the user prompt) as concrete evidence of what changed.
+    - **ALL output (title and description) MUST be written in the language identified by the locale**  
+      If the requested language is not supported, fall back to English.
+    - Title requirements:
+      - 5-50 characters  
+      - Written in imperative mood, start with a capital letter, no trailing period
+    - Description requirements:
+      - At least 20 characters  
+      - Use markdown formatting, be concise yet informative
+    - Keep the tone professional.
+    `,
     prompt: `
-You are an AI assistant specialized in creating concise, GitHub-friendly pull-request titles and descriptions from a branch name and its commit history.  
+    Locale: ${locale}
+    Target branch: ${currentBranch}
 
-**Output Requirements**  
-- **Title**: Follow the *Conventional Commits* style (\`<type>: <subject>\`) and keep it ≤ 50 characters. Typical types include \`feat\`, \`fix\`, \`docs\`, \`chore\`, \`refactor\`, etc.  
-- **Description** (Markdown):  
-  1. *PR Summary*: One-to-two sentence overview of what the PR does.  
-  2. *Changelog*: Bullet list summarizing each commit's main change.  
-  3. *Issues Fixed/Addresses*: If any commit message references \`#<number>\` or “fixes #<number>”, list those issue links.  
-  4. *Notes / Additional Info*: Any special build/test instructions or dependencies.  
+    Commit history (most recent last):
+    ${commitsString}
 
-**User Input**  
-\`\`\`
-Branch: ${currentBranch}
-Commits:
-${commitsString}
-\`\`\`
+    Based on the branch name, the commit list above, **and the locale**, generate a JSON object that conforms to this schema:
 
-**Example Output**  
-\`\`\`
-Title: feat: add JWT authentication middleware
+    {
+      "title": "<PR title>",
+      "description": "<PR description>"
+    }
 
-Description:
-## PR Summary
-Introduces JWT-based authentication middleware and associated utilities, fixing token expiry edge-cases and updating documentation.
-
-## Changeog
-- \`feat\`: add JWT authentication middleware  
-- \`fix\`: correct token expiration handling  
-- \`docs\`: update README with auth flow diagrams
-
-\`\`\`
+    Make sure the title respects the 5-50 character limit and the description is at least 20 characters long. Use markdown in the description where appropriate.
     `,
   });
   return object;
