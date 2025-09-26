@@ -16,7 +16,8 @@
   "module": "index.ts",
   "type": "module",
   "bin": {
-    "lazypr": "./dist/index.js"
+    "lazypr": "./dist/index.js",
+    "lzp": "./dist/index.js"
   },
   "files": [
     "dist"
