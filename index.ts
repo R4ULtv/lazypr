@@ -14,7 +14,7 @@ import {
   type GitCommit,
 } from "./utils/git";
 import { generatePullRequest } from "./utils/groq";
-import { addKeyValue, readSpecificKey } from "./utils/config";
+import { config, type ConfigKey } from "./utils/config";
 
 const program = new Command();
 
@@ -50,7 +50,9 @@ const createPullRequest = async (
     }
 
     // Check for GROQ API KEY
-    if (!(await readSpecificKey("GROQ_API_KEY"))) {
+    try {
+      await config.get("GROQ_API_KEY");
+    } catch {
       exitWithError(
         "Set the GROQ_API_KEY with: lazypr config set GROQ_API_KEY=<your-api-key>",
       );
@@ -179,7 +181,7 @@ program
       }
 
       console.log(`Setting config: ${key.trim()} = ${value}`);
-      await addKeyValue(key.trim(), value);
+      await config.set(key.trim() as ConfigKey, value);
     } else if (type === "get") {
       // For get operation, keyValue is just the key
       const key = keyValue.trim();
@@ -189,7 +191,7 @@ program
         process.exit(1);
       }
 
-      const value = await readSpecificKey(key);
+      const value = await config.get(key as ConfigKey).catch(() => undefined);
 
       if (value !== undefined) {
         console.log(`${key} = ${value}`);

@@ -2,173 +2,183 @@ import { homedir } from "node:os";
 import { join } from "node:path";
 import { readFile, writeFile } from "node:fs/promises";
 
-const homeDirectory = homedir();
-const configFilePath = join(homeDirectory, ".lazypr");
+const CONFIG_FILE = join(homedir(), ".lazypr");
 
-export type ConfigKey = "GROQ_API_KEY" | "LOCALE";
-
-type ConfigSpec = {
-  required: boolean;
-  defaultValue?: string;
-  validate(value: string): void;
-  normalize?(value: string): string;
+type ConfigSchemaValue = {
+  required?: boolean;
+  default?: string;
+  validate: (v: string) => string;
 };
 
-const CONFIG_SPECS: Record<ConfigKey, ConfigSpec> = {
+export const CONFIG_SCHEMA = {
   GROQ_API_KEY: {
     required: true,
-    validate(value: string) {
-      if (!value || value.trim() === "") {
-        throw new Error("GROQ_API_KEY must be a non-empty string");
-      }
-      // Basic sanity check: allow typical API key characters and length >= 20
-      const isLikelyKey = /^[A-Za-z0-9._-]{20,}$/.test(value.trim());
-      if (!isLikelyKey) {
-        throw new Error("GROQ_API_KEY appears invalid");
-      }
-    },
-    normalize(value: string) {
-      return value.trim();
+    validate: (v: string) => {
+      if (!v?.trim()) throw new Error("GROQ_API_KEY is required");
+      if (!/^[A-Za-z0-9._-]{20,}$/.test(v.trim()))
+        throw new Error("Invalid GROQ_API_KEY format");
+      return v.trim();
     },
   },
   LOCALE: {
-    required: false,
-    defaultValue: "en",
-    validate(value: string) {
-      const normalized = value.trim().toLowerCase();
-      const allowed = [
-        "en",
-        "es",
-        "pt",
-        "fr",
-        "de",
-        "it",
-        "ja",
-        "ko",
-        "zh",
-      ];
-      if (!allowed.includes(normalized)) {
-        throw new Error(
-          `LOCALE must be one of: ${allowed.join(", ")}`,
-        );
+    default: "en",
+    validate: (v: string) => {
+      const locale = v?.trim().toLowerCase() || "en";
+      const allowed = ["en", "es", "pt", "fr", "de", "it", "ja", "ko", "zh"];
+      if (!allowed.includes(locale)) {
+        throw new Error(`LOCALE must be one of: ${allowed.join(", ")}`);
       }
-    },
-    normalize(value: string) {
-      return value.trim().toLowerCase();
+      return locale;
     },
   },
-};
+  DEBUG: {
+    default: "false",
+    validate: (v: string) =>
+      ["true", "false"].includes(v.toLowerCase()) ? v.toLowerCase() : "false",
+  },
+  MAX_RETRIES: {
+    default: "2",
+    validate: (v: string) => {
+      const num = parseInt(v, 10);
+      if (isNaN(num) || num < 0)
+        throw new Error("MAX_RETRIES must be a non-negative number");
+      return num.toString();
+    },
+  },
+  TIMEOUT: {
+    default: "10000",
+    validate: (v: string) => {
+      const num = parseInt(v, 10);
+      if (isNaN(num) || num < 0)
+        throw new Error("TIMEOUT must be a non-negative number");
+      return num.toString();
+    },
+  },
+} as const satisfies Record<string, ConfigSchemaValue>;
 
-/**
- * Parses a string in KEY=VALUE format into an object.
- * @param {string} fileContent The string content of the file.
- * @returns {Record<string, string>} An object with the parsed key-value pairs.
- */
-function parseEnv(fileContent: string): Record<string, string> {
-  const config: Record<string, string> = {};
-  const lines = fileContent.split("\n");
+export type ConfigKey = keyof typeof CONFIG_SCHEMA;
 
-  for (const line of lines) {
-    // Ignore comments and empty lines
-    const trimmedLine = line.trim();
-    if (trimmedLine.startsWith("#") || trimmedLine === "") {
-      continue;
+class Config {
+  private cache = new Map<string, string>();
+  private loaded = false;
+
+  // Load and parse config file
+  private async load(): Promise<void> {
+    if (this.loaded) return;
+
+    try {
+      const content = await readFile(CONFIG_FILE, "utf8");
+      this.cache = new Map(
+        content
+          .split("\n")
+          .map((line) => line.trim())
+          .filter((line) => line && !line.startsWith("#"))
+          .map((line) => {
+            const [key, ...rest] = line.split("=");
+            return [key?.trim(), rest.join("=")?.trim()] as [string, string];
+          })
+          .filter(([key, value]) => key && value !== undefined)
+      );
+    } catch (err) {
+      if ((err as NodeJS.ErrnoException).code !== "ENOENT") throw err;
+      // File doesn't exist, start with empty cache
     }
 
-    const separatorIndex = trimmedLine.indexOf("=");
-
-    if (separatorIndex !== -1) {
-      const key = trimmedLine.slice(0, separatorIndex).trim();
-      const value = trimmedLine.slice(separatorIndex + 1).trim();
-      config[key] = value;
-    }
+    this.loaded = true;
   }
 
-  return config;
-}
+  // Save config to file
+  private async save(): Promise<void> {
+    const content = Array.from(this.cache.entries())
+      .map(([key, value]) => `${key}=${value}`)
+      .join("\n");
 
-/**
- * Adds or updates a key-value pair in the configuration file.
- * This function reads the existing configuration, adds or updates the key,
- * and then writes the entire configuration back to the file.
- * @param {string} key The key to add or update.
- * @param {string} value The value to set for the key.
- * @returns {Promise<void>} A promise that resolves when the file has been written.
- */
-export async function addKeyValue(key: ConfigKey, value: string): Promise<void> {
-  let fileContent = "";
-  try {
-    // Attempt to read the existing file.
-    fileContent = await readFile(configFilePath, { encoding: "utf8" });
-  } catch (error) {
-    // If the file does not exist, we will create it. For other errors, we throw.
-    if ((error as NodeJS.ErrnoException).code !== 'ENOENT') {
-      throw error;
-    }
+    await writeFile(CONFIG_FILE, content, "utf8");
   }
 
-  const config = parseEnv(fileContent);
-  config[key] = value;
+  // Get a config value with validation and defaults
+  async get<K extends ConfigKey>(key: K): Promise<string> {
+    await this.load();
 
-  // Reconstruct the file content from the config object.
-  const newFileContent = Object.entries(config)
-    .map(([k, v]) => `${k}=${v}`)
-    .join("\n");
+    const schema = CONFIG_SCHEMA[key];
+    const raw = this.cache.get(key);
 
-  await writeFile(configFilePath, newFileContent, { encoding: "utf8" });
-}
-
-/**
- * Reads the value of a specific key from the configuration file.
- * @param {string} key The key to read.
- * @returns {Promise<string | undefined>} The value of the key, or undefined if the key is not found or the file doesn't exist.
- */
-export async function readSpecificKey(key: ConfigKey): Promise<string | undefined> {
-  try {
-    const fileContent = await readFile(configFilePath, { encoding: "utf8" });
-    const config = parseEnv(fileContent);
-    return config[key];
-  } catch (error) {
-    // If the file doesn't exist, it's expected that the key can't be found.
-    if ((error as NodeJS.ErrnoException).code === 'ENOENT') {
-      return undefined;
+    // Handle missing values
+    if (!raw) {
+      const isRequired =
+        "required" in schema &&
+        Boolean((schema as { required?: boolean }).required);
+      if (isRequired) {
+        throw new Error(
+          `${key} is required but not set. Use: config set ${key} <value>`
+        );
+      }
+      const def =
+        "default" in schema
+          ? (schema as { default?: string }).default
+          : undefined;
+      return def || "";
     }
-    // For any other kind of error, re-throw it.
-    throw error;
+
+    // Validate and normalize
+    return schema.validate(raw);
+  }
+
+  // Set a config value with validation
+  async set<K extends ConfigKey>(key: K, value: string): Promise<void> {
+    await this.load();
+
+    const schema = CONFIG_SCHEMA[key];
+    const validated = schema.validate(value);
+
+    this.cache.set(key, validated);
+    await this.save();
+  }
+
+  // Get all config as object
+  async getAll(): Promise<Partial<Record<ConfigKey, string>>> {
+    await this.load();
+
+    const result: Partial<Record<ConfigKey, string>> = {};
+
+    for (const key of Object.keys(CONFIG_SCHEMA) as ConfigKey[]) {
+      try {
+        result[key] = await this.get(key);
+      } catch {
+        // Skip invalid/missing required values
+      }
+    }
+
+    return result;
+  }
+
+  // Check if config is valid (all required keys present and valid)
+  async validate(): Promise<{ valid: boolean; errors: string[] }> {
+    const errors: string[] = [];
+
+    for (const key of Object.keys(CONFIG_SCHEMA) as ConfigKey[]) {
+      try {
+        await this.get(key);
+      } catch (err) {
+        errors.push(`${key}: ${(err as Error).message}`);
+      }
+    }
+
+    return { valid: errors.length === 0, errors };
+  }
+
+  // Remove a config key
+  async remove(key: ConfigKey): Promise<void> {
+    await this.load();
+    this.cache.delete(key);
+    await this.save();
+  }
+
+  // Clear all config
+  async clear(): Promise<void> {
+    this.cache.clear();
+    await this.save();
   }
 }
 
-/**
- * Gets a validated config value applying per-key rules and defaults.
- * Throws if a required value is missing or invalid.
- */
-export async function getConfigValue(key: ConfigKey): Promise<string> {
-  const spec = CONFIG_SPECS[key];
-  const raw = await readSpecificKey(key);
-
-  if (raw == null || raw === "") {
-    if (spec.required && spec.defaultValue == null) {
-      throw new Error(`${key} is required but not set`);
-    }
-    const def = spec.defaultValue ?? "";
-    // Validate default as well
-    if (def !== "") {
-      spec.validate(def);
-    }
-    return def;
-  }
-
-  const normalized = spec.normalize ? spec.normalize(raw) : raw;
-  spec.validate(normalized);
-  return normalized;
-}
-
-/**
- * Validates and sets a config value following per-key rules.
- */
-export async function setConfigValue(key: ConfigKey, value: string): Promise<void> {
-  const spec = CONFIG_SPECS[key];
-  const normalized = spec.normalize ? spec.normalize(value) : value;
-  spec.validate(normalized);
-  await addKeyValue(key, normalized);
-}
+export const config = new Config();
