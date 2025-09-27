@@ -40,9 +40,11 @@ const copyToClipboard = async (content: string): Promise<void> => {
 
 // Main function
 const createPullRequest = async (
-  targetBranch: string = "master",
+  targetBranch: string | undefined,
 ): Promise<void> => {
   try {
+    targetBranch = targetBranch || (await config.get("DEFAULT_BRANCH"));
+
     // Check if git repo
     if (!(await isGitRepository())) {
       exitWithError("Not a git repository");
@@ -145,7 +147,7 @@ program
   .name(pkg.name)
   .version(pkg.version)
   .description("Generate pull request title and description")
-  .argument("[target]", "Target branch", "master")
+  .argument("[target]", "Target branch")
   .action(createPullRequest);
 
 program

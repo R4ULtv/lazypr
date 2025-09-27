@@ -49,6 +49,13 @@ export const CONFIG_SCHEMA = {
       return num.toString();
     },
   },
+  DEFAULT_BRANCH: {
+    default: "master",
+    validate: (v: string) => {
+      const branch = v?.trim().toLowerCase() || "master";
+      return branch;
+    },
+  },
 } as const satisfies Record<string, ConfigSchemaValue>;
 
 export type ConfigKey = keyof typeof CONFIG_SCHEMA;
@@ -72,7 +79,7 @@ class Config {
             const [key, ...rest] = line.split("=");
             return [key?.trim(), rest.join("=")?.trim()] as [string, string];
           })
-          .filter(([key, value]) => key && value !== undefined)
+          .filter(([key, value]) => key && value !== undefined),
       );
     } catch (err) {
       if ((err as NodeJS.ErrnoException).code !== "ENOENT") throw err;
