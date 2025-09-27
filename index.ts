@@ -71,7 +71,9 @@ const createPullRequest = async (
     // Check target branch exists
     const branches = await getAllBranches();
     if (!branches.includes(targetBranch)) {
-      exitWithError(`Branch '${targetBranch}' doesn't exist`);
+      exitWithError(
+        `Branch '${targetBranch}' doesn't exist. Available branches: ${branches.join(", ")}`,
+      );
     }
 
     // Get commits
@@ -206,6 +208,48 @@ program
     } else {
       console.error(`Error: Invalid operation '${type}'. Use 'set' or 'get'`);
       process.exit(1);
+    }
+  });
+
+program
+  .command("branches")
+  .alias("branch")
+  .description("Show all available branches")
+  .action(async () => {
+    try {
+      // Check if git repo
+      if (!(await isGitRepository())) {
+        exitWithError("Not a git repository");
+      }
+
+      // Get all branches and current branch
+      const branches = await getAllBranches();
+      const currentBranch = await getCurrentBranch();
+
+      if (branches.length === 0) {
+        exitWithError("No branches found");
+      }
+
+      console.log(chalk.bold.cyan("Available branches:"));
+
+      branches.forEach((branch) => {
+        if (branch === currentBranch) {
+          // Highlight current branch
+          console.log(chalk.green(`* ${branch} (current)`));
+        } else {
+          console.log(`  ${branch}`);
+        }
+      });
+
+      console.log(
+        chalk.dim(
+          `\nTotal: ${branches.length} branch${branches.length === 1 ? "" : "es"}`,
+        ),
+      );
+    } catch (error) {
+      exitWithError(
+        `Failed to get branches: ${error instanceof Error ? error.message : "Unknown error"}`,
+      );
     }
   });
 
