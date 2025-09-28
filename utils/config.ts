@@ -56,6 +56,30 @@ export const CONFIG_SCHEMA = {
       return branch;
     },
   },
+  MODEL: {
+    default: "openai/gpt-oss-20b",
+    validate: (v: string) => {
+      const model = v?.trim();
+      if (!model) throw new Error("MODEL cannot be empty");
+
+      // Only allow models that support structured outputs
+      const supportedModels = [
+        "openai/gpt-oss-20b",
+        "openai/gpt-oss-120b",
+        "moonshotai/kimi-k2-instruct-0905",
+        "meta-llama/llama-4-maverick-17b-128e-instruct",
+        "meta-llama/llama-4-scout-17b-16e-instruct",
+      ];
+
+      if (!supportedModels.includes(model)) {
+        throw new Error(
+          `MODEL must be one of the supported structured output models: ${supportedModels.join(", ")}`,
+        );
+      }
+
+      return model;
+    },
+  },
 } as const satisfies Record<string, ConfigSchemaValue>;
 
 export type ConfigKey = keyof typeof CONFIG_SCHEMA;
