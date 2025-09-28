@@ -83,6 +83,7 @@ Available keys:
 - `LOCALE` (default: `en`): One of `en, es, pt, fr, de, it, ja, ko, zh`
 - `MAX_RETRIES` (default: `2`): Non-negative integer
 - `TIMEOUT` (default: `10000`): Milliseconds
+- `MODEL` (default: `openai/gpt-oss-20b`): AI model to use for generating PR content.
 
 Examples:
 
@@ -90,6 +91,7 @@ Examples:
 lazypr config set LOCALE=es
 lazypr config set MAX_RETRIES=3
 lazypr config set TIMEOUT=15000
+lazypr config set MODEL=openai/gpt-oss-120b
 ```
 
 ## How it works 🧠
