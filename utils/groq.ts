@@ -12,16 +12,17 @@ const pullRequestSchema = z.object({
 
 export async function generatePullRequest(
   currentBranch: string,
-  commits: GitCommit[]
+  commits: GitCommit[],
 ) {
   const groq = createGroq({
     apiKey: await config.get("GROQ_API_KEY"),
   });
   const locale = await config.get("LOCALE");
+  const model = await config.get("MODEL");
   const commitsString = commits.map((commit) => commit.message).join("\n");
 
   const { object } = await generateObject({
-    model: groq("openai/gpt-oss-20b"),
+    model: groq(model),
     schema: pullRequestSchema,
     maxRetries: parseInt(await config.get("MAX_RETRIES")),
     abortSignal: AbortSignal.timeout(parseInt(await config.get("TIMEOUT"))),
@@ -30,13 +31,13 @@ export async function generatePullRequest(
 
     - The target branch name (e.g. \`feature/login\`, \`bugfix/auth-token\`) is a strong indicator of the overall intent.
     - Use the commit messages (provided in the user prompt) as concrete evidence of what changed.
-    - **ALL output (title and description) MUST be written in the language identified by the locale**  
+    - **ALL output (title and description) MUST be written in the language identified by the locale**
       If the requested language is not supported, fall back to English.
     - Title requirements:
-      - 5-50 characters  
+      - 5-50 characters
       - Written in imperative mood, start with a capital letter, no trailing period
     - Description requirements:
-      - At least 20 characters  
+      - At least 20 characters
       - Use markdown formatting, be concise yet informative
     - Keep the tone professional.
     `,
