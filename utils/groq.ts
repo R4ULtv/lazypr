@@ -7,7 +7,7 @@ import { config } from "./config";
 
 const pullRequestSchema = z.object({
   title: z.string().check(z.minLength(5), z.maxLength(50)),
-  description: z.string().check(z.minLength(20)),
+  description: z.string().check(z.minLength(100)),
 });
 
 export async function generatePullRequest(
@@ -27,35 +27,60 @@ export async function generatePullRequest(
     maxRetries: parseInt(await config.get("MAX_RETRIES")),
     abortSignal: AbortSignal.timeout(parseInt(await config.get("TIMEOUT"))),
     system: `
-    You are an AI assistant that creates a pull-request title and description.
+    You are a pull request content generator that creates professional PR titles and descriptions for code reviews.
 
-    - The target branch name (e.g. \`feature/login\`, \`bugfix/auth-token\`) is a strong indicator of the overall intent.
-    - Use the commit messages (provided in the user prompt) as concrete evidence of what changed.
-    - **ALL output (title and description) MUST be written in the language identified by the locale**
-      If the requested language is not supported, fall back to English.
-    - Title requirements:
-      - 5-50 characters
-      - Written in imperative mood, start with a capital letter, no trailing period
-    - Description requirements:
-      - At least 20 characters
-      - Use markdown formatting, be concise yet informative
-    - Keep the tone professional.
+    **Return ONLY valid JSON with no extra prose.**
+
+    ### Instructions:
+    1. Analyze the target branch name to understand the overall intent
+    2. Use commit messages as concrete evidence of what changed
+    3. Generate title and description in the specified locale language
+    4. Follow exact formatting requirements below
+
+    ### Context:
+    - Branch names indicate feature scope (feature/, bugfix/, hotfix/, etc.)
+    - Commit messages show implementation details and progression
+    - PR titles should be concise and actionable for reviewers
+    - Descriptions should highlight key changes and impacts
+
+    ### Requirements:
+    **Title:**
+    - Exactly 5-50 characters
+    - Imperative mood, capitalize first letter, no trailing period
+    - Summarize the main change or feature
+
+    **Description:**
+    - Minimum 100 characters (should be verbose and detailed)
+    - Start with a general overview paragraph explaining the purpose/goal
+    - Follow with detailed sections using markdown formatting
+    - Include key changes, impacts, technical details, and context
+    - Use bullet points, headers, and formatting for readability
+    - Professional tone, comprehensive yet well-structured
+
+    **Language:**
+    - ALL content must be in the specified locale language
+    - Fall back to English if locale not supported
     `,
     prompt: `
-    Locale: ${locale}
-    Target branch: ${currentBranch}
+    ### Input Data:
 
-    Commit history (most recent last):
+    **Locale:** ${locale}
+    **Target Branch:** ${currentBranch}
+
+    **Commit History (most recent last):**
+    \`\`\`
     ${commitsString}
+    \`\`\`
 
-    Based on the branch name, the commit list above, **and the locale**, generate a JSON object that conforms to this schema:
+    ### Required Output:
+    Generate JSON with exactly these keys:
+    - title (string, 5-50 chars, imperative mood)
+    - description (string, 100+ chars, markdown formatted, verbose with general overview first)
 
-    {
-      "title": "<PR title>",
-      "description": "<PR description>"
-    }
+    ### Example Output:
+    {"title":"Add user authentication system","description":"This pull request introduces a comprehensive user authentication system to enhance application security and user management capabilities.\\n\\n## Key Changes\\n- Implemented JWT-based authentication with secure token generation\\n- Added login/logout API endpoints with proper validation\\n- Updated user model to include password hashing using bcrypt\\n- Added middleware for route protection\\n\\n## Technical Details\\n- Uses industry-standard JWT tokens for session management\\n- Passwords are hashed with salt rounds for security\\n- Includes proper error handling and validation"}
 
-    Make sure the title respects the 5-50 character limit and the description is at least 20 characters long. Use markdown in the description where appropriate.
+    Generate the JSON object now:
     `,
   });
   return object;
