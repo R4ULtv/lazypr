@@ -29,10 +29,6 @@
     "start": "node dist/index.js",
     "prepublishOnly": "bun run build"
   },
-  "devDependencies": {
-    "@types/bun": "latest",
-    "@types/inquirer": "^9.0.9"
-  },
   "peerDependencies": {
     "typescript": "^5"
   },
