@@ -153,8 +153,11 @@ program
 program
   .command("config")
   .description("Manage the config file, see the .lazypr file")
-  .argument("<type>", "Type of config operation (set or get)")
-  .argument("<keyValue>", "For 'set': KEY=VALUE pair. For 'get': just the KEY")
+  .argument("<type>", "Type of config operation (set, get, or remove)")
+  .argument(
+    "<keyValue>",
+    "For 'set': KEY=VALUE pair. For 'get' or 'remove': just the KEY",
+  )
   .action(async (type, keyValue) => {
     if (type === "set") {
       // Check if the keyValue contains '='
@@ -207,8 +210,29 @@ program
       } else {
         console.log(`Key '${key}' not found in config`);
       }
+    } else if (type === "remove") {
+      // For remove operation, keyValue is just the key
+      const key = keyValue.trim();
+
+      if (!key) {
+        console.error("Error: Key cannot be empty");
+        process.exit(0);
+      }
+
+      if (!(key in CONFIG_SCHEMA)) {
+        console.error(
+          `Error: Unknown config key '${key}'. Valid keys: ${Object.keys(CONFIG_SCHEMA).join(", ")}`,
+        );
+        process.exit(0);
+      }
+
+      console.log(`Removing config: ${key}`);
+      await config.remove(key as ConfigKey);
+      success(`Config key '${key}' removed successfully`);
     } else {
-      console.error(`Error: Invalid operation '${type}'. Use 'set' or 'get'`);
+      console.error(
+        `Error: Invalid operation '${type}'. Use 'set', 'get', or 'remove'`,
+      );
       process.exit(1);
     }
   });
