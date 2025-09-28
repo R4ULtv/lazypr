@@ -83,7 +83,7 @@ Available keys:
 - `LOCALE` (default: `en`): One of `en, es, pt, fr, de, it, ja, ko, zh`
 - `MAX_RETRIES` (default: `2`): Non-negative integer
 - `TIMEOUT` (default: `10000`): Milliseconds
-- `MODEL` (default: `openai/gpt-oss-20b`): AI model to use for generating PR content.
+- `MODEL` (default: `openai/gpt-oss-20b`): AI model to use for generating PR content. Available models: [Groq Docs](https://console.groq.com/docs/structured-outputs#supported-models)
 
 Examples:
 
