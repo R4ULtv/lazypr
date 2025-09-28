@@ -1,6 +1,6 @@
 {
   "name": "lazypr",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "AI-powered CLI tool that automatically generates pull request titles and descriptions from your git commits",
   "keywords": ["cli", "git", "pull-request", "ai", "automation", "groq", "developer-tools"],
   "author": "Raul Carini",
