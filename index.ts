@@ -128,16 +128,13 @@ const createPullRequest = async (
       } into '${targetBranch}' from '${currentBranch}'`,
     );
 
-    const spin = spinner();
-    const startTime = performance.now();
+    const spin = spinner({ indicator: "timer" });
     spin.start("🤖 Generating Pull Request");
 
     // Generate PR
     const pullRequest = await generatePullRequest(currentBranch, commits);
 
-    const endTime = performance.now();
-    const timeInSeconds = ((endTime - startTime) / 1000).toFixed(2);
-    spin.stop(`📝 Generated Pull Request in ${timeInSeconds}s`);
+    spin.stop("📝 Generated Pull Request");
 
     log.info(`Pull Request Title: ${pullRequest.title}`);
     log.info(`Pull Request Description: ${pullRequest.description}`);
