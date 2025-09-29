@@ -94,6 +94,15 @@ lazypr config set TIMEOUT=15000
 lazypr config set MODEL=openai/gpt-oss-120b
 ```
 
+## Model Selection 🤖
+
+While you can choose any model that supports structured output, we recommend using the **GPT-OSS** models for optimal results:
+
+- **`openai/gpt-oss-20b`** (default): Best for most use cases with standard commit histories
+- **`openai/gpt-oss-120b`**: Recommended for repositories with large or complex commit histories
+
+The prompts have been specifically optimized and tested with these models, ensuring the highest quality PR titles and descriptions. For typical workflows, the 20B model provides excellent results with faster response times, while the 120B model excels at understanding and summarizing extensive commit contexts.
+
 ## How it works 🧠
 
 1. Verifies you are inside a git repository and not already on the target branch
