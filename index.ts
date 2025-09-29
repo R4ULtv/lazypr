@@ -2,8 +2,15 @@
 
 import { Command } from "commander";
 import clipboardy from "clipboardy";
-import select from "@inquirer/select";
-import chalk from "chalk";
+import {
+  intro,
+  outro,
+  cancel,
+  log,
+  spinner,
+  confirm,
+  select,
+} from "@clack/prompts";
 
 import { pkg } from "./utils/info";
 import {
@@ -19,13 +26,13 @@ const program = new Command();
 
 // Simple error handler
 const exitWithError = (message: string): never => {
-  console.error(chalk.red(`${message}`));
+  cancel(message);
   process.exit(0);
 };
 
 // Simple success message
 const success = (message: string): void => {
-  console.log(chalk.green(`${message}`));
+  log.success(message);
 };
 
 // Copy to clipboard
@@ -34,7 +41,7 @@ const copyToClipboard = async (content: string): Promise<void> => {
     await clipboardy.write(content);
     success("Copied to clipboard!");
   } catch {
-    console.log(chalk.yellow("Couldn't copy to clipboard"));
+    log.warn("Couldn't copy to clipboard");
   }
 };
 
@@ -43,6 +50,7 @@ const createPullRequest = async (
   targetBranch: string | undefined,
 ): Promise<void> => {
   try {
+    intro("lazypr");
     targetBranch = targetBranch || (await config.get("DEFAULT_BRANCH"));
 
     // Check if git repo
@@ -65,17 +73,46 @@ const createPullRequest = async (
       exitWithError("No current branch found");
     }
 
-    // Check branches aren't the same
+    // Get all branches
+    const branches = await getAllBranches();
+
+    // Check if branches are the same
     if (currentBranch === targetBranch) {
-      exitWithError(`Already on target branch '${targetBranch}'`);
+      log.warning(
+        `Target branch '${targetBranch}' is the same as current branch '${currentBranch}'`,
+      );
     }
 
-    // Check target branch exists
-    const branches = await getAllBranches();
+    // Check if target branch exists
     if (!branches.includes(targetBranch)) {
-      exitWithError(
-        `Branch '${targetBranch}' doesn't exist. Available branches: ${branches.join(", ")}`,
+      log.warning(
+        `Target branch '${targetBranch}' doesn't exist. You can change the default branch in the config.`,
       );
+    }
+
+    // If either condition is true, show branch selection
+    if (currentBranch === targetBranch || !branches.includes(targetBranch)) {
+      const availableBranches = branches.filter(
+        (branch) => branch !== currentBranch,
+      );
+
+      if (availableBranches.length === 0) {
+        exitWithError("No other branches available to merge into");
+      }
+
+      const selectedBranch = await select({
+        message: `Select target branch to merge '${currentBranch}' into:`,
+        options: availableBranches.map((branch) => ({
+          value: branch,
+          label: branch,
+        })),
+      });
+
+      if (typeof selectedBranch === "symbol") {
+        exitWithError("Branch selection cancelled");
+      }
+
+      targetBranch = selectedBranch as string;
     }
 
     // Get commits
@@ -85,56 +122,39 @@ const createPullRequest = async (
     }
 
     const commitCount = commits.length;
-    console.log(
-      chalk.blue(
-        `You want to merge ${commitCount} commit${
-          commitCount === 1 ? "" : "s"
-        } into '${targetBranch}' from '${currentBranch}'`,
-      ),
+    log.info(
+      `You want to merge ${commitCount} commit${
+        commitCount === 1 ? "" : "s"
+      } into '${targetBranch}' from '${currentBranch}'`,
     );
+
+    const spin = spinner({ indicator: "timer" });
+    spin.start("🤖 Generating Pull Request");
 
     // Generate PR
     const pullRequest = await generatePullRequest(currentBranch, commits);
 
-    // Display result
-    console.log("\n" + chalk.bold.cyan("Title:"));
-    console.log(pullRequest.title);
-    console.log("\n" + chalk.bold.cyan("Description:"));
-    console.log(pullRequest.description);
+    spin.stop("📝 Generated Pull Request");
 
-    let keepCopying = true;
-    while (keepCopying) {
-      const copyChoice = await select({
-        message: "Copy to clipboard:",
-        choices: [
-          {
-            name: "Title Only",
-            value: "title",
-          },
-          {
-            name: "Description Only",
-            value: "description",
-          },
-          {
-            name: "Exit Copying",
-            value: "none",
-          },
-        ],
-      });
+    log.info(`Pull Request Title: ${pullRequest.title}`);
+    log.info(`Pull Request Description: ${pullRequest.description}`);
 
-      switch (copyChoice) {
-        case "title":
-          await copyToClipboard(pullRequest.title);
-          break;
-        case "description":
-          await copyToClipboard(pullRequest.description);
-          break;
-        case "none":
-          keepCopying = false;
-          break;
-      }
+    const copyTitle = await confirm({
+      message: "Do you want to copy the title ?",
+    });
+
+    if (copyTitle) {
+      await copyToClipboard(pullRequest.title);
     }
-    success("Done!");
+
+    const copyDescription = await confirm({
+      message: "Do you want to copy the description ?",
+    });
+
+    if (copyDescription) {
+      await copyToClipboard(pullRequest.description);
+    }
+    outro("✅ Done!");
   } catch (error) {
     exitWithError(
       `Failed: ${error instanceof Error ? error.message : "Unknown error"}`,
@@ -234,48 +254,6 @@ program
         `Error: Invalid operation '${type}'. Use 'set', 'get', or 'remove'`,
       );
       process.exit(1);
-    }
-  });
-
-program
-  .command("branches")
-  .alias("branch")
-  .description("Show all available branches")
-  .action(async () => {
-    try {
-      // Check if git repo
-      if (!(await isGitRepository())) {
-        exitWithError("Not a git repository");
-      }
-
-      // Get all branches and current branch
-      const branches = await getAllBranches();
-      const currentBranch = await getCurrentBranch();
-
-      if (branches.length === 0) {
-        exitWithError("No branches found");
-      }
-
-      console.log(chalk.bold.cyan("Available branches:"));
-
-      branches.forEach((branch) => {
-        if (branch === currentBranch) {
-          // Highlight current branch
-          console.log(chalk.green(`* ${branch} (current)`));
-        } else {
-          console.log(`  ${branch}`);
-        }
-      });
-
-      console.log(
-        chalk.dim(
-          `\nTotal: ${branches.length} branch${branches.length === 1 ? "" : "es"}`,
-        ),
-      );
-    } catch (error) {
-      exitWithError(
-        `Failed to get branches: ${error instanceof Error ? error.message : "Unknown error"}`,
-      );
     }
   });
 
