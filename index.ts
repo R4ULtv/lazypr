@@ -50,7 +50,7 @@ const createPullRequest = async (
   targetBranch: string | undefined,
 ): Promise<void> => {
   try {
-    intro("🚀 LazyPR - Generate Pull Request");
+    intro("lazypr");
     targetBranch = targetBranch || (await config.get("DEFAULT_BRANCH"));
 
     // Check if git repo
