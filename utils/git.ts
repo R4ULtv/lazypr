@@ -27,7 +27,7 @@ export async function isGitRepository(): Promise<boolean> {
     if (error instanceof Error && "code" in error && error.code === "ENOENT") {
       console.error(
         "An unexpected error occurred. Is git installed and in your PATH?",
-        error
+        error,
       );
     }
     return false;
@@ -51,7 +51,7 @@ export async function getAllBranches(): Promise<string[]> {
   } catch (error) {
     console.error(
       "Failed to get git branches. Are you in a git repository?",
-      error
+      error,
     );
     return [];
   }
@@ -78,14 +78,14 @@ export async function getCurrentBranch(): Promise<string> {
  * @returns {Promise<GitCommit[]>} A promise that resolves to an array of commit objects ordered from oldest to newest
  */
 export async function getPullRequestCommits(
-  targetBranch: string
+  targetBranch: string,
 ): Promise<GitCommit[]> {
   try {
     // Get commits that are in current branch but not in target branch
     // Using --reverse to show commits in chronological order (oldest first, like in a PR)
     // Format: hash|short_hash|author|date|message
     const { stdout } = await execAsync(
-      `git log ${targetBranch}..HEAD --reverse --pretty=format:"%H|%h|%an|%ad|%s" --date=short`
+      `git log ${targetBranch}..HEAD --reverse --pretty=format:"%H|%h|%an|%ad|%s" --date=short`,
     );
 
     if (!stdout.trim()) {
@@ -109,10 +109,8 @@ export async function getPullRequestCommits(
 
     return commits;
   } catch (error) {
-    console.error(
-      `Failed to get PR commits for current branch -> '${targetBranch}'. Make sure the target branch exists.`,
-      error
-    );
+    // Silently return empty array for non-existent branches or other git errors
+    // The calling code can check if the array is empty and handle accordingly
     return [];
   }
 }
