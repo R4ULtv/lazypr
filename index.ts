@@ -21,6 +21,11 @@ import {
 } from "./utils/git";
 import { generatePullRequest } from "./utils/groq";
 import { config, CONFIG_SCHEMA, type ConfigKey } from "./utils/config";
+import {
+  findPRTemplates,
+  getPRTemplate,
+  type PRTemplate,
+} from "./utils/template";
 
 const program = new Command();
 
@@ -48,6 +53,7 @@ const copyToClipboard = async (content: string): Promise<void> => {
 // Main function
 const createPullRequest = async (
   targetBranch: string | undefined,
+  options: { template?: string },
 ): Promise<void> => {
   try {
     intro("lazypr");
@@ -128,11 +134,68 @@ const createPullRequest = async (
       } into '${targetBranch}' from '${currentBranch}'`,
     );
 
+    // Handle template selection
+    let templateContent: string | undefined;
+    if (options.template !== undefined) {
+      // Template flag was provided
+      if (options.template === "" || options.template === "true") {
+        // Flag without value or --template flag: show interactive selection
+        const availableTemplates = await findPRTemplates();
+
+        if (availableTemplates.length === 0) {
+          log.warning("No PR templates found in .github folder");
+        } else if (availableTemplates.length === 1) {
+          // Only one template, use it automatically
+          const firstTemplate = availableTemplates[0];
+          if (firstTemplate) {
+            templateContent = firstTemplate.content;
+            log.info(`Using template: ${firstTemplate.name}`);
+          }
+        } else {
+          // Multiple templates, let user choose
+          const selectedTemplate = await select({
+            message: "Select a PR template:",
+            options: availableTemplates.map((tmpl) => ({
+              value: tmpl.path,
+              label: `${tmpl.name} (${tmpl.path})`,
+            })),
+          });
+
+          if (typeof selectedTemplate === "symbol") {
+            log.info("No template selected, continuing without template");
+          } else {
+            const template = availableTemplates.find(
+              (t) => t.path === selectedTemplate,
+            );
+            if (template) {
+              templateContent = template.content;
+              log.info(`Using template: ${template.name}`);
+            }
+          }
+        }
+      } else {
+        // Specific template name/path provided
+        const template = await getPRTemplate(options.template);
+        if (template) {
+          templateContent = template.content;
+          log.info(`Using template: ${template.name}`);
+        } else {
+          log.warning(
+            `Template '${options.template}' not found, continuing without template`,
+          );
+        }
+      }
+    }
+
     const spin = spinner({ indicator: "timer" });
     spin.start("🤖 Generating Pull Request");
 
     // Generate PR
-    const pullRequest = await generatePullRequest(currentBranch, commits);
+    const pullRequest = await generatePullRequest(
+      currentBranch,
+      commits,
+      templateContent,
+    );
 
     spin.stop("📝 Generated Pull Request");
 
@@ -168,6 +231,10 @@ program
   .version(pkg.version)
   .description("Generate pull request title and description")
   .argument("[target]", "Target branch")
+  .option(
+    "-t, --template [name]",
+    "Use a PR template from .github folder. Omit value to select interactively, or provide template name/path",
+  )
   .action(createPullRequest);
 
 program
