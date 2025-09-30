@@ -1,4 +1,4 @@
-# lazypr
+[![lazypr](https://lazypr.vercel.app/og-image.png)](https://lazypr.vercel.app)
 
 [![test status](https://img.shields.io/github/actions/workflow/status/github/docs/test.yml)](https://github.com/github/docs/actions/workflows/test.yml)
 [![version](https://img.shields.io/npm/v/lazypr.svg)](https://www.npmjs.com/package/lazypr)
