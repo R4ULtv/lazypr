@@ -53,7 +53,7 @@ const copyToClipboard = async (content: string): Promise<void> => {
 // Main function
 const createPullRequest = async (
   targetBranch: string | undefined,
-  options: { template?: string },
+  options: { template?: string | boolean },
 ): Promise<void> => {
   try {
     intro("lazypr");
@@ -138,7 +138,11 @@ const createPullRequest = async (
     let templateContent: string | undefined;
     if (options.template !== undefined) {
       // Template flag was provided
-      if (options.template === "" || options.template === "true") {
+      if (
+        options.template === "" ||
+        options.template === "true" ||
+        options.template === true
+      ) {
         // Flag without value or --template flag: show interactive selection
         const availableTemplates = await findPRTemplates();
 
@@ -173,7 +177,7 @@ const createPullRequest = async (
             }
           }
         }
-      } else {
+      } else if (typeof options.template === "string") {
         // Specific template name/path provided
         const template = await getPRTemplate(options.template);
         if (template) {

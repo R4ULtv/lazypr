@@ -162,6 +162,11 @@ export async function getPRTemplate(
   nameOrPath: string,
   cwd: string = process.cwd(),
 ): Promise<PRTemplate | null> {
+  // Validate input
+  if (!nameOrPath || typeof nameOrPath !== "string") {
+    return null;
+  }
+
   const templates = await findPRTemplates(cwd);
 
   // Try to find by exact name match (case-insensitive)
