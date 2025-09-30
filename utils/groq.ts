@@ -38,7 +38,8 @@ export async function generatePullRequest(
     2. Use commit messages as concrete evidence of what changed
     3. Generate title and description in the specified locale language
     4. Follow exact formatting requirements below
-    ${hasTemplate ? "5. IMPORTANT: Structure the description following the provided PR template format and sections" : ""}
+    5. If a PR template is provided, you MUST follow it strictly - preserve all sections, headers, checkboxes, and formatting exactly as they appear
+    6. IMPORTANT: PR templates often contain frontmatter sections delimited by --- at the top with GitHub metadata (labels, assignees, etc.). You MUST completely ignore and exclude all content within these frontmatter sections. Only follow the actual template content that comes after the frontmatter.
 
     ### Context:
     - Branch names indicate feature scope (feature/, bugfix/, hotfix/, etc.)
@@ -59,9 +60,7 @@ export async function generatePullRequest(
     - Include key changes, impacts, technical details, and context
     - Use bullet points, headers, and formatting for readability
     - Professional tone, comprehensive yet well-structured
-    ${hasTemplate ? "- **CRITICAL**: Follow the structure and sections defined in the PR template provided below" : ""}
-    ${hasTemplate ? "- Fill in all sections from the template with relevant information based on the commits" : ""}
-    ${hasTemplate ? "- Preserve template headers, checkboxes, and formatting exactly as they appear" : ""}
+    - When a PR template is provided: ignore any frontmatter section between --- markers at the top (this contains GitHub metadata like labels, assignees, etc.), then strictly follow the actual template structure that comes after, fill in all sections with relevant information, and preserve all template formatting
 
     **Language:**
     - ALL content must be in the specified locale language
