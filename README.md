@@ -141,6 +141,8 @@ When you use the `--template` or `-t` flag, lazypr will:
 3. Fill in the template sections based on your commit history
 4. Preserve template structure, headers, and checkboxes
 
+> **⚠️ Important Note:** Using PR templates significantly increases the amount of input and output tokens consumed by the GROQ AI API. By using your own API key, you are in control of the API usage—please be careful and monitor your costs accordingly.
+
 You can also specify a template by name or path:
 
 ```bash
