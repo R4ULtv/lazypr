@@ -1,5 +1,6 @@
 # lazypr
 
+[![test status](https://img.shields.io/github/actions/workflow/status/github/docs/test.yml)](https://github.com/github/docs/actions/workflows/test.yml)
 [![version](https://img.shields.io/npm/v/lazypr.svg)](https://www.npmjs.com/package/lazypr)
 [![license](https://img.shields.io/github/license/r4ultv/lazypr.svg)](https://github.com/r4ultv/lazypr/blob/main/LICENSE)
 [![node](https://img.shields.io/badge/node-%3E%3D20.0-43853d?logo=node.js&logoColor=white)](https://nodejs.org)
