@@ -37,7 +37,7 @@
   "dependencies": {
     "@ai-sdk/groq": "^2.0.22",
     "@clack/prompts": "^1.0.0-alpha.5",
-    "ai": "^5.0.54",
+    "ai": "^5.0.59",
     "clipboardy": "5.0.0",
     "commander": "^14.0.1",
     "zod": "^4.1.11"
