@@ -207,7 +207,12 @@ program
         process.exit(0);
       }
       console.log(`Setting config: ${trimmedKey} = ${value}`);
-      await config.set(trimmedKey as ConfigKey, value);
+      try {
+        await config.set(trimmedKey as ConfigKey, value);
+      } catch (error) {
+        console.error(`error: ${(error as Error).message}`);
+        process.exit(1);
+      }
     } else if (type === "get") {
       // For get operation, keyValue is just the key
       const key = keyValue.trim();
