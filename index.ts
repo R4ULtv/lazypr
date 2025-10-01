@@ -22,11 +22,7 @@ import {
 } from "./utils/git";
 import { generatePullRequest } from "./utils/groq";
 import { config, CONFIG_SCHEMA, type ConfigKey } from "./utils/config";
-import {
-  findPRTemplates,
-  getPRTemplate,
-  type PRTemplate,
-} from "./utils/template";
+import { findPRTemplates, getPRTemplate } from "./utils/template";
 
 const program = new Command();
 
