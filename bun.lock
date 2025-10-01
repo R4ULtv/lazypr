@@ -5,7 +5,7 @@
       "name": "lazypr",
       "dependencies": {
         "@ai-sdk/groq": "^2.0.22",
-        "@clack/prompts": "^1.0.0-alpha.5",
+        "@clack/prompts": "^0.11.0",
         "ai": "^5.0.59",
         "clipboardy": "5.0.0",
         "commander": "^14.0.1",
@@ -25,9 +25,9 @@
 
     "@ai-sdk/provider-utils": ["@ai-sdk/provider-utils@3.0.10", "", { "dependencies": { "@ai-sdk/provider": "2.0.0", "@standard-schema/spec": "^1.0.0", "eventsource-parser": "^3.0.5" }, "peerDependencies": { "zod": "^3.25.76 || ^4.1.8" } }, "sha512-T1gZ76gEIwffep6MWI0QNy9jgoybUHE7TRaHB5k54K8mF91ciGFlbtCGxDYhMH3nCRergKwYFIDeFF0hJSIQHQ=="],
 
-    "@clack/core": ["@clack/core@1.0.0-alpha.5", "", { "dependencies": { "picocolors": "^1.0.0", "sisteransi": "^1.0.5" } }, "sha512-z02wRlW7F7L5N5r2otDMsrLNKAgjDIDD+m4do5/cBqiYCKKb7SNBJgpUISjuCmRI0/P5XyoInmMrr1rBoH8MKw=="],
+    "@clack/core": ["@clack/core@0.5.0", "", { "dependencies": { "picocolors": "^1.0.0", "sisteransi": "^1.0.5" } }, "sha512-p3y0FIOwaYRUPRcMO7+dlmLh8PSRcrjuTndsiA0WAFbWES0mLZlrjVoBRZ9DzkPFJZG6KGkJmoEAY0ZcVWTkow=="],
 
-    "@clack/prompts": ["@clack/prompts@1.0.0-alpha.5", "", { "dependencies": { "@clack/core": "1.0.0-alpha.5", "picocolors": "^1.0.0", "sisteransi": "^1.0.5" } }, "sha512-hY67bxfwwti2WkLOLOiuXtAdD43KNMV4yiJPPSEdZG8N5TfZ9lLxibmqwKe5UZ5364PIp4kzTEvge/4Crcd5bg=="],
+    "@clack/prompts": ["@clack/prompts@0.11.0", "", { "dependencies": { "@clack/core": "0.5.0", "picocolors": "^1.0.0", "sisteransi": "^1.0.5" } }, "sha512-pMN5FcrEw9hUkZA4f+zLlzivQSeQf5dRGJjSUbvVYDLvpKCdQx5OaknvKzgbtXOizhP+SJJJjqEbOe55uKKfAw=="],
 
     "@opentelemetry/api": ["@opentelemetry/api@1.9.0", "", {}, "sha512-3giAOQvZiH5F9bMlMiv8+GSPMeqg0dbaeo58/0SlA9sxSqZhnUtxzX9/2FzyhS9sWQf5S0GJE0AKBrFqjpeYcg=="],
 
