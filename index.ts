@@ -10,6 +10,7 @@ import {
   spinner,
   confirm,
   select,
+  note,
 } from "@clack/prompts";
 
 import { pkg } from "./utils/info";
@@ -53,7 +54,7 @@ const copyToClipboard = async (content: string): Promise<void> => {
 // Main function
 const createPullRequest = async (
   targetBranch: string | undefined,
-  options: { template?: string | boolean },
+  options: { template?: string | boolean; usage?: boolean },
 ): Promise<void> => {
   try {
     intro("lazypr");
@@ -201,7 +202,15 @@ const createPullRequest = async (
       templateContent,
     );
 
-    spin.stop(`📝 Generated Pull Request (${usage.totalTokens} tokens)`);
+    spin.stop("📝 Generated Pull Request");
+
+    // Display detailed usage if flag is set
+    if (options.usage) {
+      note(
+        `- Input: ${usage.inputTokens} tokens\n- Output: ${usage.outputTokens} tokens\n- Total: ${usage.totalTokens} tokens`,
+        "📊 AI Model Usage",
+      );
+    }
 
     log.info(`Pull Request Title: ${pullRequest.title}`);
     log.info(`Pull Request Description: ${pullRequest.description}`);
@@ -239,6 +248,7 @@ program
     "-t, --template [name]",
     "Use a PR template from .github folder. Omit value to select interactively, or provide template name/path",
   )
+  .option("-u, --usage", "Display detailed AI token usage statistics")
   .action(createPullRequest);
 
 program
