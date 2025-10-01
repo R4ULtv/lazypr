@@ -23,7 +23,7 @@ export async function generatePullRequest(
   const commitsString = commits.map((commit) => commit.message).join("\n");
   const hasTemplate = template && template.trim().length > 0;
 
-  const { object } = await generateObject({
+  const { object, usage } = await generateObject({
     model: groq(model),
     schema: pullRequestSchema,
     maxRetries: parseInt(await config.get("MAX_RETRIES")),
@@ -89,5 +89,5 @@ export async function generatePullRequest(
     Generate the JSON object now:
     `,
   });
-  return object;
+  return { object, usage };
 }

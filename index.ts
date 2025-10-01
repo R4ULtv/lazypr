@@ -195,13 +195,13 @@ const createPullRequest = async (
     spin.start("🤖 Generating Pull Request");
 
     // Generate PR
-    const pullRequest = await generatePullRequest(
+    const { object: pullRequest, usage } = await generatePullRequest(
       currentBranch,
       commits,
       templateContent,
     );
 
-    spin.stop("📝 Generated Pull Request");
+    spin.stop(`📝 Generated Pull Request (${usage.totalTokens} tokens)`);
 
     log.info(`Pull Request Title: ${pullRequest.title}`);
     log.info(`Pull Request Description: ${pullRequest.description}`);
