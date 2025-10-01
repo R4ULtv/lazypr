@@ -259,7 +259,7 @@ program
     if (type === "set") {
       // Check if the keyValue contains '='
       if (!keyValue.includes("=")) {
-        console.error(
+        log.error(
           "Error: For 'set' operation, key-value pair must be in format KEY=VALUE",
         );
         process.exit(1);
@@ -272,22 +272,22 @@ program
 
       // Validate that both key and value exist
       if (!key.trim()) {
-        console.error("Error: Key cannot be empty");
+        log.error("Error: Key cannot be empty");
         process.exit(0);
       }
 
       const trimmedKey = key.trim();
       if (!(trimmedKey in CONFIG_SCHEMA)) {
-        console.error(
+        log.error(
           `Error: Unknown config key '${trimmedKey}'. Valid keys: ${Object.keys(CONFIG_SCHEMA).join(", ")}`,
         );
         process.exit(0);
       }
-      console.log(`Setting config: ${trimmedKey} = ${value}`);
+      log.info(`Setting config: ${trimmedKey} = ${value}`);
       try {
         await config.set(trimmedKey as ConfigKey, value);
       } catch (error) {
-        console.error(`error: ${(error as Error).message}`);
+        log.error(`error: ${(error as Error).message}`);
         process.exit(1);
       }
     } else if (type === "get") {
@@ -295,12 +295,12 @@ program
       const key = keyValue.trim();
 
       if (!key) {
-        console.error("Error: Key cannot be empty");
+        log.error("Error: Key cannot be empty");
         process.exit(0);
       }
 
       if (!(key in CONFIG_SCHEMA)) {
-        console.error(
+        log.error(
           `Error: Unknown config config '${key}'. Valid config: ${Object.keys(CONFIG_SCHEMA).join(", ")}`,
         );
         process.exit(0);
@@ -308,31 +308,31 @@ program
       const value = await config.get(key as ConfigKey).catch(() => undefined);
 
       if (value !== undefined) {
-        console.log(`${key} = ${value}`);
+        log.warning(`${key} = ${value}`);
       } else {
-        console.log(`Key '${key}' not found in config`);
+        log.warning(`Key '${key}' not found in config`);
       }
     } else if (type === "remove") {
       // For remove operation, keyValue is just the key
       const key = keyValue.trim();
 
       if (!key) {
-        console.error("Error: Key cannot be empty");
+        log.error("Error: Key cannot be empty");
         process.exit(0);
       }
 
       if (!(key in CONFIG_SCHEMA)) {
-        console.error(
+        log.error(
           `Error: Unknown config key '${key}'. Valid keys: ${Object.keys(CONFIG_SCHEMA).join(", ")}`,
         );
         process.exit(0);
       }
 
-      console.log(`Removing config: ${key}`);
+      log.info(`Removing config: ${key}`);
       await config.remove(key as ConfigKey);
       success(`Config key '${key}' removed successfully`);
     } else {
-      console.error(
+      log.error(
         `Error: Invalid operation '${type}'. Use 'set', 'get', or 'remove'`,
       );
       process.exit(1);
