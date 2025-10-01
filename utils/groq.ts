@@ -14,11 +14,13 @@ export async function generatePullRequest(
   currentBranch: string,
   commits: GitCommit[],
   template?: string,
+  localeOverride?: string,
 ) {
   const groq = createGroq({
     apiKey: await config.get("GROQ_API_KEY"),
   });
-  const locale = await config.get("LOCALE");
+  // Use locale override if provided, otherwise fall back to config
+  const locale = localeOverride || (await config.get("LOCALE"));
   const model = await config.get("MODEL");
   const commitsString = commits.map((commit) => commit.message).join("\n");
   const hasTemplate = template && template.trim().length > 0;

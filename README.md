@@ -18,7 +18,7 @@ AI-powered CLI that turns your git commits into a polished pull request title an
 - **PR template support:** Use your existing PR templates from `.github` folder
 - **Clipboard integration:** Copy title or description right from the prompt
 - **Alias included:** Use `lzp` as a short command
-- **Configurable locale:** Output language via `LOCALE` (en, es, pt, fr, de, it, ja, ko, zh)
+- **Configurable locale:** Output language via `LOCALE` config or `--locale` flag (en, es, pt, fr, de, it, ja, ko, zh, ru, nl, pl, tr)
 - **Resilience controls:** Tune `MAX_RETRIES` and `TIMEOUT`
 
 ## Installation 📦
@@ -75,6 +75,14 @@ lazypr --template    # same as above
 lazypr -t bugfix     # use specific template by name
 ```
 
+To specify a language for a single run (overrides config):
+
+```bash
+lazypr -l es         # generate PR in Spanish
+lazypr --locale pt   # generate PR in Portuguese
+lazypr main -l fr    # target main branch with French output
+```
+
 ## Configuration ⚙️
 
 Settings are stored in `~/.lazypr` as simple `KEY=VALUE` lines. Manage them via the built-in command:
@@ -90,7 +98,7 @@ lazypr config get KEY
 Available keys:
 
 - `GROQ_API_KEY` (required): Your Groq API key
-- `LOCALE` (default: `en`): One of `en, es, pt, fr, de, it, ja, ko, zh`
+- `LOCALE` (default: `en`): One of `en, es, pt, fr, de, it, ja, ko, zh, ru, nl, pl, tr`
 - `MAX_RETRIES` (default: `2`): Non-negative integer
 - `TIMEOUT` (default: `10000`): Milliseconds
 - `MODEL` (default: `openai/gpt-oss-20b`): AI model to use for generating PR content. Available models: [Groq Docs](https://console.groq.com/docs/structured-outputs#supported-models)
@@ -163,6 +171,9 @@ Arguments:
 Options:
   -t, --template [name]      Use a PR template from .github folder
                              Omit value to select interactively
+  -l, --locale <language>    Set the language for PR content (en, es, pt, fr, de, it, ja, ko, zh, ru, nl, pl, tr)
+                             Overrides config setting
+  -u, --usage                Display detailed AI token usage statistics
   -V, --version              Output version number
   -h, --help                 Display help
 ```

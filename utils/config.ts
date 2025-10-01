@@ -24,7 +24,21 @@ export const CONFIG_SCHEMA = {
     default: "en",
     validate: (v: string) => {
       const locale = v?.trim().toLowerCase() || "en";
-      const allowed = ["en", "es", "pt", "fr", "de", "it", "ja", "ko", "zh"];
+      const allowed = [
+        "en",
+        "es",
+        "pt",
+        "fr",
+        "de",
+        "it",
+        "ja",
+        "ko",
+        "zh",
+        "ru",
+        "nl",
+        "pl",
+        "tr",
+      ];
       if (!allowed.includes(locale)) {
         throw new Error(`LOCALE must be one of: ${allowed.join(", ")}`);
       }
