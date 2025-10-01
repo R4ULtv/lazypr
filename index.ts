@@ -50,11 +50,22 @@ const copyToClipboard = async (content: string): Promise<void> => {
 // Main function
 const createPullRequest = async (
   targetBranch: string | undefined,
-  options: { template?: string | boolean; usage?: boolean },
+  options: { template?: string | boolean; usage?: boolean; locale?: string },
 ): Promise<void> => {
   try {
     intro("lazypr");
     targetBranch = targetBranch || (await config.get("DEFAULT_BRANCH"));
+
+    // Validate locale if provided
+    if (options.locale) {
+      try {
+        options.locale = CONFIG_SCHEMA.LOCALE.validate(options.locale);
+      } catch (error) {
+        exitWithError(
+          `Invalid locale: ${error instanceof Error ? error.message : "Unknown error"}`,
+        );
+      }
+    }
 
     // Check if git repo
     if (!(await isGitRepository())) {
@@ -196,6 +207,7 @@ const createPullRequest = async (
       currentBranch,
       commits,
       templateContent,
+      options.locale,
     );
 
     spin.stop("📝 Generated Pull Request");
@@ -245,6 +257,10 @@ program
     "Use a PR template from .github folder. Omit value to select interactively, or provide template name/path",
   )
   .option("-u, --usage", "Display detailed AI token usage statistics")
+  .option(
+    "-l, --locale <language>",
+    "Set the language for the PR content (en, es, pt, fr, de, it, ja, ko, zh). Overrides config setting",
+  )
   .action(createPullRequest);
 
 program

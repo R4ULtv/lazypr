@@ -18,7 +18,7 @@ AI-powered CLI that turns your git commits into a polished pull request title an
 - **PR template support:** Use your existing PR templates from `.github` folder
 - **Clipboard integration:** Copy title or description right from the prompt
 - **Alias included:** Use `lzp` as a short command
-- **Configurable locale:** Output language via `LOCALE` (en, es, pt, fr, de, it, ja, ko, zh)
+- **Configurable locale:** Output language via `LOCALE` config or `--locale` flag (en, es, pt, fr, de, it, ja, ko, zh)
 - **Resilience controls:** Tune `MAX_RETRIES` and `TIMEOUT`
 
 ## Installation 📦
@@ -73,6 +73,14 @@ To use a PR template:
 lazypr -t            # interactive selection if multiple templates
 lazypr --template    # same as above
 lazypr -t bugfix     # use specific template by name
+```
+
+To specify a language for a single run (overrides config):
+
+```bash
+lazypr -l es         # generate PR in Spanish
+lazypr --locale pt   # generate PR in Portuguese
+lazypr main -l fr    # target main branch with French output
 ```
 
 ## Configuration ⚙️
@@ -163,6 +171,9 @@ Arguments:
 Options:
   -t, --template [name]      Use a PR template from .github folder
                              Omit value to select interactively
+  -l, --locale <language>    Set the language for PR content (en, es, pt, fr, de, it, ja, ko, zh)
+                             Overrides config setting
+  -u, --usage                Display detailed AI token usage statistics
   -V, --version              Output version number
   -h, --help                 Display help
 ```
