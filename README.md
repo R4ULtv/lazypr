@@ -15,6 +15,7 @@ AI-powered CLI that turns your git commits into a polished pull request title an
 
 - **AI summarization:** Uses the Groq AI SDK to synthesize clear PR context from commits
 - **Concise titles + markdown descriptions:** Enforces length and style requirements
+- **PR template support:** Use your existing PR templates from `.github` folder
 - **Clipboard integration:** Copy title or description right from the prompt
 - **Alias included:** Use `lzp` as a short command
 - **Configurable locale:** Output language via `LOCALE` (en, es, pt, fr, de, it, ja, ko, zh)
@@ -66,6 +67,14 @@ To target a different base branch:
 lazypr main          # or develop, release/1.2, etc.
 ```
 
+To use a PR template:
+
+```bash
+lazypr -t            # interactive selection if multiple templates
+lazypr --template    # same as above
+lazypr -t bugfix     # use specific template by name
+```
+
 ## Configuration ⚙️
 
 Settings are stored in `~/.lazypr` as simple `KEY=VALUE` lines. Manage them via the built-in command:
@@ -112,13 +121,50 @@ The prompts have been specifically optimized and tested with these models, ensur
 4. Sends commit messages to Groq and generates a title + markdown description
 5. Offers an interactive menu to copy the title or description to your clipboard
 
+## PR Templates 📝
+
+`lazypr` automatically detects PR templates in your repository from common locations:
+
+- `.github/pull_request_template.md`
+- `.github/PULL_REQUEST_TEMPLATE.md`
+- `.github/pull_request_template/` (directory with multiple templates)
+- `.github/PULL_REQUEST_TEMPLATE/` (directory with multiple templates)
+- `docs/pull_request_template.md`
+- `docs/PULL_REQUEST_TEMPLATE.md`
+
+### Using Templates
+
+When you use the `--template` or `-t` flag, lazypr will:
+
+1. If only one template exists: automatically use it
+2. If multiple templates exist: show an interactive selection menu
+3. Fill in the template sections based on your commit history
+4. Preserve template structure, headers, and checkboxes
+
+> **⚠️ Important Note:** Using PR templates significantly increases the amount of input and output tokens consumed by the GROQ AI API. By using your own API key, you are in control of the API usage—please be careful and monitor your costs accordingly.
+
+You can also specify a template by name or path:
+
+```bash
+lazypr -t "Bug Fix"              # by display name
+lazypr -t .github/bug_fix.md     # by path
+```
+
+The AI will structure the PR description following your template format while incorporating the commit analysis.
+
 ## CLI 🛠️
 
 ```bash
-lazypr [target]
+lazypr [target] [options]
+
+Arguments:
+  target                     Target branch name (default: master)
 
 Options:
-  target   Target branch name (default: master)
+  -t, --template [name]      Use a PR template from .github folder
+                             Omit value to select interactively
+  -V, --version              Output version number
+  -h, --help                 Display help
 ```
 
 ## Troubleshooting 🛟

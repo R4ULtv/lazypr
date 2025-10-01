@@ -13,6 +13,7 @@ const pullRequestSchema = z.object({
 export async function generatePullRequest(
   currentBranch: string,
   commits: GitCommit[],
+  template?: string,
 ) {
   const groq = createGroq({
     apiKey: await config.get("GROQ_API_KEY"),
@@ -20,6 +21,7 @@ export async function generatePullRequest(
   const locale = await config.get("LOCALE");
   const model = await config.get("MODEL");
   const commitsString = commits.map((commit) => commit.message).join("\n");
+  const hasTemplate = template && template.trim().length > 0;
 
   const { object } = await generateObject({
     model: groq(model),
@@ -36,6 +38,8 @@ export async function generatePullRequest(
     2. Use commit messages as concrete evidence of what changed
     3. Generate title and description in the specified locale language
     4. Follow exact formatting requirements below
+    5. If a PR template is provided, you MUST follow it strictly - preserve all sections, headers, checkboxes, and formatting exactly as they appear
+    6. IMPORTANT: PR templates often contain frontmatter sections delimited by --- at the top with GitHub metadata (labels, assignees, etc.). You MUST completely ignore and exclude all content within these frontmatter sections. Only follow the actual template content that comes after the frontmatter.
 
     ### Context:
     - Branch names indicate feature scope (feature/, bugfix/, hotfix/, etc.)
@@ -56,6 +60,7 @@ export async function generatePullRequest(
     - Include key changes, impacts, technical details, and context
     - Use bullet points, headers, and formatting for readability
     - Professional tone, comprehensive yet well-structured
+    - When a PR template is provided: ignore any frontmatter section between --- markers at the top (this contains GitHub metadata like labels, assignees, etc.), then strictly follow the actual template structure that comes after, fill in all sections with relevant information, and preserve all template formatting
 
     **Language:**
     - ALL content must be in the specified locale language
@@ -71,6 +76,7 @@ export async function generatePullRequest(
     \`\`\`
     ${commitsString}
     \`\`\`
+    ${hasTemplate ? `\n    **PR Template to Follow:**\n    \`\`\`markdown\n    ${template}\n    \`\`\`` : ""}
 
     ### Required Output:
     Generate JSON with exactly these keys:
