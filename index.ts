@@ -259,7 +259,7 @@ program
   .option("-u, --usage", "Display detailed AI token usage statistics")
   .option(
     "-l, --locale <language>",
-    "Set the language for the PR content (en, es, pt, fr, de, it, ja, ko, zh). Overrides config setting",
+    "Set the language for the PR content (en, es, pt, fr, de, it, ja, ko, zh, ru, nl, pl, tr). Overrides config setting",
   )
   .action(createPullRequest);
 
