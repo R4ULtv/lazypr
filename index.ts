@@ -53,7 +53,7 @@ const createPullRequest = async (
   options: { template?: string | boolean; usage?: boolean; locale?: string },
 ): Promise<void> => {
   try {
-    intro("lazypr");
+    intro("\x1b[30;47m lazypr \x1b[0m");
     targetBranch = targetBranch || (await config.get("DEFAULT_BRANCH"));
 
     // Validate locale if provided
