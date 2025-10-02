@@ -4,43 +4,57 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/) and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## [1.1.0] - 2025-10-02
+
+### Added
+
+- **PULL REQUEST TEMPLATE INTEGRATION:** Implemented full support for standard Git repository templates (`PULL_REQUEST_TEMPLATE.md`). The AI now automatically detects and uses the structure and content of this template to format the generated PR description, allowing users to enforce consistent and custom documentation standards. ([#7](https://github.com/R4ULtv/lazypr/pull/7))
+- **AI USAGE REPORTING:** Introduced transparent API token usage reporting. After the PR is successfully generated, the CLI now displays the total number of **prompt tokens** and **completion tokens** consumed, providing users with better visibility into API costs. ([#8](https://github.com/R4ULtv/lazypr/pull/8))
+- **MULTILINGUAL SUPPORT (LOCALE FLAG):** Added the optional `--locale` (`-l`) flag to the main command. This allows users to explicitly request that the AI generate the PR title and description in a specified language (e.g., Italian, Spanish, German), enabling localized output. ([#9](https://github.com/R4ULtv/lazypr/pull/9))
+
+### Security
+
+- **PREVENTED COMMAND INJECTION:** Patched a security vulnerability by replacing the insecure `child_process.exec` with `child_process.execFile` in the `getPullRequestCommits` function. This prevents shell interpretation of commands, mitigating potential **command injection** risks.
+    - Added an integration test to safely handle branch names containing special shell characters, confirming the fix. ([e108786](https://github.com/R4ULtv/lazypr/commit/e108786e5d3f2daa64947b2f0059f95a947ea24d))
+
 ## [1.0.4] - 2025-09-30
 
 ### Added
 
-- [#6](https://github.com/R4ULtv/lazypr/pull/6) MINOR Add test scripts and utilities tests.
+- **COMPREHENSIVE TEST SUITE:** Introduced a comprehensive test suite (Bun) for core utilities and CLI commands, covering configuration parsing, Git helpers, information utilities, and GROQ PR generation logic. This significantly improves code reliability and prevents future regressions. ([#6](https://github.com/R4ULtv/lazypr/pull/6))
 
 ### Fixed
 
-- [30edcdf](https://github.com/R4ULtv/lazypr/commit/30edcdf) PATCH Return empty array on PR commits fetch failure.
+- **PR FETCH RELIABILITY:** Updated the pull request commit fetching logic to gracefully handle Git errors (such as a non-existent target branch) by returning an empty array (`[]`) instead of throwing an error. This prevents unexpected crashes during PR generation. ([30edcdf](https://github.com/R4ULtv/lazypr/commit/30edcdf))
 
 ## [1.0.3] - 2025-09-29
 
 ### Added
 
-- [#5](https://github.com/R4ULtv/lazypr/pull/5) MINOR Migrate to `@clack/prompts`.
-- [e1c5318](https://github.com/R4ULtv/lazypr/commit/e1c5318) PATCH Add `remove` option to config command.
+- **CONFIG REMOVE OPTION:** Added the `remove` subcommand to the `config` command, allowing users to easily delete a configured key from the `.lazypr` file. ([e1c5318](https://github.com/R4ULtv/lazypr/commit/e1c5318))
 
 ### Changed
 
-- PATCH Reduced bundle size by ~5%, from 545 KB to 517 KB.
+- **UX/DEPENDENCY MIGRATION:** Migrated the entire interactive prompt system from legacy libraries (like `Inquirer`) to **`@clack/prompts`** for a modern, consistent, and performant command-line user experience. ([#5](https://github.com/R4ULtv/lazypr/pull/5))
+    - **Performance:** This migration resulted in a reduction of the overall package bundle size by approximately **5%** (from 545 KB to 517 KB).
+    - Implemented the Clack timer spinner for real-time feedback during long operations (e.g., waiting for AI generation).
 
 ## [1.0.2] - 2025-09-28
 
 ### Changed
 
-- MINOR Raise PR description minimum length to 100 characters.
+- **PR DESCRIPTION QUALITY:** Increased the minimum length requirement for the generated Pull Request description to **100 characters**. This enforces a higher standard of detail and quality for the AI-generated content.
 
 ## [1.0.1] - 2025-09-28
 
 ### Added
 
-- [#3](https://github.com/R4ULtv/lazypr/pull/3) MINOR Add MODEL config for custom models.
+- **CUSTOM MODEL CONFIG:** Introduced a new `MODEL` configuration option in the config file (`.lazypr`). This allows users to specify and use custom large language models (LLMs) for pull request generation. ([#3](https://github.com/R4ULtv/lazypr/pull/3))
 
 ## [1.0.0] - 2025-09-27
 
-Initial release of lazypr.
+Initial public release of `lazypr`.
 
 ### Added
 
-- MAJOR Initial project setup and core functionality.
+- **CORE FUNCTIONALITY:** Initial project setup, command-line interface (CLI) structure, and core functionality for generating Pull Request titles and descriptions from Git commit history using AI.
