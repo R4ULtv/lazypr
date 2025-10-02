@@ -265,6 +265,32 @@ describe("Git Utilities - Integration Tests", () => {
       expect(Array.isArray(result)).toBe(true);
       expect(result).toEqual([]);
     });
+
+    test("should safely handle branch names with special characters (command injection protection)", async () => {
+      if (!isInGitRepo) {
+        console.log("Skipping test: not in a git repository");
+        return;
+      }
+
+      // Test various potentially dangerous branch name patterns
+      // These should be handled safely without executing arbitrary commands
+      const dangerousBranchNames = [
+        "main; echo 'injected'",
+        "main && echo 'injected'",
+        "main | echo 'injected'",
+        "main$(echo 'injected')",
+        "main`echo 'injected'`",
+        "main; rm -rf /",
+      ];
+
+      for (const branchName of dangerousBranchNames) {
+        // Should not throw or execute injected commands
+        // Will return empty array since these branches don't exist
+        const result = await getPullRequestCommits(branchName);
+        expect(Array.isArray(result)).toBe(true);
+        expect(result).toEqual([]);
+      }
+    });
   });
 
   describe("GitCommit interface", () => {

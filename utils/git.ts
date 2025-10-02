@@ -1,7 +1,8 @@
-import { exec } from "child_process";
+import { exec, execFile } from "child_process";
 import { promisify } from "util";
 
 const execAsync = promisify(exec);
+const execFileAsync = promisify(execFile);
 
 /**
  * Interface representing a git commit with basic information.
@@ -84,9 +85,16 @@ export async function getPullRequestCommits(
     // Get commits that are in current branch but not in target branch
     // Using --reverse to show commits in chronological order (oldest first, like in a PR)
     // Format: hash|short_hash|author|date|message
-    const { stdout } = await execAsync(
-      `git log ${targetBranch}..HEAD --reverse --pretty=format:"%H|%h|%an|%ad|%s" --date=short`,
-    );
+    // SECURITY: Using execFile instead of exec to prevent command injection attacks.
+    // execFile passes arguments as an array, so special characters in targetBranch
+    // (like semicolons, pipes, backticks) are treated as literal strings, not shell commands.
+    const { stdout } = await execFileAsync("git", [
+      "log",
+      `${targetBranch}..HEAD`,
+      "--reverse",
+      "--pretty=format:%H|%h|%an|%ad|%s",
+      "--date=short",
+    ]);
 
     if (!stdout.trim()) {
       return []; // No commits for PR
