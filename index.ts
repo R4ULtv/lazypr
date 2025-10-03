@@ -220,6 +220,26 @@ const createPullRequest = async (
       );
     }
 
+    if (pullRequest.labels?.length) {
+      const LABEL_COLORS: Record<string, string> = {
+        enhancement: "\x1b[30;42m",
+        bug: "\x1b[30;41m",
+        documentation: "\x1b[30;44m",
+      };
+
+      const DEFAULT_COLOR = "\x1b[30;47m";
+      const RESET = "\x1b[0m";
+
+      const coloredLabels = pullRequest.labels
+        .map(
+          (label) =>
+            `${LABEL_COLORS[label] || DEFAULT_COLOR} ${label} ${RESET}`,
+        )
+        .join(" ");
+
+      log.info(`Pull Request Labels: ${coloredLabels}`);
+    }
+
     log.info(`Pull Request Title: ${pullRequest.title}`);
     log.info(`Pull Request Description: ${pullRequest.description}`);
 
