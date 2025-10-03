@@ -23,6 +23,7 @@ import {
 import { generatePullRequest } from "./utils/groq";
 import { config, CONFIG_SCHEMA, type ConfigKey } from "./utils/config";
 import { findPRTemplates, getPRTemplate } from "./utils/template";
+import { formatLabels } from "./utils/labels";
 
 const program = new Command();
 
@@ -221,22 +222,7 @@ const createPullRequest = async (
     }
 
     if (pullRequest.labels?.length) {
-      const LABEL_COLORS: Record<string, string> = {
-        enhancement: "\x1b[30;42m",
-        bug: "\x1b[30;41m",
-        documentation: "\x1b[30;44m",
-      };
-
-      const DEFAULT_COLOR = "\x1b[30;47m";
-      const RESET = "\x1b[0m";
-
-      const coloredLabels = pullRequest.labels
-        .map(
-          (label) =>
-            `${LABEL_COLORS[label] || DEFAULT_COLOR} ${label} ${RESET}`,
-        )
-        .join(" ");
-
+      const coloredLabels = formatLabels(pullRequest.labels);
       log.info(`Pull Request Labels: ${coloredLabels}`);
     }
 
