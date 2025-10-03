@@ -66,9 +66,9 @@ describe("generatePullRequest - Schema Validation", () => {
       const result = await generatePullRequest("feature/test", commits);
 
       // If successful, verify the result meets schema requirements
-      expect(result.title).toBeDefined();
-      expect(typeof result.title).toBe("string");
-      expect(result.title.length).toBeGreaterThanOrEqual(5);
+      expect(result.object.title).toBeDefined();
+      expect(typeof result.object.title).toBe("string");
+      expect(result.object.title.length).toBeGreaterThanOrEqual(5);
     } catch (error: any) {
       // Expected to fail without valid API key or network
       expect(error).toBeDefined();
@@ -95,8 +95,8 @@ describe("generatePullRequest - Schema Validation", () => {
     try {
       const result = await generatePullRequest("feature/long-name", commits);
 
-      expect(result.title).toBeDefined();
-      expect(result.title.length).toBeLessThanOrEqual(50);
+      expect(result.object.title).toBeDefined();
+      expect(result.object.title.length).toBeLessThanOrEqual(50);
     } catch (error: any) {
       expect(error).toBeDefined();
     }
@@ -122,9 +122,9 @@ describe("generatePullRequest - Schema Validation", () => {
     try {
       const result = await generatePullRequest("bugfix/auth", commits);
 
-      expect(result.description).toBeDefined();
-      expect(typeof result.description).toBe("string");
-      expect(result.description.length).toBeGreaterThanOrEqual(100);
+      expect(result.object.description).toBeDefined();
+      expect(typeof result.object.description).toBe("string");
+      expect(result.object.description.length).toBeGreaterThanOrEqual(100);
     } catch (error: any) {
       expect(error).toBeDefined();
     }
@@ -150,9 +150,11 @@ describe("generatePullRequest - Schema Validation", () => {
     try {
       const result = await generatePullRequest("chore/deps", commits);
 
-      expect(result).toHaveProperty("title");
-      expect(result).toHaveProperty("description");
-      expect(Object.keys(result).length).toBe(2);
+      expect(result).toHaveProperty("object");
+      expect(result).toHaveProperty("usage");
+      expect(result.object).toHaveProperty("title");
+      expect(result.object).toHaveProperty("description");
+      expect(result.object).toHaveProperty("labels");
     } catch (error: any) {
       expect(error).toBeDefined();
     }
@@ -618,14 +620,20 @@ describe("generatePullRequest - Return Type", () => {
       expect(typeof result).toBe("object");
       expect(result).not.toBeNull();
 
-      // Verify properties exist and are strings
-      expect(typeof result.title).toBe("string");
-      expect(typeof result.description).toBe("string");
+      // Verify result has object and usage
+      expect(result).toHaveProperty("object");
+      expect(result).toHaveProperty("usage");
 
-      // Verify no extra properties
-      const keys = Object.keys(result);
+      // Verify properties exist and are strings
+      expect(typeof result.object.title).toBe("string");
+      expect(typeof result.object.description).toBe("string");
+      expect(Array.isArray(result.object.labels)).toBe(true);
+
+      // Verify object properties
+      const keys = Object.keys(result.object);
       expect(keys).toContain("title");
       expect(keys).toContain("description");
+      expect(keys).toContain("labels");
     } catch (error: any) {
       expect(error).toBeDefined();
     }
@@ -652,14 +660,173 @@ describe("generatePullRequest - Return Type", () => {
       const result = await generatePullRequest("feature/types", commits);
 
       // Ensure title is a string, not number, boolean, etc.
-      expect(result.title).not.toBeNull();
-      expect(result.title).not.toBeUndefined();
-      expect(Array.isArray(result.title)).toBe(false);
+      expect(result.object.title).not.toBeNull();
+      expect(result.object.title).not.toBeUndefined();
+      expect(Array.isArray(result.object.title)).toBe(false);
 
       // Ensure description is a string
-      expect(result.description).not.toBeNull();
-      expect(result.description).not.toBeUndefined();
-      expect(Array.isArray(result.description)).toBe(false);
+      expect(result.object.description).not.toBeNull();
+      expect(result.object.description).not.toBeUndefined();
+      expect(Array.isArray(result.object.description)).toBe(false);
+
+      // Ensure labels is an array
+      expect(result.object.labels).not.toBeNull();
+      expect(result.object.labels).not.toBeUndefined();
+      expect(Array.isArray(result.object.labels)).toBe(true);
+    } catch (error: any) {
+      expect(error).toBeDefined();
+    }
+  });
+});
+
+describe("generatePullRequest - Labels", () => {
+  test("should return object with labels property", async () => {
+    await writeFile(
+      ORIGINAL_CONFIG_FILE,
+      "GROQ_API_KEY=gsk_test1234567890abcdefghijk\nMODEL=openai/gpt-oss-20b\n",
+      "utf8",
+    );
+
+    const commits: GitCommit[] = [
+      {
+        hash: "label1",
+        shortHash: "label1",
+        author: "Test User",
+        date: "2024-01-01",
+        message: "Add new feature",
+      },
+    ];
+
+    try {
+      const result = await generatePullRequest("feature/labels", commits);
+
+      // Verify labels property exists
+      expect(result.object).toHaveProperty("labels");
+      expect(Array.isArray(result.object.labels)).toBe(true);
+    } catch (error: any) {
+      expect(error).toBeDefined();
+    }
+  });
+
+  test("should validate labels are valid enum values", async () => {
+    await writeFile(
+      ORIGINAL_CONFIG_FILE,
+      "GROQ_API_KEY=gsk_test1234567890abcdefghijk\nMODEL=openai/gpt-oss-20b\n",
+      "utf8",
+    );
+
+    const commits: GitCommit[] = [
+      {
+        hash: "label2",
+        shortHash: "label2",
+        author: "Test User",
+        date: "2024-01-01",
+        message: "Fix critical bug in authentication",
+      },
+    ];
+
+    try {
+      const result = await generatePullRequest("bugfix/auth", commits);
+
+      // Verify labels are from valid enum values
+      const validLabels = ["enhancement", "bug", "documentation"];
+      result.object.labels.forEach((label: string) => {
+        expect(validLabels).toContain(label);
+      });
+    } catch (error: any) {
+      expect(error).toBeDefined();
+    }
+  });
+
+  test("should handle empty labels array", async () => {
+    await writeFile(
+      ORIGINAL_CONFIG_FILE,
+      "GROQ_API_KEY=gsk_test1234567890abcdefghijk\nMODEL=openai/gpt-oss-20b\n",
+      "utf8",
+    );
+
+    const commits: GitCommit[] = [
+      {
+        hash: "label3",
+        shortHash: "label3",
+        author: "Test User",
+        date: "2024-01-01",
+        message: "Refactor code structure",
+      },
+    ];
+
+    try {
+      const result = await generatePullRequest("refactor/structure", commits);
+
+      // Verify labels is an array (can be empty)
+      expect(Array.isArray(result.object.labels)).toBe(true);
+      expect(result.object.labels.length).toBeGreaterThanOrEqual(0);
+    } catch (error: any) {
+      expect(error).toBeDefined();
+    }
+  });
+
+  test("should return complete object structure with labels, title, and description", async () => {
+    await writeFile(
+      ORIGINAL_CONFIG_FILE,
+      "GROQ_API_KEY=gsk_test1234567890abcdefghijk\nMODEL=openai/gpt-oss-20b\n",
+      "utf8",
+    );
+
+    const commits: GitCommit[] = [
+      {
+        hash: "complete1",
+        shortHash: "complete1",
+        author: "Test User",
+        date: "2024-01-01",
+        message: "Update documentation for API endpoints",
+      },
+    ];
+
+    try {
+      const result = await generatePullRequest("docs/api", commits);
+
+      // Verify complete structure
+      expect(result.object).toHaveProperty("title");
+      expect(result.object).toHaveProperty("description");
+      expect(result.object).toHaveProperty("labels");
+
+      expect(typeof result.object.title).toBe("string");
+      expect(typeof result.object.description).toBe("string");
+      expect(Array.isArray(result.object.labels)).toBe(true);
+    } catch (error: any) {
+      expect(error).toBeDefined();
+    }
+  });
+
+  test("should return usage information alongside the object", async () => {
+    await writeFile(
+      ORIGINAL_CONFIG_FILE,
+      "GROQ_API_KEY=gsk_test1234567890abcdefghijk\nMODEL=openai/gpt-oss-20b\n",
+      "utf8",
+    );
+
+    const commits: GitCommit[] = [
+      {
+        hash: "usage1",
+        shortHash: "usage1",
+        author: "Test User",
+        date: "2024-01-01",
+        message: "Add user authentication",
+      },
+    ];
+
+    try {
+      const result = await generatePullRequest("feature/auth", commits);
+
+      // Verify result has both object and usage
+      expect(result).toHaveProperty("object");
+      expect(result).toHaveProperty("usage");
+
+      // Verify object structure
+      expect(result.object).toHaveProperty("title");
+      expect(result.object).toHaveProperty("description");
+      expect(result.object).toHaveProperty("labels");
     } catch (error: any) {
       expect(error).toBeDefined();
     }
