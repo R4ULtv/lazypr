@@ -140,7 +140,7 @@ const createPullRequest = async (
     log.info(
       `You want to merge ${commitCount} commit${
         commitCount === 1 ? "" : "s"
-      } into '${targetBranch}' from '${currentBranch}'`,
+      } into \x1B[1;4m${targetBranch}\x1b[0m from \x1B[1;4m${currentBranch}\x1b[0m`,
     );
 
     // Handle template selection
