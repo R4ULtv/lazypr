@@ -8,19 +8,7 @@ import { config } from "./config";
 const pullRequestSchema = z.object({
   title: z.string().min(5).max(50),
   description: z.string().min(100),
-  labels: z.array(
-    z.enum([
-      "enhancement",
-      "bug",
-      "documentation",
-      "duplicate",
-      "good first issue",
-      "help wanted",
-      "invalid",
-      "question",
-      "wontfix",
-    ]),
-  ),
+  labels: z.array(z.enum(["enhancement", "bug", "documentation"])),
 });
 
 export async function generatePullRequest(
