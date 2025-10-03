@@ -1,4 +1,4 @@
-import * as z from "zod/mini";
+import * as z from "zod/v4";
 import { generateObject } from "ai";
 import { createGroq } from "@ai-sdk/groq";
 
@@ -6,8 +6,9 @@ import type { GitCommit } from "./git";
 import { config } from "./config";
 
 const pullRequestSchema = z.object({
-  title: z.string().check(z.minLength(5), z.maxLength(50)),
-  description: z.string().check(z.minLength(100)),
+  title: z.string().min(5).max(50),
+  description: z.string().min(100),
+  labels: z.array(z.enum(["enhancement", "bug", "documentation"])),
 });
 
 export async function generatePullRequest(

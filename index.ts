@@ -23,6 +23,7 @@ import {
 import { generatePullRequest } from "./utils/groq";
 import { config, CONFIG_SCHEMA, type ConfigKey } from "./utils/config";
 import { findPRTemplates, getPRTemplate } from "./utils/template";
+import { formatLabels } from "./utils/labels";
 
 const program = new Command();
 
@@ -218,6 +219,11 @@ const createPullRequest = async (
         `- Input: ${usage.inputTokens} tokens\n- Output: ${usage.outputTokens} tokens\n- Total: ${usage.totalTokens} tokens`,
         "📊 AI Model Usage",
       );
+    }
+
+    if (pullRequest.labels?.length) {
+      const coloredLabels = formatLabels(pullRequest.labels);
+      log.info(`Pull Request Labels: ${coloredLabels}`);
     }
 
     log.info(`Pull Request Title: ${pullRequest.title}`);
