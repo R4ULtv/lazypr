@@ -5,7 +5,7 @@
 [![license](https://img.shields.io/github/license/r4ultv/lazypr.svg)](https://github.com/r4ultv/lazypr/blob/main/LICENSE)
 [![node](https://img.shields.io/badge/node-%3E%3D20.0-43853d?logo=node.js&logoColor=white)](https://nodejs.org)
 
-AI-powered CLI that turns your git commits into a polished pull request title and description.
+Generate clean, consistent PRs from commits - powered by Groq AI and your git history.
 
 ## What is it? ℹ️
 
