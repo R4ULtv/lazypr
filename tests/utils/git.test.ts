@@ -4,6 +4,8 @@ import {
   getAllBranches,
   getCurrentBranch,
   getPullRequestCommits,
+  shouldFilterCommit,
+  filterCommits,
   type GitCommit,
 } from "../../utils/git";
 
@@ -366,6 +368,471 @@ describe("Git Utilities - Integration Tests", () => {
     test("getPullRequestCommits should not throw on error", async () => {
       // This should not throw even if there's an error
       await expect(getPullRequestCommits("any-branch")).resolves.toBeDefined();
+    });
+  });
+
+  describe("Smart Commit Filtering", () => {
+    describe("shouldFilterCommit()", () => {
+      test("should filter merge commits", () => {
+        const mergeCommits: GitCommit[] = [
+          {
+            hash: "abc123",
+            shortHash: "abc",
+            author: "Dev",
+            date: "2024-01-01",
+            message: "Merge branch 'feature' into main",
+          },
+          {
+            hash: "def456",
+            shortHash: "def",
+            author: "Dev",
+            date: "2024-01-02",
+            message: "Merge pull request #123 from user/feature",
+          },
+          {
+            hash: "ghi789",
+            shortHash: "ghi",
+            author: "Dev",
+            date: "2024-01-03",
+            message: "Merge remote-tracking branch 'origin/main'",
+          },
+          {
+            hash: "jkl012",
+            shortHash: "jkl",
+            author: "Dev",
+            date: "2024-01-04",
+            message: "Merged in feature-branch (pull request #456)",
+          },
+        ];
+
+        mergeCommits.forEach((commit) => {
+          expect(shouldFilterCommit(commit)).toBe(true);
+        });
+      });
+
+      test("should filter dependency update commits", () => {
+        const dependencyCommits: GitCommit[] = [
+          {
+            hash: "abc123",
+            shortHash: "abc",
+            author: "Dev",
+            date: "2024-01-01",
+            message: "bump dependencies",
+          },
+          {
+            hash: "def456",
+            shortHash: "def",
+            author: "Dev",
+            date: "2024-01-02",
+            message: "chore(deps): update packages",
+          },
+          {
+            hash: "ghi789",
+            shortHash: "ghi",
+            author: "Dev",
+            date: "2024-01-03",
+            message: "build(deps): bump lodash from 4.17.20 to 4.17.21",
+          },
+          {
+            hash: "jkl012",
+            shortHash: "jkl",
+            author: "Dependabot",
+            date: "2024-01-04",
+            message: "Bump axios from 0.21.1 to 0.21.2",
+          },
+          {
+            hash: "mno345",
+            shortHash: "mno",
+            author: "Renovate Bot",
+            date: "2024-01-05",
+            message: "Update dependency typescript to v5.0.0",
+          },
+          {
+            hash: "pqr678",
+            shortHash: "pqr",
+            author: "Dev",
+            date: "2024-01-06",
+            message: "npm update packages",
+          },
+          {
+            hash: "stu901",
+            shortHash: "stu",
+            author: "Dev",
+            date: "2024-01-07",
+            message: "upgrade react to v18.2.0",
+          },
+        ];
+
+        dependencyCommits.forEach((commit) => {
+          expect(shouldFilterCommit(commit)).toBe(true);
+        });
+      });
+
+      test("should filter formatting-only commits", () => {
+        const formattingCommits: GitCommit[] = [
+          {
+            hash: "abc123",
+            shortHash: "abc",
+            author: "Dev",
+            date: "2024-01-01",
+            message: "fix formatting",
+          },
+          {
+            hash: "def456",
+            shortHash: "def",
+            author: "Dev",
+            date: "2024-01-02",
+            message: "run prettier",
+          },
+          {
+            hash: "ghi789",
+            shortHash: "ghi",
+            author: "Dev",
+            date: "2024-01-03",
+            message: "apply linting fixes",
+          },
+          {
+            hash: "jkl012",
+            shortHash: "jkl",
+            author: "Dev",
+            date: "2024-01-04",
+            message: "format code",
+          },
+          {
+            hash: "mno345",
+            shortHash: "mno",
+            author: "Dev",
+            date: "2024-01-05",
+            message: "chore(format): auto-format files",
+          },
+          {
+            hash: "pqr678",
+            shortHash: "pqr",
+            author: "Dev",
+            date: "2024-01-06",
+            message: "style: fix indentation",
+          },
+          {
+            hash: "stu901",
+            shortHash: "stu",
+            author: "Dev",
+            date: "2024-01-07",
+            message: "eslint fixes",
+          },
+          {
+            hash: "vwx234",
+            shortHash: "vwx",
+            author: "Dev",
+            date: "2024-01-08",
+            message: "reformat with prettier",
+          },
+          {
+            hash: "yz567",
+            shortHash: "yz5",
+            author: "Dev",
+            date: "2024-01-09",
+            message: "whitespace cleanup",
+          },
+        ];
+
+        formattingCommits.forEach((commit) => {
+          expect(shouldFilterCommit(commit)).toBe(true);
+        });
+      });
+
+      test("should NOT filter regular feature commits", () => {
+        const regularCommits: GitCommit[] = [
+          {
+            hash: "abc123",
+            shortHash: "abc",
+            author: "Dev",
+            date: "2024-01-01",
+            message: "feat: add user authentication",
+          },
+          {
+            hash: "def456",
+            shortHash: "def",
+            author: "Dev",
+            date: "2024-01-02",
+            message: "fix: resolve login bug",
+          },
+          {
+            hash: "ghi789",
+            shortHash: "ghi",
+            author: "Dev",
+            date: "2024-01-03",
+            message: "docs: update README with installation instructions",
+          },
+          {
+            hash: "jkl012",
+            shortHash: "jkl",
+            author: "Dev",
+            date: "2024-01-04",
+            message: "refactor: improve database query performance",
+          },
+          {
+            hash: "mno345",
+            shortHash: "mno",
+            author: "Dev",
+            date: "2024-01-05",
+            message: "test: add unit tests for auth module",
+          },
+        ];
+
+        regularCommits.forEach((commit) => {
+          expect(shouldFilterCommit(commit)).toBe(false);
+        });
+      });
+
+      test("should be case-insensitive", () => {
+        const commits: GitCommit[] = [
+          {
+            hash: "abc123",
+            shortHash: "abc",
+            author: "Dev",
+            date: "2024-01-01",
+            message: "MERGE BRANCH 'feature'",
+          },
+          {
+            hash: "def456",
+            shortHash: "def",
+            author: "Dev",
+            date: "2024-01-02",
+            message: "BUMP DEPENDENCIES",
+          },
+          {
+            hash: "ghi789",
+            shortHash: "ghi",
+            author: "Dev",
+            date: "2024-01-03",
+            message: "FIX FORMATTING",
+          },
+        ];
+
+        commits.forEach((commit) => {
+          expect(shouldFilterCommit(commit)).toBe(true);
+        });
+      });
+
+      test("should handle commits with leading/trailing whitespace", () => {
+        const commit: GitCommit = {
+          hash: "abc123",
+          shortHash: "abc",
+          author: "Dev",
+          date: "2024-01-01",
+          message: "  Merge branch 'feature'  ",
+        };
+
+        expect(shouldFilterCommit(commit)).toBe(true);
+      });
+    });
+
+    describe("filterCommits()", () => {
+      test("should filter out merge, dependency, and formatting commits", () => {
+        const commits: GitCommit[] = [
+          {
+            hash: "abc123",
+            shortHash: "abc",
+            author: "Dev",
+            date: "2024-01-01",
+            message: "feat: add user authentication",
+          },
+          {
+            hash: "def456",
+            shortHash: "def",
+            author: "Dev",
+            date: "2024-01-02",
+            message: "Merge branch 'feature' into main",
+          },
+          {
+            hash: "ghi789",
+            shortHash: "ghi",
+            author: "Dev",
+            date: "2024-01-03",
+            message: "fix: resolve login bug",
+          },
+          {
+            hash: "jkl012",
+            shortHash: "jkl",
+            author: "Dev",
+            date: "2024-01-04",
+            message: "chore(deps): update packages",
+          },
+          {
+            hash: "mno345",
+            shortHash: "mno",
+            author: "Dev",
+            date: "2024-01-05",
+            message: "docs: update README",
+          },
+          {
+            hash: "pqr678",
+            shortHash: "pqr",
+            author: "Dev",
+            date: "2024-01-06",
+            message: "run prettier",
+          },
+          {
+            hash: "stu901",
+            shortHash: "stu",
+            author: "Dev",
+            date: "2024-01-07",
+            message: "refactor: improve code structure",
+          },
+        ];
+
+        const filtered = filterCommits(commits);
+
+        expect(filtered.length).toBe(4);
+        expect(filtered[0]?.message).toBe("feat: add user authentication");
+        expect(filtered[1]?.message).toBe("fix: resolve login bug");
+        expect(filtered[2]?.message).toBe("docs: update README");
+        expect(filtered[3]?.message).toBe("refactor: improve code structure");
+      });
+
+      test("should return empty array when all commits are filtered", () => {
+        const commits: GitCommit[] = [
+          {
+            hash: "abc123",
+            shortHash: "abc",
+            author: "Dev",
+            date: "2024-01-01",
+            message: "Merge branch 'feature'",
+          },
+          {
+            hash: "def456",
+            shortHash: "def",
+            author: "Dev",
+            date: "2024-01-02",
+            message: "bump dependencies",
+          },
+          {
+            hash: "ghi789",
+            shortHash: "ghi",
+            author: "Dev",
+            date: "2024-01-03",
+            message: "fix formatting",
+          },
+        ];
+
+        const filtered = filterCommits(commits);
+        expect(filtered.length).toBe(0);
+      });
+
+      test("should return all commits when none match filter patterns", () => {
+        const commits: GitCommit[] = [
+          {
+            hash: "abc123",
+            shortHash: "abc",
+            author: "Dev",
+            date: "2024-01-01",
+            message: "feat: add feature A",
+          },
+          {
+            hash: "def456",
+            shortHash: "def",
+            author: "Dev",
+            date: "2024-01-02",
+            message: "fix: resolve bug B",
+          },
+          {
+            hash: "ghi789",
+            shortHash: "ghi",
+            author: "Dev",
+            date: "2024-01-03",
+            message: "docs: update documentation C",
+          },
+        ];
+
+        const filtered = filterCommits(commits);
+        expect(filtered.length).toBe(3);
+        expect(filtered).toEqual(commits);
+      });
+
+      test("should handle empty array", () => {
+        const commits: GitCommit[] = [];
+        const filtered = filterCommits(commits);
+        expect(filtered.length).toBe(0);
+      });
+
+      test("should preserve order of non-filtered commits", () => {
+        const commits: GitCommit[] = [
+          {
+            hash: "abc123",
+            shortHash: "abc",
+            author: "Dev",
+            date: "2024-01-01",
+            message: "feat: feature 1",
+          },
+          {
+            hash: "def456",
+            shortHash: "def",
+            author: "Dev",
+            date: "2024-01-02",
+            message: "Merge branch 'x'",
+          },
+          {
+            hash: "ghi789",
+            shortHash: "ghi",
+            author: "Dev",
+            date: "2024-01-03",
+            message: "feat: feature 2",
+          },
+          {
+            hash: "jkl012",
+            shortHash: "jkl",
+            author: "Dev",
+            date: "2024-01-04",
+            message: "bump deps",
+          },
+          {
+            hash: "mno345",
+            shortHash: "mno",
+            author: "Dev",
+            date: "2024-01-05",
+            message: "feat: feature 3",
+          },
+        ];
+
+        const filtered = filterCommits(commits);
+        expect(filtered.length).toBe(3);
+        expect(filtered[0]?.message).toBe("feat: feature 1");
+        expect(filtered[1]?.message).toBe("feat: feature 2");
+        expect(filtered[2]?.message).toBe("feat: feature 3");
+      });
+    });
+
+    describe("Integration with getPullRequestCommits()", () => {
+      test("should apply filtering by default when config is true", async () => {
+        if (!isInGitRepo) {
+          console.log("Skipping test: not in a git repository");
+          return;
+        }
+
+        // This tests the integration - actual filtering behavior depends on config
+        const commits = await getPullRequestCommits("main");
+        expect(Array.isArray(commits)).toBe(true);
+        // Commits should be filtered, so verify structure is maintained
+        commits.forEach((commit) => {
+          expect(commit).toHaveProperty("hash");
+          expect(commit).toHaveProperty("message");
+        });
+      });
+
+      test("should skip filtering when noFilter flag is true", async () => {
+        if (!isInGitRepo) {
+          console.log("Skipping test: not in a git repository");
+          return;
+        }
+
+        const commits = await getPullRequestCommits("main", true);
+        expect(Array.isArray(commits)).toBe(true);
+        // With noFilter=true, all commits should be included
+        commits.forEach((commit) => {
+          expect(commit).toHaveProperty("hash");
+          expect(commit).toHaveProperty("message");
+        });
+      });
     });
   });
 });
