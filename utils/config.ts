@@ -94,6 +94,16 @@ export const CONFIG_SCHEMA = {
       return model;
     },
   },
+  FILTER_COMMITS: {
+    default: "true",
+    validate: (v: string) => {
+      const value = v?.trim().toLowerCase();
+      if (value !== "true" && value !== "false") {
+        throw new Error("FILTER_COMMITS must be either 'true' or 'false'");
+      }
+      return value;
+    },
+  },
 } as const satisfies Record<string, ConfigSchemaValue>;
 
 export type ConfigKey = keyof typeof CONFIG_SCHEMA;
