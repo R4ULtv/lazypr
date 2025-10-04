@@ -51,7 +51,12 @@ const copyToClipboard = async (content: string): Promise<void> => {
 // Main function
 const createPullRequest = async (
   targetBranch: string | undefined,
-  options: { template?: string | boolean; usage?: boolean; locale?: string },
+  options: {
+    template?: string | boolean;
+    usage?: boolean;
+    locale?: string;
+    noFilter?: boolean;
+  },
 ): Promise<void> => {
   try {
     intro("\x1b[30;47m lazypr \x1b[0m");
@@ -130,8 +135,8 @@ const createPullRequest = async (
       targetBranch = selectedBranch as string;
     }
 
-    // Get commits
-    const commits = await getPullRequestCommits(targetBranch);
+    // Get commits (with optional filtering override)
+    const commits = await getPullRequestCommits(targetBranch, options.noFilter);
     if (!commits || commits.length === 0) {
       exitWithError("No commits found for pull request");
     }
@@ -266,6 +271,10 @@ program
   .option(
     "-l, --locale <language>",
     "Set the language for the PR content (en, es, pt, fr, de, it, ja, ko, zh, ru, nl, pl, tr). Overrides config setting",
+  )
+  .option(
+    "--no-filter",
+    "Disable smart commit filtering (include merge commits, dependency updates, and formatting changes)",
   )
   .action(createPullRequest);
 
