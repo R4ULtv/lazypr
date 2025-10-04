@@ -1,5 +1,6 @@
 import { exec, execFile } from "child_process";
 import { promisify } from "util";
+import { config } from "./config";
 
 const execAsync = promisify(exec);
 const execFileAsync = promisify(execFile);
@@ -13,6 +14,79 @@ export interface GitCommit {
   author: string;
   date: string;
   message: string;
+}
+
+/**
+ * Patterns to identify commits that should be filtered out
+ * These are exported to allow external tools to understand what gets filtered
+ */
+export const MERGE_COMMIT_PATTERNS = [
+  /^merge\s+(branch|pull\s+request|remote-tracking\s+branch)/i,
+  /^merge\s+.+\s+into\s+.+/i,
+  /^merged\s+in\s+/i,
+];
+
+export const DEPENDENCY_UPDATE_PATTERNS = [
+  /^(bump|update|upgrade)\s+(dependencies|deps|dependency)/i,
+  /^chore\(deps\)/i,
+  /^build\(deps\)/i,
+  /^\[deps\]/i,
+  /^(npm|yarn|pnpm|bun)\s+update/i,
+  /^update\s+.*\s+(package|packages|dependency|dependencies)/i,
+  /^upgrade\s+.*\s+to\s+v?\d+\.\d+/i,
+  /^bump\s+.+\s+(from|to)\s+\d+\.\d+/i,
+  /^dependabot/i,
+  /^renovate/i,
+];
+
+export const FORMATTING_PATTERNS = [
+  /^(fix|run|apply)\s+(formatting|linting|lint|prettier|eslint)/i,
+  /^format\s+(code|files?)/i,
+  /^(prettier|eslint|style)\s+(fix|fixes)/i,
+  /^chore\(format\)/i,
+  /^style:/i,
+  /^auto[- ]?format/i,
+  /^reformat\s+/i,
+  /^whitespace\s+/i,
+  /^fix\s+indentation/i,
+];
+
+/**
+ * Checks if a commit message matches any of the given patterns
+ */
+function matchesAnyPattern(message: string, patterns: RegExp[]): boolean {
+  return patterns.some((pattern) => pattern.test(message));
+}
+
+/**
+ * Determines if a commit should be filtered out based on its content
+ */
+export function shouldFilterCommit(commit: GitCommit): boolean {
+  const message = commit.message.trim();
+
+  // Filter merge commits
+  if (matchesAnyPattern(message, MERGE_COMMIT_PATTERNS)) {
+    return true;
+  }
+
+  // Filter dependency updates
+  if (matchesAnyPattern(message, DEPENDENCY_UPDATE_PATTERNS)) {
+    return true;
+  }
+
+  // Filter formatting-only changes
+  if (matchesAnyPattern(message, FORMATTING_PATTERNS)) {
+    return true;
+  }
+
+  return false;
+}
+
+/**
+ * Filters out merge commits, dependency updates, and formatting-only changes
+ */
+export function filterCommits(commits: GitCommit[]): GitCommit[] {
+  return commits.filter((commit) => !shouldFilterCommit(commit));
 }
 
 /**
@@ -76,10 +150,12 @@ export async function getCurrentBranch(): Promise<string> {
  * Gets all commits that would be included in a pull request from the current branch to the target branch.
  * This shows commits that are in the current branch but not in the target branch (i.e., new commits to be merged).
  * @param {string} targetBranch - The target branch that the PR would merge into
+ * @param {boolean} noFilter - Optional flag to disable smart commit filtering for this call
  * @returns {Promise<GitCommit[]>} A promise that resolves to an array of commit objects ordered from oldest to newest
  */
 export async function getPullRequestCommits(
   targetBranch: string,
+  noFilter?: boolean,
 ): Promise<GitCommit[]> {
   try {
     // Get commits that are in current branch but not in target branch
@@ -115,7 +191,12 @@ export async function getPullRequestCommits(
       })
       .filter((commit) => commit.hash.length > 0); // Filter out any malformed entries
 
-    return commits;
+    // Apply smart filtering if enabled in config and not overridden
+    if (noFilter) {
+      return commits;
+    }
+    const shouldFilter = (await config.get("FILTER_COMMITS")) === "true";
+    return shouldFilter ? filterCommits(commits) : commits;
   } catch (error) {
     // Silently return empty array for non-existent branches or other git errors
     // The calling code can check if the array is empty and handle accordingly
