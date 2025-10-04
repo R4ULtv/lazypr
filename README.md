@@ -14,6 +14,7 @@ AI-powered CLI that turns your git commits into a polished pull request title an
 ## Features ✨
 
 - **AI summarization:** Uses the Groq AI SDK to synthesize clear PR context from commits
+- **Smart commit filtering:** Automatically excludes merge commits, dependency updates, and formatting-only changes
 - **Concise titles + markdown descriptions:** Enforces length and style requirements
 - **PR template support:** Use your existing PR templates from `.github` folder
 - **Clipboard integration:** Copy title or description right from the prompt
@@ -102,6 +103,7 @@ Available keys:
 - `MAX_RETRIES` (default: `2`): Non-negative integer
 - `TIMEOUT` (default: `10000`): Milliseconds
 - `MODEL` (default: `openai/gpt-oss-20b`): AI model to use for generating PR content. Available models: [Groq Docs](https://console.groq.com/docs/structured-outputs#supported-models)
+- `FILTER_COMMITS` (default: `true`): Enable smart filtering to exclude merge commits, dependency updates, and formatting-only changes
 
 Examples:
 
@@ -110,7 +112,41 @@ lazypr config set LOCALE=es
 lazypr config set MAX_RETRIES=3
 lazypr config set TIMEOUT=15000
 lazypr config set MODEL=openai/gpt-oss-120b
+lazypr config set FILTER_COMMITS=false
 ```
+
+## Smart Commit Filtering 🎯
+
+By default, `lazypr` intelligently filters out noise from your commit history to focus on meaningful changes:
+
+**What gets filtered:**
+- **Merge commits:** `Merge branch 'feature' into main`, `Merge pull request #123`
+- **Dependency updates:** `chore(deps): update packages`, `Bump lodash from 4.17.20 to 4.17.21`, commits from Dependabot/Renovate
+- **Formatting changes:** `run prettier`, `fix formatting`, `eslint fixes`, `style: fix indentation`
+
+**Configuration:**
+
+You can control this behavior globally via config:
+
+```bash
+# Disable filtering (include all commits)
+lazypr config set FILTER_COMMITS=false
+
+# Enable filtering (default)
+lazypr config set FILTER_COMMITS=true
+```
+
+Or override it for a single run:
+
+```bash
+# Disable filtering for this run only
+lazypr --no-filter
+
+# Use with other options
+lazypr main --no-filter -t
+```
+
+This ensures your PR descriptions focus on actual feature work and bug fixes, making them more relevant and easier to review.
 
 ## Model Selection 🤖
 
@@ -174,6 +210,8 @@ Options:
   -l, --locale <language>    Set the language for PR content (en, es, pt, fr, de, it, ja, ko, zh, ru, nl, pl, tr)
                              Overrides config setting
   -u, --usage                Display detailed AI token usage statistics
+  --no-filter                Disable smart commit filtering (include merge commits,
+                             dependency updates, and formatting changes)
   -V, --version              Output version number
   -h, --help                 Display help
 ```
