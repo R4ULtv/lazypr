@@ -56,6 +56,7 @@ const createPullRequest = async (
     usage?: boolean;
     locale?: string;
     noFilter?: boolean;
+    gh?: boolean;
   },
 ): Promise<void> => {
   try {
@@ -234,20 +235,34 @@ const createPullRequest = async (
     log.info(`Pull Request Title: ${pullRequest.title}`);
     log.info(`Pull Request Description: ${pullRequest.description}`);
 
-    const copyTitle = await confirm({
-      message: "Do you want to copy the title ?",
-    });
+    // If --gh flag is provided, generate and copy the gh pr create command
+    if (options.gh) {
+      const ghCommand = `gh pr create -B ${targetBranch} ${pullRequest.labels ? "-l " + pullRequest.labels.join(", ") : ""} -t "${pullRequest.title.replace(/"/g, '\\"')}" -b "${pullRequest.description.replace(/"/g, '\\"').replace(/\n/g, "\\n")}"`;
 
-    if (copyTitle) {
-      await copyToClipboard(pullRequest.title);
-    }
+      const copyCommand = await confirm({
+        message: "Do you want to copy the GitHub CLI command?",
+      });
 
-    const copyDescription = await confirm({
-      message: "Do you want to copy the description ?",
-    });
+      if (copyCommand) {
+        await copyToClipboard(ghCommand);
+      }
+    } else {
+      // Original behavior when --gh is not used
+      const copyTitle = await confirm({
+        message: "Do you want to copy the title ?",
+      });
 
-    if (copyDescription) {
-      await copyToClipboard(pullRequest.description);
+      if (copyTitle) {
+        await copyToClipboard(pullRequest.title);
+      }
+
+      const copyDescription = await confirm({
+        message: "Do you want to copy the description ?",
+      });
+
+      if (copyDescription) {
+        await copyToClipboard(pullRequest.description);
+      }
     }
 
     log.info(
@@ -279,6 +294,10 @@ program
   .option(
     "--no-filter",
     "Disable smart commit filtering (include merge commits, dependency updates, and formatting changes)",
+  )
+  .option(
+    "--gh",
+    "Generate and copy a GitHub CLI (gh pr create) command instead of copying title and description separately",
   )
   .action(createPullRequest);
 
