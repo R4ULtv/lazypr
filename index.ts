@@ -24,6 +24,7 @@ import { generatePullRequest } from "./utils/groq";
 import { config, CONFIG_SCHEMA, type ConfigKey } from "./utils/config";
 import { findPRTemplates, getPRTemplate } from "./utils/template";
 import { formatLabels } from "./utils/labels";
+import { displayConfigBadge } from "./utils/badge";
 
 const program = new Command();
 
@@ -205,6 +206,30 @@ const createPullRequest = async (
         }
       }
     }
+
+    // Display configuration badge before generating PR
+    const currentLocale = options.locale || (await config.get("LOCALE"));
+    const filterEnabled =
+      !options.noFilter && (await config.get("FILTER_COMMITS")) === "true";
+
+    // Extract template name from templateContent if available
+    let templateName: string | undefined;
+    if (templateContent) {
+      // Try to find template name from the previous logs or use generic name
+      const availableTemplates = await findPRTemplates();
+      const matchedTemplate = availableTemplates.find(
+        (t) => t.content === templateContent,
+      );
+      templateName = matchedTemplate?.name || "Custom Template";
+    }
+
+    displayConfigBadge({
+      smartFilter: filterEnabled,
+      locale: currentLocale,
+      template: templateName,
+      usage: options.usage || false,
+      ghCli: options.gh || false,
+    });
 
     const spin = spinner({ indicator: "timer" });
     spin.start("Generating Pull Request");
