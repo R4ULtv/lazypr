@@ -253,11 +253,11 @@ const createPullRequest = async (
       // Build labels part of the command
       const labelsArg =
         pullRequest.labels && pullRequest.labels.length > 0
-          ? pullRequest.labels.map((label) => `-l "${label}"`).join(" ") + " "
+          ? `-l "${pullRequest.labels.join(", ")}"`
           : "";
 
       // Use $'...' syntax for the body to properly interpret \n as newlines
-      const ghCommand = `gh pr create -B ${targetBranch} ${labelsArg}-t $'${escapedTitle}' -b $'${escapedDescription}'`;
+      const ghCommand = `gh pr create -B ${targetBranch} ${labelsArg} -t $'${escapedTitle}' -b $'${escapedDescription}'`;
 
       const copyCommand = await confirm({
         message: "Do you want to copy the GitHub CLI command?",
