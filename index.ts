@@ -56,6 +56,7 @@ const createPullRequest = async (
     usage?: boolean;
     locale?: string;
     noFilter?: boolean;
+    gh?: boolean;
   },
 ): Promise<void> => {
   try {
@@ -234,20 +235,54 @@ const createPullRequest = async (
     log.info(`Pull Request Title: ${pullRequest.title}`);
     log.info(`Pull Request Description: ${pullRequest.description}`);
 
-    const copyTitle = await confirm({
-      message: "Do you want to copy the title ?",
-    });
+    // If --gh flag is provided, generate and copy the gh pr create command
+    if (options.gh) {
+      // Helper function to escape shell special characters for $'...' syntax
+      const escapeShellArg = (str: string): string => {
+        return str
+          .replace(/\\/g, "\\\\") // Escape backslashes first
+          .replace(/'/g, "\\'") // Escape single quotes for $'...' syntax
+          .replace(/`/g, "\\`") // Escape backticks
+          .replace(/\$/g, "\\$") // Escape dollar signs
+          .replace(/\n/g, "\\n"); // Keep newlines as \n for $'...' syntax
+      };
 
-    if (copyTitle) {
-      await copyToClipboard(pullRequest.title);
-    }
+      const escapedTitle = escapeShellArg(pullRequest.title);
+      const escapedDescription = escapeShellArg(pullRequest.description);
 
-    const copyDescription = await confirm({
-      message: "Do you want to copy the description ?",
-    });
+      // Build labels part of the command
+      const labelsArg =
+        pullRequest.labels && pullRequest.labels.length > 0
+          ? `-l "${pullRequest.labels.join(", ")}"`
+          : "";
 
-    if (copyDescription) {
-      await copyToClipboard(pullRequest.description);
+      // Use $'...' syntax for the body to properly interpret \n as newlines
+      const ghCommand = `gh pr create -B ${targetBranch} ${labelsArg} -t $'${escapedTitle}' -b $'${escapedDescription}'`;
+
+      const copyCommand = await confirm({
+        message: "Do you want to copy the GitHub CLI command?",
+      });
+
+      if (copyCommand) {
+        await copyToClipboard(ghCommand);
+      }
+    } else {
+      // Original behavior when --gh is not used
+      const copyTitle = await confirm({
+        message: "Do you want to copy the title ?",
+      });
+
+      if (copyTitle) {
+        await copyToClipboard(pullRequest.title);
+      }
+
+      const copyDescription = await confirm({
+        message: "Do you want to copy the description ?",
+      });
+
+      if (copyDescription) {
+        await copyToClipboard(pullRequest.description);
+      }
     }
 
     log.info(
@@ -279,6 +314,10 @@ program
   .option(
     "--no-filter",
     "Disable smart commit filtering (include merge commits, dependency updates, and formatting changes)",
+  )
+  .option(
+    "--gh",
+    "Generate and copy a GitHub CLI (gh pr create) command instead of copying title and description separately",
   )
   .action(createPullRequest);
 

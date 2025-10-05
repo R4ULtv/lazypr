@@ -18,6 +18,7 @@ Generate clean, consistent PRs from commits - powered by Groq AI and your git hi
 - **Concise titles + markdown descriptions:** Enforces length and style requirements
 - **PR template support:** Use your existing PR templates from `.github` folder
 - **Clipboard integration:** Copy title or description right from the prompt
+- **GitHub CLI integration:** Generate ready-to-use `gh pr create` commands with the `--gh` flag
 - **Alias included:** Use `lzp` as a short command
 - **Configurable locale:** Output language via `LOCALE` config or `--locale` flag (en, es, pt, fr, de, it, ja, ko, zh, ru, nl, pl, tr)
 - **Resilience controls:** Tune `MAX_RETRIES` and `TIMEOUT`
@@ -83,6 +84,21 @@ lazypr -l es         # generate PR in Spanish
 lazypr --locale pt   # generate PR in Portuguese
 lazypr main -l fr    # target main branch with French output
 ```
+
+To generate a GitHub CLI command instead of copying title and description separately:
+
+```bash
+lazypr --gh          # generates a complete 'gh pr create' command
+lazypr main --gh     # target main branch and generate gh command
+lazypr --gh -t       # use a PR template and generate gh command
+```
+
+This will create a command like:
+```bash
+gh pr create --base main --title "feat: Add new feature" --body "Description..."
+```
+
+You can then copy and run this command directly in your terminal to create the PR using GitHub CLI.
 
 ## Configuration ⚙️
 
@@ -212,6 +228,8 @@ Options:
   -u, --usage                Display detailed AI token usage statistics
   --no-filter                Disable smart commit filtering (include merge commits,
                              dependency updates, and formatting changes)
+  --gh                       Generate and copy a GitHub CLI (gh pr create) command
+                             instead of copying title and description separately
   -V, --version              Output version number
   -h, --help                 Display help
 ```
