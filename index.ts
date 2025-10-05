@@ -206,7 +206,7 @@ const createPullRequest = async (
     }
 
     const spin = spinner({ indicator: "timer" });
-    spin.start("🤖 Generating Pull Request");
+    spin.start("Generating Pull Request");
 
     // Generate PR
     const { object: pullRequest, usage } = await generatePullRequest(
@@ -216,13 +216,13 @@ const createPullRequest = async (
       options.locale,
     );
 
-    spin.stop("📝 Generated Pull Request");
+    spin.stop("Generated Pull Request");
 
     // Display detailed usage if flag is set
     if (options.usage) {
       note(
         `- Input: ${usage.inputTokens} tokens\n- Output: ${usage.outputTokens} tokens\n- Total: ${usage.totalTokens} tokens`,
-        "📊 AI Model Usage",
+        "AI Model Usage",
       );
     }
 
@@ -249,7 +249,11 @@ const createPullRequest = async (
     if (copyDescription) {
       await copyToClipboard(pullRequest.description);
     }
-    outro("✅ Done!");
+
+    log.info(
+      "Remember: AI can make mistakes, always review the generated content.",
+    );
+    outro("Done!");
   } catch (error) {
     exitWithError(
       `Failed: ${error instanceof Error ? error.message : "Unknown error"}`,
