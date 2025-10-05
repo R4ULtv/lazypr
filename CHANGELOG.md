@@ -17,11 +17,6 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
     - Colorized the intro banner and branch names in log output.
     - Added colored formatting for the new PR labels in the console output.
 
-### Fixed
-
-- **GH PR CREATE SHELL SAFETY:** Introduced shell argument escaping and the use of the `$'...'` syntax to correctly and safely handle special characters, quotes, and newlines in the title and description when generating the `gh pr create` command.
-- **GH PR CREATE LABEL FORMAT:** Corrected the label formatting to use a single `-l` flag with comma-separated values, ensuring compatibility with the GitHub CLI.
-
 ### Changed
 
 - **PR MESSAGE FORMATTING:**
