@@ -4,6 +4,31 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/) and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## [1.2.0] - 2025-10-05
+
+### Added
+
+- **GITHUB CLI INTEGRATION:** Introduced the `--gh` flag to automatically generate a complete `gh pr create` command using the AI-generated title, description, and labels. This command is then copied to the clipboard, streamlining the process for users who deploy PRs with the GitHub CLI.
+- **SMART COMMIT FILTERING:** Implemented intelligent commit filtering to improve the quality of AI-generated content.
+    - Commits deemed low-value (e.g., `docs:`, `test:`, `chore:`) are now excluded from the prompt sent to the AI.
+    - Added the `FILTER_COMMITS` configuration option (default `true`) and the `--no-filter` CLI flag to disable this feature.
+- **PULL REQUEST LABEL MANAGEMENT:** The AI is now capable of suggesting and generating a core set of labels (`enhancement`, `bug`, `documentation`) based on the changes in the commits, which are included in the generated output and the new `gh pr create` command.
+- **ENHANCED VISUALS & UX:** Improved the command-line user experience with colorization:
+    - Colorized the intro banner and branch names in log output.
+    - Added colored formatting for the new PR labels in the console output.
+
+### Fixed
+
+- **GH PR CREATE SHELL SAFETY:** Introduced shell argument escaping and the use of the `$'...'` syntax to correctly and safely handle special characters, quotes, and newlines in the title and description when generating the `gh pr create` command.
+- **GH PR CREATE LABEL FORMAT:** Corrected the label formatting to use a single `-l` flag with comma-separated values, ensuring compatibility with the GitHub CLI.
+
+### Changed
+
+- **PR MESSAGE FORMATTING:**
+    - Removed emojis from the AI-generated Pull Request titles and descriptions.
+    - Added a standard "Review Reminder" boilerplate to the bottom of the generated PR message.
+- **CI/CD:** Updated the NPM publish script to include a mandatory test step and removed the push-based trigger from the pipeline.
+
 ## [1.1.0] - 2025-10-02
 
 ### Added
