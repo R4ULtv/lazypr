@@ -237,14 +237,14 @@ const createPullRequest = async (
 
     // If --gh flag is provided, generate and copy the gh pr create command
     if (options.gh) {
-      // Helper function to escape shell special characters
+      // Helper function to escape shell special characters for $'...' syntax
       const escapeShellArg = (str: string): string => {
         return str
           .replace(/\\/g, "\\\\") // Escape backslashes first
-          .replace(/"/g, '\\"') // Escape double quotes
+          .replace(/'/g, "\\'") // Escape single quotes for $'...' syntax
           .replace(/`/g, "\\`") // Escape backticks
           .replace(/\$/g, "\\$") // Escape dollar signs
-          .replace(/\n/g, "\\n"); // Escape newlines
+          .replace(/\n/g, "\\n"); // Keep newlines as \n for $'...' syntax
       };
 
       const escapedTitle = escapeShellArg(pullRequest.title);
@@ -256,7 +256,8 @@ const createPullRequest = async (
           ? pullRequest.labels.map((label) => `-l "${label}"`).join(" ") + " "
           : "";
 
-      const ghCommand = `gh pr create -B ${targetBranch} ${labelsArg}-t "${escapedTitle}" -b "${escapedDescription}"`;
+      // Use $'...' syntax for the body to properly interpret \n as newlines
+      const ghCommand = `gh pr create -B ${targetBranch} ${labelsArg}-t $'${escapedTitle}' -b $'${escapedDescription}'`;
 
       const copyCommand = await confirm({
         message: "Do you want to copy the GitHub CLI command?",
