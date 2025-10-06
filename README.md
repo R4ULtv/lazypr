@@ -258,7 +258,53 @@ bun run index.ts
 
 # Build ESM bundle to dist/
 bun run build
+
+# Run tests
+bun test
 ```
+
+### Testing 🧪
+
+The project includes comprehensive test coverage for all core functionality:
+
+**Test Structure:**
+- `tests/index.test.ts` - CLI integration tests covering:
+  - Configuration management (set, get, remove operations)
+  - Command-line argument parsing
+  - Version and help flags
+  - Error handling and validation
+  - Edge cases and special characters
+  - All supported locales and models
+  
+- `tests/utils/` - Unit tests for utility modules:
+  - `config.test.ts` - Configuration file operations
+  - `git.test.ts` - Git repository interactions
+  - `groq.test.ts` - AI integration and PR generation
+  - `info.test.ts` - Information display utilities
+  - `labels.test.ts` - Label generation and formatting
+  - `template.test.ts` - PR template processing
+
+**Running Tests:**
+
+```bash
+# Run all tests
+bun test
+
+# Run tests in watch mode
+bun test --watch
+
+# Run specific test file
+bun test tests/utils/config.test.ts
+```
+
+**CI/CD:**
+
+Tests run automatically on pull requests via GitHub Actions (see `.github/workflows/test.yml`). The test workflow:
+1. Checks out the code
+2. Installs Bun and dependencies
+3. Runs the full test suite
+
+The test status badge at the top of this README shows the current test status.
 
 ## Contributing 🤝
 
