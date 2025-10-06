@@ -1,4 +1,4 @@
-import { exec, execFile } from "child_process";
+import { execFile } from "child_process";
 import { promisify } from "util";
 import { config } from "./config";
 
