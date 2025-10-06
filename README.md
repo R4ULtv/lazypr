@@ -258,9 +258,6 @@ bun run index.ts
 
 # Build ESM bundle to dist/
 bun run build
-
-# Build a standalone binary (experimental)
-bun run build:standalone
 ```
 
 ## Contributing 🤝
