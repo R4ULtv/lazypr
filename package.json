@@ -1,6 +1,6 @@
 {
   "name": "lazypr",
-  "version": "1.2.1",
+  "version": "1.2.2",
   "description": "Generate clean, consistent PRs from commits - powered by Groq AI and your git history.",
   "keywords": [
     "cli",
