@@ -2,7 +2,6 @@ import { exec, execFile } from "child_process";
 import { promisify } from "util";
 import { config } from "./config";
 
-const execAsync = promisify(exec);
 const execFileAsync = promisify(execFile);
 
 /**
@@ -95,7 +94,7 @@ export function filterCommits(commits: GitCommit[]): GitCommit[] {
  */
 export async function isGitRepository(): Promise<boolean> {
   try {
-    await execAsync("git rev-parse --is-inside-work-tree");
+    await execFileAsync("git", ["rev-parse", "--is-inside-work-tree"]);
     return true;
   } catch (error) {
     // This catch block handles cases where the command fails (not a git repo) or git is not installed
@@ -115,7 +114,7 @@ export async function isGitRepository(): Promise<boolean> {
  */
 export async function getAllBranches(): Promise<string[]> {
   try {
-    const { stdout } = await execAsync("git branch -a");
+    const { stdout } = await execFileAsync("git", ["branch", "-a"]);
     const branches = stdout
       .split("\n")
       .map((branch) => branch.trim().replace(/^\*\s*/, ""))
@@ -138,7 +137,7 @@ export async function getAllBranches(): Promise<string[]> {
  */
 export async function getCurrentBranch(): Promise<string> {
   try {
-    const { stdout } = await execAsync("git branch --show-current");
+    const { stdout } = await execFileAsync("git", ["branch", "--show-current"]);
     return stdout.trim();
   } catch (error) {
     console.error("Failed to get the current branch.", error);
@@ -161,9 +160,6 @@ export async function getPullRequestCommits(
     // Get commits that are in current branch but not in target branch
     // Using --reverse to show commits in chronological order (oldest first, like in a PR)
     // Format: hash|short_hash|author|date|message
-    // SECURITY: Using execFile instead of exec to prevent command injection attacks.
-    // execFile passes arguments as an array, so special characters in targetBranch
-    // (like semicolons, pipes, backticks) are treated as literal strings, not shell commands.
     const { stdout } = await execFileAsync("git", [
       "log",
       `${targetBranch}..HEAD`,
