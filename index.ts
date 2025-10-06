@@ -372,7 +372,7 @@ program
       // Validate that both key and value exist
       if (!key.trim()) {
         log.error("Error: Key cannot be empty");
-        process.exit(0);
+        process.exit(1);
       }
 
       const trimmedKey = key.trim();
@@ -380,7 +380,7 @@ program
         log.error(
           `Error: Unknown config key '${trimmedKey}'. Valid keys: ${Object.keys(CONFIG_SCHEMA).join(", ")}`,
         );
-        process.exit(0);
+        process.exit(1);
       }
       log.info(`Setting config: ${trimmedKey} = ${value}`);
       try {
@@ -395,14 +395,14 @@ program
 
       if (!key) {
         log.error("Error: Key cannot be empty");
-        process.exit(0);
+        process.exit(1);
       }
 
       if (!(key in CONFIG_SCHEMA)) {
         log.error(
           `Error: Unknown config config '${key}'. Valid config: ${Object.keys(CONFIG_SCHEMA).join(", ")}`,
         );
-        process.exit(0);
+        process.exit(1);
       }
       const value = await config.get(key as ConfigKey).catch(() => undefined);
 
@@ -417,14 +417,14 @@ program
 
       if (!key) {
         log.error("Error: Key cannot be empty");
-        process.exit(0);
+        process.exit(1);
       }
 
       if (!(key in CONFIG_SCHEMA)) {
         log.error(
           `Error: Unknown config key '${key}'. Valid keys: ${Object.keys(CONFIG_SCHEMA).join(", ")}`,
         );
-        process.exit(0);
+        process.exit(1);
       }
 
       log.info(`Removing config: ${key}`);

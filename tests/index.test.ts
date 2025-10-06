@@ -144,7 +144,7 @@ describe("CLI - config command", () => {
         { encoding: "utf8" },
       );
 
-      expect(result.status).toBe(0);
+      expect(result.status).toBe(1);
       expect(result.stderr || result.stdout).toContain("Unknown config key");
     });
 
@@ -168,7 +168,7 @@ describe("CLI - config command", () => {
         { encoding: "utf8" },
       );
 
-      expect(result.status).toBe(0);
+      expect(result.status).toBe(1);
       expect(result.stderr || result.stdout).toContain("Key cannot be empty");
     });
 
@@ -279,18 +279,16 @@ describe("CLI - config command", () => {
         { encoding: "utf8" },
       );
 
-      expect(result.status).toBe(0);
+      expect(result.status).toBe(1);
       expect(result.stderr || result.stdout).toContain("Unknown config");
     });
 
     test("should reject empty key for get", async () => {
-      const result = spawnSync(
-        "bun",
-        ["run", CLI_PATH, "config", "get", ""],
-        { encoding: "utf8" },
-      );
+      const result = spawnSync("bun", ["run", CLI_PATH, "config", "get", ""], {
+        encoding: "utf8",
+      });
 
-      expect(result.status).toBe(0);
+      expect(result.status).toBe(1);
       expect(result.stderr || result.stdout).toContain("Key cannot be empty");
     });
 
@@ -339,7 +337,7 @@ describe("CLI - config command", () => {
         { encoding: "utf8" },
       );
 
-      expect(result.status).toBe(0);
+      expect(result.status).toBe(1);
       expect(result.stderr || result.stdout).toContain("Unknown config key");
     });
 
@@ -350,7 +348,7 @@ describe("CLI - config command", () => {
         { encoding: "utf8" },
       );
 
-      expect(result.status).toBe(0);
+      expect(result.status).toBe(1);
       expect(result.stderr || result.stdout).toContain("Key cannot be empty");
     });
   });
@@ -545,7 +543,7 @@ describe("CLI - input validation", () => {
       { encoding: "utf8" },
     );
 
-    expect(result.status).toBe(0);
+    expect(result.status).toBe(1);
     expect(result.stderr || result.stdout).toContain("Unknown config key");
   });
 });
