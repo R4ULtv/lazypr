@@ -4,6 +4,22 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/) and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## [1.2.1] - 2025-10-06
+
+### Security
+
+- **PREVENTED COMMAND INJECTION (GIT):** Patched a potential command injection vulnerability by replacing all instances of the insecure `child_process.exec` with the safer `child_process.execFile` for executing Git commands, fully eliminating the reliance on shell interpretation.
+
+### Fixed
+
+- **TEMPLATE HASHING RELIABILITY:** Improved template content hashing to significantly reduce collisions. The new hash now uses a multi-part strategy combining the total length and specific content slices (first 200, middle 100, and last 100 characters).
+- **CONFIG EXIT CODE:** The command-line interface (CLI) now correctly exits with a non-zero status code (`1`) when a configuration error occurs, ensuring better pipeline and script integration.
+
+### Changed
+
+- **PROJECT MAINTENANCE:** Updated project metadata (`description`, `author`) in `package.json` and removed deprecated scripts (`test`, `test:watch`, `build:standalone`).
+- **DOCUMENTATION:** Updated the README to reflect the current test and CI setup and removed the obsolete section detailing the standalone binary build process.
+
 ## [1.2.0] - 2025-10-05
 
 ### Added
