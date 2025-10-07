@@ -1,10 +1,9 @@
-import { expect, test, describe, beforeEach, afterEach, mock } from "bun:test";
+import { expect, test, describe, beforeEach, afterEach } from "bun:test";
 import { homedir } from "node:os";
 import { join } from "node:path";
 import { readFile, writeFile, unlink } from "node:fs/promises";
-import { config, CONFIG_SCHEMA, type ConfigKey } from "../../utils/config";
+import { config, CONFIG_SCHEMA } from "../../utils/config";
 
-const TEST_CONFIG_FILE = join(homedir(), ".lazypr.test");
 const ORIGINAL_CONFIG_FILE = join(homedir(), ".lazypr");
 
 // Helper to backup and restore original config
@@ -273,7 +272,7 @@ LOCALE=es`;
 
     test("should handle values with equals signs", async () => {
       // Using DEFAULT_BRANCH since it allows any characters including equals signs
-      const configContent = `DEFAULT_BRANCH=feature/test=branch`;
+      const configContent = "DEFAULT_BRANCH=feature/test=branch";
       await writeFile(ORIGINAL_CONFIG_FILE, configContent, "utf8");
       (config as any).loaded = false;
 
@@ -291,7 +290,7 @@ LOCALE=es`;
       // Change file content
       await writeFile(
         ORIGINAL_CONFIG_FILE,
-        `GROQ_API_KEY=gsk_different_key_value`,
+        "GROQ_API_KEY=gsk_different_key_value",
         "utf8",
       );
 
@@ -390,7 +389,7 @@ LOCALE=es`;
     });
 
     test("should include validation errors for invalid values", async () => {
-      const configContent = `GROQ_API_KEY=invalid_key_format`;
+      const configContent = "GROQ_API_KEY=invalid_key_format";
       await writeFile(ORIGINAL_CONFIG_FILE, configContent, "utf8");
       (config as any).loaded = false;
 

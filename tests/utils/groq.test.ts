@@ -551,7 +551,7 @@ describe("generatePullRequest - Error Handling", () => {
       "utf8",
     );
 
-    const commits: GitCommit[] = [
+    const _commits: GitCommit[] = [
       {
         hash: "invalid1",
         shortHash: "invalid1",
