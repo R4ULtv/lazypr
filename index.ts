@@ -51,7 +51,7 @@ const copyToClipboard = async (content: string): Promise<void> => {
 
 // Main function
 const createPullRequest = async (
-  targetBranch: string | undefined,
+  target: string | undefined,
   options: {
     template?: string | boolean;
     usage?: boolean;
@@ -62,7 +62,7 @@ const createPullRequest = async (
 ): Promise<void> => {
   try {
     intro("\x1b[30;47m lazypr \x1b[0m");
-    targetBranch = targetBranch || (await config.get("DEFAULT_BRANCH"));
+    let targetBranch = target || (await config.get("DEFAULT_BRANCH"));
 
     // Validate locale if provided
     if (options.locale) {
