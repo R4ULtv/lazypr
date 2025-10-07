@@ -14,7 +14,7 @@ interface BadgeConfig {
 function formatBadgeItem(
   label: string,
   value: string | boolean,
-  enabled: boolean = true,
+  enabled = true,
 ): string {
   const statusIcon = enabled ? "✓" : "✗";
   const color = enabled ? "\x1b[32m" : "\x1b[90m"; // Green for enabled, gray for disabled

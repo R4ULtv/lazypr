@@ -48,8 +48,8 @@ export const CONFIG_SCHEMA = {
   MAX_RETRIES: {
     default: "2",
     validate: (v: string) => {
-      const num = parseInt(v, 10);
-      if (isNaN(num) || num < 0)
+      const num = Number.parseInt(v, 10);
+      if (Number.isNaN(num) || num < 0)
         throw new Error("MAX_RETRIES must be a non-negative number");
       return num.toString();
     },
@@ -57,8 +57,8 @@ export const CONFIG_SCHEMA = {
   TIMEOUT: {
     default: "10000",
     validate: (v: string) => {
-      const num = parseInt(v, 10);
-      if (isNaN(num) || num < 0)
+      const num = Number.parseInt(v, 10);
+      if (Number.isNaN(num) || num < 0)
         throw new Error("TIMEOUT must be a non-negative number");
       return num.toString();
     },

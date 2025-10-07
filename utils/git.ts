@@ -193,7 +193,7 @@ export async function getPullRequestCommits(
     }
     const shouldFilter = (await config.get("FILTER_COMMITS")) === "true";
     return shouldFilter ? filterCommits(commits) : commits;
-  } catch (error) {
+  } catch (_error) {
     // Silently return empty array for non-existent branches or other git errors
     // The calling code can check if the array is empty and handle accordingly
     return [];

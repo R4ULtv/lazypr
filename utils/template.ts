@@ -53,7 +53,7 @@ async function isDirectory(path: string): Promise<boolean> {
 async function readTemplateFile(path: string): Promise<string> {
   try {
     return await readFile(path, "utf-8");
-  } catch (error) {
+  } catch (_error) {
     throw new Error(`Failed to read template file: ${path}`);
   }
 }
@@ -142,10 +142,7 @@ export async function findPRTemplates(
           seenPaths.add(normalizedPath);
           seenContents.set(contentHash, templatePath);
         }
-      } catch (error) {
-        // Skip directories that can't be read
-        continue;
-      }
+      } catch (_error) {}
     }
   }
 

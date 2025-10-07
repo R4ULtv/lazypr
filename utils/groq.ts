@@ -29,8 +29,8 @@ export async function generatePullRequest(
   const { object, usage } = await generateObject({
     model: groq(model),
     schema: pullRequestSchema,
-    maxRetries: parseInt(await config.get("MAX_RETRIES")),
-    abortSignal: AbortSignal.timeout(parseInt(await config.get("TIMEOUT"))),
+    maxRetries: Number.parseInt(await config.get("MAX_RETRIES")),
+    abortSignal: AbortSignal.timeout(Number.parseInt(await config.get("TIMEOUT"))),
     system: `
     You are a pull request content generator that creates professional PR titles and descriptions for code reviews.
 
