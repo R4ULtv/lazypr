@@ -34,15 +34,15 @@
     "prepublishOnly": "bun run build"
   },
   "peerDependencies": {
-    "typescript": "^5"
+    "typescript": "^5.9.2"
   },
   "dependencies": {
     "@ai-sdk/groq": "^2.0.22",
     "@clack/prompts": "^0.11.0",
-    "ai": "^5.0.59",
+    "ai": "^5.0.60",
     "clipboardy": "5.0.0",
     "commander": "^14.0.1",
-    "zod": "^4.1.11"
+    "zod": "^4.1.12"
   },
   "devDependencies": {
     "@types/bun": "^1.2.23"
