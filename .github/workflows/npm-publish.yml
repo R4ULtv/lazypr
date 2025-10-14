@@ -29,6 +29,6 @@ jobs:
         run: bun run build
 
       - name: Publish to npm
-        run: bun publish --access public --provenance
+        run: bunx npm publish publish --access public --provenance
         env:
           NPM_CONFIG_TOKEN: ${{ secrets.NPM_TOKEN }}
