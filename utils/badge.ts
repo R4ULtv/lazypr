@@ -6,6 +6,7 @@ interface BadgeConfig {
   template?: string;
   usage: boolean;
   ghCli: boolean;
+  model: string;
 }
 
 /**
@@ -34,6 +35,9 @@ function formatBadgeItem(
  */
 export function displayConfigBadge(config: BadgeConfig): void {
   const items: string[] = [];
+
+  // Model
+  items.push(formatBadgeItem("Model", config.model));
 
   // Smart filtering (shorter name for FILTER_COMMITS)
   items.push(

@@ -229,6 +229,7 @@ const createPullRequest = async (
       template: templateName,
       usage: options.usage || false,
       ghCli: options.gh || false,
+      model: await config.get("MODEL"),
     });
 
     const spin = spinner({ indicator: "timer" });
