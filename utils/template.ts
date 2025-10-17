@@ -172,8 +172,11 @@ export async function getPRTemplate(
   );
   if (byName) return byName;
 
-  // Try to find by path match
-  const byPath = templates.find((t) => t.path === nameOrPath);
+  // Try to find by path match (normalize path separators)
+  const normalizedInput = nameOrPath.replace(/\\/g, "/");
+  const byPath = templates.find(
+    (t) => t.path.replace(/\\/g, "/") === normalizedInput,
+  );
   if (byPath) return byPath;
 
   // Try to find by partial name match
