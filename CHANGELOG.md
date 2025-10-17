@@ -4,6 +4,19 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/) and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## [1.2.4] - 2025-10-17
+
+### Added
+- **MODEL BADGE:** Added model name display to the configuration badge shown before PR generation, providing better visibility of which AI model is being used.
+
+### Changed
+- **REFACTOR:** Replaced `noFilter` option with clearer `filter` parameter for improved code clarity and consistency.
+- **DEPENDENCIES:** Updated dependencies to latest versions in package.json and bun.lock.
+
+### Fixed
+- **CI/CD:** Corrected npm publish command in workflow to use `bunx` and removed redundant 'public' flag.
+- **CI/CD:** Updated npm publish workflow to include provenance flag and adjusted dependency installation.
+
 ## [1.2.3] - 2025-10-10
 
 ### Fixed
