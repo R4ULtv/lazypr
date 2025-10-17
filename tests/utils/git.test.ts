@@ -819,7 +819,7 @@ describe("Git Utilities - Integration Tests", () => {
         });
       });
 
-      test("should skip filtering when noFilter flag is true", async () => {
+      test("should skip filtering when noFilter parameter is true", async () => {
         if (!isInGitRepo) {
           console.log("Skipping test: not in a git repository");
           return;
@@ -827,7 +827,6 @@ describe("Git Utilities - Integration Tests", () => {
 
         const commits = await getPullRequestCommits("main", true);
         expect(Array.isArray(commits)).toBe(true);
-        // With noFilter=true, all commits should be included
         commits.forEach((commit) => {
           expect(commit).toHaveProperty("hash");
           expect(commit).toHaveProperty("message");

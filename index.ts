@@ -56,7 +56,7 @@ const createPullRequest = async (
     template?: string | boolean;
     usage?: boolean;
     locale?: string;
-    noFilter?: boolean;
+    filter?: boolean;
     gh?: boolean;
   },
 ): Promise<void> => {
@@ -138,7 +138,11 @@ const createPullRequest = async (
     }
 
     // Get commits (with optional filtering override)
-    const commits = await getPullRequestCommits(targetBranch, options.noFilter);
+    // When --no-filter is used, options.filter is false
+    const commits = await getPullRequestCommits(
+      targetBranch,
+      options.filter === false,
+    );
     if (!commits || commits.length === 0) {
       exitWithError("No commits found for pull request");
     }
@@ -210,7 +214,8 @@ const createPullRequest = async (
     // Display configuration badge before generating PR
     const currentLocale = options.locale || (await config.get("LOCALE"));
     const filterEnabled =
-      !options.noFilter && (await config.get("FILTER_COMMITS")) === "true";
+      options.filter !== false &&
+      (await config.get("FILTER_COMMITS")) === "true";
 
     // Extract template name from templateContent if available
     let templateName: string | undefined;
