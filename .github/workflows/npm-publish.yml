@@ -28,7 +28,14 @@ jobs:
       - name: Build package
         run: bun run build
 
+      - name: Pack package
+        id: pack
+        run: |
+          bun pm pack
+          TARBALL=$(ls lazypr-*.tgz)
+          echo "tarball=$TARBALL" >> $GITHUB_OUTPUT
+
       - name: Publish to npm
-        run: bunx npm publish publish --provenance
+        run: bunx npm publish ./${{ steps.pack.outputs.tarball }} --provenance
         env:
           NPM_CONFIG_TOKEN: ${{ secrets.NPM_TOKEN }}
