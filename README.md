@@ -85,6 +85,26 @@ lazypr --locale pt   # generate PR in Portuguese
 lazypr main -l fr    # target main branch with French output
 ```
 
+To provide custom context to guide the AI's tone and style:
+
+```bash
+lazypr -c "make it simple and cohesive"     # add context for this run
+lazypr --context "be concise"                # same as above
+lazypr main -c "focus on technical details" # with target branch
+```
+
+The context helps guide how the AI generates both the title and description. Examples:
+- "be concise" - for shorter, more direct PRs
+- "make it technical" - for detailed technical descriptions
+- "use simple language" - for non-technical audiences
+- "focus on business impact" - to emphasize value over implementation
+
+Context is limited to 200 characters and can also be set globally via config:
+
+```bash
+lazypr config set CONTEXT="make it simple and cohesive"
+```
+
 To generate a GitHub CLI command instead of copying title and description separately:
 
 ```bash
@@ -120,6 +140,7 @@ Available keys:
 - `TIMEOUT` (default: `10000`): Milliseconds
 - `MODEL` (default: `openai/gpt-oss-20b`): AI model to use for generating PR content. Available models: [Groq Docs](https://console.groq.com/docs/structured-outputs#supported-models)
 - `FILTER_COMMITS` (default: `true`): Enable smart filtering to exclude merge commits, dependency updates, and formatting-only changes
+- `CONTEXT`: Custom context to guide AI generation style and tone (max 200 characters)
 
 Examples:
 
@@ -129,6 +150,7 @@ lazypr config set MAX_RETRIES=3
 lazypr config set TIMEOUT=15000
 lazypr config set MODEL=openai/gpt-oss-120b
 lazypr config set FILTER_COMMITS=false
+lazypr config set CONTEXT="make it simple and cohesive"
 ```
 
 ## Smart Commit Filtering 🎯
@@ -225,6 +247,8 @@ Options:
                              Omit value to select interactively
   -l, --locale <language>    Set the language for PR content (en, es, pt, fr, de, it, ja, ko, zh, ru, nl, pl, tr)
                              Overrides config setting
+  -c, --context <text>       Provide custom context to guide AI generation style and tone
+                             (max 200 characters). Overrides config setting
   -u, --usage                Display detailed AI token usage statistics
   --no-filter                Disable smart commit filtering (include merge commits,
                              dependency updates, and formatting changes)
