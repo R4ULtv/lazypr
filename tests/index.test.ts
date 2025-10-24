@@ -245,6 +245,50 @@ describe("CLI - config command", () => {
         "MODEL must be one of the supported",
       );
     });
+
+    test("should set valid CONTEXT", async () => {
+      const result = spawnSync(
+        "bun",
+        [
+          "run",
+          CLI_PATH,
+          "config",
+          "set",
+          "CONTEXT=make it simple and cohesive",
+        ],
+        { encoding: "utf8" },
+      );
+
+      expect(result.status).toBe(0);
+      expect(result.stdout).toContain("Setting config");
+
+      const fileContent = await readFile(ORIGINAL_CONFIG_FILE, "utf8");
+      expect(fileContent).toContain("CONTEXT=make it simple and cohesive");
+    });
+
+    test("should set empty CONTEXT", async () => {
+      const result = spawnSync(
+        "bun",
+        ["run", CLI_PATH, "config", "set", "CONTEXT="],
+        { encoding: "utf8" },
+      );
+
+      expect(result.status).toBe(0);
+    });
+
+    test("should reject CONTEXT longer than 200 characters", async () => {
+      const longContext = "a".repeat(201);
+      const result = spawnSync(
+        "bun",
+        ["run", CLI_PATH, "config", "set", `CONTEXT=${longContext}`],
+        { encoding: "utf8" },
+      );
+
+      expect(result.status).toBe(1);
+      expect(result.stderr || result.stdout).toContain(
+        "CONTEXT must be 200 characters or less",
+      );
+    });
   });
 
   describe("config get", () => {
