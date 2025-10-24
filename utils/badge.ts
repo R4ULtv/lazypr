@@ -13,16 +13,12 @@ interface BadgeConfig {
 /**
  * Formats a badge item with color and styling
  */
-function formatBadgeItem(
-  label: string,
-  value: string | boolean,
-  enabled = true,
-): string {
-  const statusIcon = enabled ? "✓" : "✗";
-  const color = enabled ? "\x1b[32m" : "\x1b[90m"; // Green for enabled, gray for disabled
+function formatBadgeItem(label: string, value: string | boolean): string {
+  const color = "\x1b[32m"; // Green
   const reset = "\x1b[0m";
   const bold = "\x1b[1m";
   const dim = "\x1b[2m";
+  const statusIcon = "✓";
 
   if (typeof value === "boolean") {
     return `${color}${statusIcon}${reset} ${bold}${label}${reset}`;
@@ -32,21 +28,21 @@ function formatBadgeItem(
 }
 
 /**
- * Displays a configuration badge showing all enabled settings
+ * Displays a configuration badge showing only enabled settings
  */
 export function displayConfigBadge(config: BadgeConfig): void {
   const items: string[] = [];
 
-  // Model
+  // Model (always shown)
   items.push(formatBadgeItem("Model", config.model));
 
-  // Smart filtering (shorter name for FILTER_COMMITS)
-  items.push(
-    formatBadgeItem("Smart Filter", config.smartFilter, config.smartFilter),
-  );
-
-  // Locale
+  // Locale (always shown)
   items.push(formatBadgeItem("Locale", config.locale.toUpperCase()));
+
+  // Smart filtering (only show if enabled)
+  if (config.smartFilter) {
+    items.push(formatBadgeItem("Smart Filter", config.smartFilter));
+  }
 
   // Template (only show if used)
   if (config.template) {
@@ -55,20 +51,18 @@ export function displayConfigBadge(config: BadgeConfig): void {
 
   // Context (only show if provided)
   if (config.context) {
-    items.push(
-      formatBadgeItem(
-        "User Context",
-        config.context ? true : false,
-        config.context ? true : false,
-      ),
-    );
+    items.push(formatBadgeItem("User Context", config.context ? true : false));
   }
 
-  // Usage stats
-  items.push(formatBadgeItem("Usage Stats", config.usage, config.usage));
+  // Usage stats (only show if enabled)
+  if (config.usage) {
+    items.push(formatBadgeItem("Usage Stats", config.usage));
+  }
 
-  // GitHub CLI
-  items.push(formatBadgeItem("GH CLI", config.ghCli, config.ghCli));
+  // GitHub CLI (only show if enabled)
+  if (config.ghCli) {
+    items.push(formatBadgeItem("GH CLI", config.ghCli));
+  }
 
   const badge = items.join("\x1b[2m | \x1b[0m");
   note(badge, "Configuration");
