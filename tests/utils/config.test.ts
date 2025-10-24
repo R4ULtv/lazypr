@@ -222,6 +222,51 @@ describe("CONFIG_SCHEMA", () => {
       expect(result).toBe("openai/gpt-oss-20b");
     });
   });
+
+  describe("CONTEXT validation", () => {
+    test("should accept valid context strings", () => {
+      const validContexts = [
+        "make it simple and cohesive",
+        "be concise",
+        "focus on business impact",
+        "make it technical",
+      ];
+
+      validContexts.forEach((context) => {
+        expect(() => CONFIG_SCHEMA.CONTEXT.validate(context)).not.toThrow();
+        expect(CONFIG_SCHEMA.CONTEXT.validate(context)).toBe(context);
+      });
+    });
+
+    test("should accept empty string and return empty", () => {
+      const result = CONFIG_SCHEMA.CONTEXT.validate("");
+      expect(result).toBe("");
+    });
+
+    test("should trim whitespace", () => {
+      const result = CONFIG_SCHEMA.CONTEXT.validate("  make it simple  ");
+      expect(result).toBe("make it simple");
+    });
+
+    test("should throw error for context longer than 200 characters", () => {
+      const longContext = "a".repeat(201);
+      expect(() => CONFIG_SCHEMA.CONTEXT.validate(longContext)).toThrow(
+        "CONTEXT must be 200 characters or less",
+      );
+    });
+
+    test("should accept context exactly 200 characters", () => {
+      const context200 = "a".repeat(200);
+      expect(() => CONFIG_SCHEMA.CONTEXT.validate(context200)).not.toThrow();
+      expect(CONFIG_SCHEMA.CONTEXT.validate(context200)).toBe(context200);
+    });
+
+    test("should accept context with special characters", () => {
+      const context = "Use simple language, don't make it too complex!";
+      expect(() => CONFIG_SCHEMA.CONTEXT.validate(context)).not.toThrow();
+      expect(CONFIG_SCHEMA.CONTEXT.validate(context)).toBe(context);
+    });
+  });
 });
 
 describe("Config class", () => {
@@ -232,7 +277,7 @@ describe("Config class", () => {
     });
 
     test("should throw error for required key not in config", async () => {
-      await expect(config.get("GROQ_API_KEY")).rejects.toThrow(
+      expect(config.get("GROQ_API_KEY")).rejects.toThrow(
         "GROQ_API_KEY is required but not set",
       );
     });
@@ -310,7 +355,7 @@ LOCALE=es`;
     });
 
     test("should throw error for invalid value", async () => {
-      await expect(config.set("GROQ_API_KEY", "invalid")).rejects.toThrow(
+      expect(config.set("GROQ_API_KEY", "invalid")).rejects.toThrow(
         "Invalid GROQ_API_KEY format",
       );
     });
@@ -334,7 +379,7 @@ LOCALE=es`;
     });
 
     test("should validate value before setting", async () => {
-      await expect(config.set("LOCALE", "invalid_locale")).rejects.toThrow();
+      expect(config.set("LOCALE", "invalid_locale")).rejects.toThrow();
     });
   });
 

@@ -104,6 +104,16 @@ export const CONFIG_SCHEMA = {
       return value;
     },
   },
+  CONTEXT: {
+    default: "",
+    validate: (v: string) => {
+      const context = v?.trim() || "";
+      if (context.length > 200) {
+        throw new Error("CONTEXT must be 200 characters or less");
+      }
+      return context;
+    },
+  },
 } as const satisfies Record<string, ConfigSchemaValue>;
 
 export type ConfigKey = keyof typeof CONFIG_SCHEMA;
