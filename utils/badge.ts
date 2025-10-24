@@ -7,6 +7,7 @@ interface BadgeConfig {
   usage: boolean;
   ghCli: boolean;
   model: string;
+  context?: string;
 }
 
 /**
@@ -50,6 +51,17 @@ export function displayConfigBadge(config: BadgeConfig): void {
   // Template (only show if used)
   if (config.template) {
     items.push(formatBadgeItem("Template", config.template));
+  }
+
+  // Context (only show if provided)
+  if (config.context) {
+    items.push(
+      formatBadgeItem(
+        "User Context",
+        config.context ? true : false,
+        config.context ? true : false,
+      ),
+    );
   }
 
   // Usage stats

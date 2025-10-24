@@ -16,12 +16,13 @@ export async function generatePullRequest(
   commits: GitCommit[],
   template?: string,
   localeOverride?: string,
+  contextOverride?: string,
 ) {
   const groq = createGroq({
     apiKey: await config.get("GROQ_API_KEY"),
   });
-  // Use locale override if provided, otherwise fall back to config
   const locale = localeOverride || (await config.get("LOCALE"));
+  const context = contextOverride || (await config.get("CONTEXT"));
   const model = await config.get("MODEL");
   const commitsString = commits.map((commit) => commit.message).join("\n");
   const hasTemplate = template && template.trim().length > 0;
@@ -30,7 +31,9 @@ export async function generatePullRequest(
     model: groq(model),
     schema: pullRequestSchema,
     maxRetries: Number.parseInt(await config.get("MAX_RETRIES")),
-    abortSignal: AbortSignal.timeout(Number.parseInt(await config.get("TIMEOUT"))),
+    abortSignal: AbortSignal.timeout(
+      Number.parseInt(await config.get("TIMEOUT")),
+    ),
     system: `
     You are a pull request content generator that creates professional PR titles and descriptions for code reviews.
 
@@ -68,12 +71,16 @@ export async function generatePullRequest(
     **Language:**
     - ALL content must be in the specified locale language
     - Fall back to English if locale not supported
+
+    **Additional Guidance:**
+    - The user may provide additional context to guide the tone, style, and structure of the PR content
+    - If provided, apply this guidance while maintaining professional quality and completeness
     `,
     prompt: `
     ### Input Data:
 
     **Locale:** ${locale}
-    **Target Branch:** ${currentBranch}
+    **Target Branch:** ${currentBranch}${context ? `\n    **Additional Guidance:** ${context}` : ""}
 
     **Commit History (most recent last):**
     \`\`\`

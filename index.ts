@@ -58,6 +58,7 @@ const createPullRequest = async (
     locale?: string;
     filter?: boolean;
     gh?: boolean;
+    context?: string;
   },
 ): Promise<void> => {
   try {
@@ -71,6 +72,17 @@ const createPullRequest = async (
       } catch (error) {
         exitWithError(
           `Invalid locale: ${error instanceof Error ? error.message : "Unknown error"}`,
+        );
+      }
+    }
+
+    // Validate context if provided
+    if (options.context) {
+      try {
+        options.context = CONFIG_SCHEMA.CONTEXT.validate(options.context);
+      } catch (error) {
+        exitWithError(
+          `Invalid context: ${error instanceof Error ? error.message : "Unknown error"}`,
         );
       }
     }
@@ -213,6 +225,7 @@ const createPullRequest = async (
 
     // Display configuration badge before generating PR
     const currentLocale = options.locale || (await config.get("LOCALE"));
+    const currentContext = options.context || (await config.get("CONTEXT"));
     const filterEnabled =
       options.filter !== false &&
       (await config.get("FILTER_COMMITS")) === "true";
@@ -235,6 +248,7 @@ const createPullRequest = async (
       usage: options.usage || false,
       ghCli: options.gh || false,
       model: await config.get("MODEL"),
+      context: currentContext,
     });
 
     const spin = spinner({ indicator: "timer" });
@@ -246,6 +260,7 @@ const createPullRequest = async (
       commits,
       templateContent,
       options.locale,
+      options.context,
     );
 
     spin.stop("Generated Pull Request");
@@ -349,6 +364,10 @@ program
   .option(
     "--gh",
     "Generate and copy a GitHub CLI (gh pr create) command instead of copying title and description separately",
+  )
+  .option(
+    "-c, --context <text>",
+    "Add custom context to guide PR generation (e.g., 'make it simple and cohesive'). Overrides config setting",
   )
   .action(createPullRequest);
 
