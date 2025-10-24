@@ -4,6 +4,16 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/) and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## [1.2.5] - 2025-10-24
+
+### Added
+- **CUSTOM CONTEXT OPTION:** Introduced the ability for users to provide custom context to guide PR generation via the `--context` (`-c`) flag or the `CONTEXT` configuration key. This allows users to influence the tone, style, and structure of the generated PR content (e.g., "make it simple and cohesive", "be more technical"). Context is limited to 200 characters maximum.
+- **CONTEXT BADGE DISPLAY:** Added context display to the configuration badge, providing visual confirmation when custom context is being used for PR generation.
+- **CONTEXT VALIDATION:** Implemented comprehensive validation and testing for the new CONTEXT configuration option to ensure length constraints and proper integration.
+
+### Changed
+- **BADGE REFACTOR:** Refactored badge display logic to only show enabled settings, providing a cleaner and more focused configuration summary before PR generation.
+
 ## [1.2.4] - 2025-10-17
 
 ### Added
