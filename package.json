@@ -37,11 +37,11 @@
     "typescript": "^5.9.2"
   },
   "dependencies": {
-    "@ai-sdk/groq": "^2.0.24",
+    "@ai-sdk/groq": "^2.0.27",
     "@clack/prompts": "^0.11.0",
-    "ai": "^5.0.78",
+    "ai": "^5.0.86",
     "clipboardy": "5.0.0",
-    "commander": "^14.0.1",
+    "commander": "^14.0.2",
     "zod": "^4.1.12"
   },
   "devDependencies": {
