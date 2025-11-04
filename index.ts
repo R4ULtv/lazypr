@@ -21,7 +21,12 @@ import {
   isGitRepository,
 } from "./utils/git";
 import { generatePullRequest } from "./utils/groq";
-import { config, CONFIG_SCHEMA, type ConfigKey } from "./utils/config";
+import {
+  config,
+  CONFIG_SCHEMA,
+  CONFIG_FILE,
+  type ConfigKey,
+} from "./utils/config";
 import { findPRTemplates, getPRTemplate } from "./utils/template";
 import { formatLabels } from "./utils/labels";
 import { displayConfigBadge } from "./utils/badge";
@@ -374,13 +379,80 @@ program
 program
   .command("config")
   .description("Manage the config file, see the .lazypr file")
-  .argument("<type>", "Type of config operation (set, get, or remove)")
+  .argument("<type>", "Type of config operation (set, get, remove, list)")
   .argument(
-    "<keyValue>",
-    "For 'set': KEY=VALUE pair. For 'get' or 'remove': just the KEY",
+    "[keyValue]",
+    "For 'set': KEY=VALUE pair. For 'get' or 'remove': just the KEY. Not needed for 'list'",
   )
   .action(async (type, keyValue) => {
-    if (type === "set") {
+    if (type === "list") {
+      // Get all current config
+      const allConfig = await config.getAll();
+
+      // Build the output lines
+      const lines: string[] = [];
+
+      // Display each config key with its value or default
+      for (const key of Object.keys(CONFIG_SCHEMA) as ConfigKey[]) {
+        const schema = CONFIG_SCHEMA[key];
+        const currentValue = allConfig[key];
+        const defaultValue =
+          "default" in schema
+            ? (schema as { default?: string }).default
+            : undefined;
+        const isRequired =
+          "required" in schema
+            ? Boolean((schema as { required?: boolean }).required)
+            : false;
+
+        let displayValue: string;
+        let status: string;
+
+        if (currentValue !== undefined && currentValue !== "") {
+          // Mask sensitive values (API keys)
+          if (key === "GROQ_API_KEY") {
+            const masked =
+              currentValue.length > 4
+                ? `${"*".repeat(currentValue.length - 4)}${currentValue.slice(-4)}`
+                : "****";
+            displayValue = masked;
+            status = "\x1b[32m✓\x1b[0m"; // Green checkmark
+          } else {
+            displayValue = currentValue;
+            status = "\x1b[32m✓\x1b[0m"; // Green checkmark
+          }
+        } else if (defaultValue !== undefined) {
+          displayValue = `${defaultValue} \x1b[2m(default)\x1b[0m`;
+          status = "\x1b[33m○\x1b[0m"; // Yellow circle
+        } else if (isRequired) {
+          displayValue = "\x1b[31mNOT SET (required)\x1b[0m";
+          status = "\x1b[31m✗\x1b[0m"; // Red X
+        } else {
+          displayValue = "\x1b[2mnot set\x1b[0m";
+          status = "\x1b[2m○\x1b[0m"; // Dim circle
+        }
+
+        lines.push(`${status} \x1b[1m${key}\x1b[0m: ${displayValue}`);
+      }
+
+      // Display configuration settings in first note
+      note(lines.join("\n"), "Configuration Settings");
+
+      // Display file location and warning in second note
+      const locationLines: string[] = [];
+      locationLines.push(`\x1b[2mLocation: ${CONFIG_FILE}\x1b[0m`);
+      locationLines.push("");
+      locationLines.push(
+        "\x1b[33m⚠️  Editing the config file manually is not recommended - use the CLI\x1b[0m",
+      );
+      locationLines.push(
+        "\x1b[33m   commands instead to avoid misconfigurations\x1b[0m",
+      );
+
+      note(locationLines.join("\n"), "Config File");
+
+      return;
+    } else if (type === "set") {
       // Check if the keyValue contains '='
       if (!keyValue.includes("=")) {
         log.error(
@@ -457,7 +529,7 @@ program
       success(`Config key '${key}' removed successfully`);
     } else {
       log.error(
-        `Error: Invalid operation '${type}'. Use 'set', 'get', or 'remove'`,
+        `Error: Invalid operation '${type}'. Use 'set', 'get', 'remove', 'list'`,
       );
       process.exit(1);
     }

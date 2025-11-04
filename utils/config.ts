@@ -2,7 +2,7 @@ import { homedir } from "node:os";
 import { join } from "node:path";
 import { readFile, writeFile } from "node:fs/promises";
 
-const CONFIG_FILE = join(homedir(), ".lazypr");
+export const CONFIG_FILE = join(homedir(), ".lazypr");
 
 type ConfigSchemaValue = {
   required?: boolean;
