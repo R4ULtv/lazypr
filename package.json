@@ -1,6 +1,6 @@
 {
   "name": "lazypr",
-  "version": "1.2.6",
+  "version": "1.2.7",
   "description": "Generate clean, consistent PRs from commits - powered by Groq AI and your git history.",
   "keywords": [
     "cli",
@@ -21,8 +21,8 @@
   "module": "index.ts",
   "type": "module",
   "bin": {
-    "lazypr": "./index.js",
-    "lzp": "./index.js"
+    "lazypr": "./dist/index.js",
+    "lzp": "./dist/index.js"
   },
   "files": [
     "dist"

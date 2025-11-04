@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/) and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## [1.2.7] - 2025-11-04
+
+### Fixed
+- **CRITICAL BUILD FIX:** Fixed a misconfigured file that broke CLI commands in v1.2.6, restoring full functionality. The bin paths in package.json now correctly point to the bundled output.
+
 ## [1.2.6] - 2025-11-04
 
 ### Added
