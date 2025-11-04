@@ -223,6 +223,55 @@ describe("CONFIG_SCHEMA", () => {
     });
   });
 
+  describe("FILTER_COMMITS validation", () => {
+    test("should accept 'true' as valid value", () => {
+      const result = CONFIG_SCHEMA.FILTER_COMMITS.validate("true");
+      expect(result).toBe("true");
+    });
+
+    test("should accept 'false' as valid value", () => {
+      const result = CONFIG_SCHEMA.FILTER_COMMITS.validate("false");
+      expect(result).toBe("false");
+    });
+
+    test("should normalize to lowercase", () => {
+      expect(CONFIG_SCHEMA.FILTER_COMMITS.validate("TRUE")).toBe("true");
+      expect(CONFIG_SCHEMA.FILTER_COMMITS.validate("FALSE")).toBe("false");
+      expect(CONFIG_SCHEMA.FILTER_COMMITS.validate("True")).toBe("true");
+      expect(CONFIG_SCHEMA.FILTER_COMMITS.validate("False")).toBe("false");
+    });
+
+    test("should trim whitespace", () => {
+      expect(CONFIG_SCHEMA.FILTER_COMMITS.validate("  true  ")).toBe("true");
+      expect(CONFIG_SCHEMA.FILTER_COMMITS.validate("  false  ")).toBe("false");
+    });
+
+    test("should throw error for invalid boolean strings", () => {
+      expect(() => CONFIG_SCHEMA.FILTER_COMMITS.validate("yes")).toThrow(
+        "FILTER_COMMITS must be either 'true' or 'false'",
+      );
+      expect(() => CONFIG_SCHEMA.FILTER_COMMITS.validate("no")).toThrow(
+        "FILTER_COMMITS must be either 'true' or 'false'",
+      );
+      expect(() => CONFIG_SCHEMA.FILTER_COMMITS.validate("1")).toThrow(
+        "FILTER_COMMITS must be either 'true' or 'false'",
+      );
+      expect(() => CONFIG_SCHEMA.FILTER_COMMITS.validate("0")).toThrow(
+        "FILTER_COMMITS must be either 'true' or 'false'",
+      );
+    });
+
+    test("should throw error for empty string", () => {
+      expect(() => CONFIG_SCHEMA.FILTER_COMMITS.validate("")).toThrow(
+        "FILTER_COMMITS must be either 'true' or 'false'",
+      );
+    });
+
+    test("should have default value of 'true'", () => {
+      expect(CONFIG_SCHEMA.FILTER_COMMITS.default).toBe("true");
+    });
+  });
+
   describe("CONTEXT validation", () => {
     test("should accept valid context strings", () => {
       const validContexts = [
