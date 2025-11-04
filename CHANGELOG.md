@@ -4,6 +4,18 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/) and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## [1.2.6] - 2025-11-04
+
+### Added
+- **CONFIG LIST COMMAND:** Introduced a new `list` subcommand for configuration management, allowing users to view all current configuration settings with their statuses. Sensitive values (like API keys) are automatically masked for security.
+
+### Fixed
+- **BUILD SIZE OPTIMIZATION:** Resolved a build configuration issue that was duplicating files in the distribution bundle, which had doubled the package size. The build process now correctly generates a single, optimized output.
+
+### Changed
+- **CI/CD OPTIMIZATION:** Removed the build step from the npm publish workflow, streamlining the deployment process.
+- **DEPENDENCIES:** Updated project dependencies to their latest versions.
+
 ## [1.2.5] - 2025-10-24
 
 ### Added
