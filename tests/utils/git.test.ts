@@ -22,11 +22,6 @@ describe("Git Utilities - Integration Tests", () => {
   });
 
   describe("isGitRepository()", () => {
-    test("should return a boolean", async () => {
-      const result = await isGitRepository();
-      expect(typeof result).toBe("boolean");
-    });
-
     test("should return true when in project root (lazypr is a git repo)", async () => {
       const result = await isGitRepository();
       expect(result).toBe(true);
@@ -261,11 +256,10 @@ describe("Git Utilities - Integration Tests", () => {
         return;
       }
 
-      const result = await getPullRequestCommits(
-        "this-branch-definitely-does-not-exist-12345",
-      );
-      expect(Array.isArray(result)).toBe(true);
-      expect(result).toEqual([]);
+      // Should throw a user-friendly error for non-existent branches
+      await expect(
+        getPullRequestCommits("this-branch-definitely-does-not-exist-12345"),
+      ).rejects.toThrow(/Branch or revision not found/);
     });
 
     test("should safely handle branch names with special characters (command injection protection)", async () => {
@@ -286,11 +280,10 @@ describe("Git Utilities - Integration Tests", () => {
       ];
 
       for (const branchName of dangerousBranchNames) {
-        // Should not throw or execute injected commands
-        // Will return empty array since these branches don't exist
-        const result = await getPullRequestCommits(branchName);
-        expect(Array.isArray(result)).toBe(true);
-        expect(result).toEqual([]);
+        // Should throw because branch doesn't exist, but NOT execute command
+        await expect(getPullRequestCommits(branchName)).rejects.toThrow(
+          /Branch or revision not found/,
+        );
       }
     });
   });
@@ -365,9 +358,9 @@ describe("Git Utilities - Integration Tests", () => {
       await expect(getCurrentBranch()).resolves.toBeDefined();
     });
 
-    test("getPullRequestCommits should not throw on error", async () => {
-      // This should not throw even if there's an error
-      await expect(getPullRequestCommits("any-branch")).resolves.toBeDefined();
+    test("getPullRequestCommits should throw on error", async () => {
+      // This should throw a user-friendly error
+      await expect(getPullRequestCommits("any-branch")).rejects.toThrow();
     });
   });
 

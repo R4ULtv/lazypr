@@ -89,6 +89,40 @@ export function filterCommits(commits: GitCommit[]): GitCommit[] {
 }
 
 /**
+ * Helper function to handle git errors with user-friendly messages
+ */
+function handleGitError(error: any, context: string): never {
+  const stderr = (error as any).stderr || "";
+  const message = (error as Error).message || "";
+
+  if (
+    stderr.includes("not a git repository") ||
+    message.includes("ENOENT")
+  ) {
+    throw new Error(
+      "Not a git repository. Run 'git init' to initialize a new repository.",
+    );
+  }
+
+  if (stderr.includes("unknown revision") || stderr.includes("did not match any file(s) known to git")) {
+    throw new Error(
+      `Branch or revision not found. Please check if the branch exists locally or remotely.`,
+    );
+  }
+
+  if (
+    stderr.includes("Connection refused") ||
+    stderr.includes("Could not resolve host")
+  ) {
+    throw new Error(
+      "Network error: Could not connect to remote repository. Please check your internet connection.",
+    );
+  }
+
+  throw new Error(`Git error during ${context}: ${message}`);
+}
+
+/**
  * Checks if the current working directory is a Git repository using a git command.
  * @returns {Promise<boolean>} A promise that resolves to true if it's a git repository, false otherwise.
  */
@@ -97,14 +131,7 @@ export async function isGitRepository(): Promise<boolean> {
     await execFileAsync("git", ["rev-parse", "--is-inside-work-tree"]);
     return true;
   } catch (error) {
-    // This catch block handles cases where the command fails (not a git repo) or git is not installed
-    if (error instanceof Error && "code" in error && error.code === "ENOENT") {
-      console.error(
-        "An unexpected error occurred. Is git installed and in your PATH?",
-        error,
-      );
-    }
-    return false;
+    handleGitError(error, "checking git repository");
   }
 }
 
@@ -123,11 +150,7 @@ export async function getAllBranches(): Promise<string[]> {
     // Using a Set to ensure all branch names are unique before returning as an array.
     return [...new Set(branches)];
   } catch (error) {
-    console.error(
-      "Failed to get git branches. Are you in a git repository?",
-      error,
-    );
-    return [];
+    handleGitError(error, "fetching branches");
   }
 }
 
@@ -140,8 +163,7 @@ export async function getCurrentBranch(): Promise<string> {
     const { stdout } = await execFileAsync("git", ["branch", "--show-current"]);
     return stdout.trim();
   } catch (error) {
-    console.error("Failed to get the current branch.", error);
-    return "";
+    handleGitError(error, "getting current branch");
   }
 }
 
@@ -193,9 +215,7 @@ export async function getPullRequestCommits(
     }
     const shouldFilter = (await config.get("FILTER_COMMITS")) === "true";
     return shouldFilter ? filterCommits(commits) : commits;
-  } catch (_error) {
-    // Silently return empty array for non-existent branches or other git errors
-    // The calling code can check if the array is empty and handle accordingly
-    return [];
+  } catch (error) {
+    handleGitError(error, "fetching PR commits");
   }
 }

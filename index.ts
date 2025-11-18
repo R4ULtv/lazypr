@@ -93,9 +93,7 @@ const createPullRequest = async (
     }
 
     // Check if git repo
-    if (!(await isGitRepository())) {
-      exitWithError("Not a git repository");
-    }
+    await isGitRepository();
 
     // Check for GROQ API KEY
     try {
