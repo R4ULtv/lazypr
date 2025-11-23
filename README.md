@@ -5,7 +5,7 @@
 [![license](https://img.shields.io/github/license/r4ultv/lazypr.svg)](https://github.com/r4ultv/lazypr/blob/main/LICENSE)
 [![node](https://img.shields.io/badge/node-%3E%3D20.0-43853d?logo=node.js&logoColor=white)](https://nodejs.org)
 
-Generate clean, consistent PRs from commits - powered by Groq AI and your git history.
+Generate clean, consistent PRs from commits - powered by AI (Groq, Cerebras) and your git history.
 
 ## What is it? ℹ️
 
@@ -13,7 +13,7 @@ Generate clean, consistent PRs from commits - powered by Groq AI and your git hi
 
 ## Features ✨
 
-- **AI summarization:** Uses the Groq AI SDK to synthesize clear PR context from commits
+- **Multi-provider AI:** Choose between Groq and Cerebras for AI-powered PR generation
 - **Smart commit filtering:** Automatically excludes merge commits, dependency updates, and formatting-only changes
 - **Concise titles + markdown descriptions:** Enforces length and style requirements
 - **PR template support:** Use your existing PR templates from `.github` folder
@@ -45,10 +45,15 @@ Requires Node.js >= 20 (for ESM-only dependencies and clipboard support).
 
 ## Quick start ⚡
 
-1) Set your Groq API key
+1) Set your AI provider API key (Groq is the default provider)
 
 ```bash
+# For Groq (default)
 lazypr config set GROQ_API_KEY=<your-api-key>
+
+# Or for Cerebras
+lazypr config set PROVIDER=cerebras
+lazypr config set CEREBRAS_API_KEY=<your-api-key>
 ```
 
 2) From a git repo on a feature branch, run:
@@ -134,21 +139,25 @@ lazypr config get KEY
 
 Available keys:
 
-- `GROQ_API_KEY` (required): Your Groq API key
+- `PROVIDER` (default: `groq`): AI provider to use (`groq` or `cerebras`)
+- `GROQ_API_KEY`: Your Groq API key (required when using Groq provider)
+- `CEREBRAS_API_KEY`: Your Cerebras API key (required when using Cerebras provider)
 - `LOCALE` (default: `en`): One of `en, es, pt, fr, de, it, ja, ko, zh, ru, nl, pl, tr`
 - `MAX_RETRIES` (default: `2`): Non-negative integer
 - `TIMEOUT` (default: `10000`): Milliseconds
-- `MODEL` (default: `openai/gpt-oss-20b`): AI model to use for generating PR content. Available models: [Groq Docs](https://console.groq.com/docs/structured-outputs#supported-models)
+- `MODEL` (default: `llama-3.3-70b`): AI model to use for generating PR content (any model supported by your provider)
 - `FILTER_COMMITS` (default: `true`): Enable smart filtering to exclude merge commits, dependency updates, and formatting-only changes
 - `CONTEXT`: Custom context to guide AI generation style and tone (max 200 characters)
 
 Examples:
 
 ```bash
+lazypr config set PROVIDER=cerebras
+lazypr config set CEREBRAS_API_KEY=<your-api-key>
 lazypr config set LOCALE=es
 lazypr config set MAX_RETRIES=3
 lazypr config set TIMEOUT=15000
-lazypr config set MODEL=openai/gpt-oss-120b
+lazypr config set MODEL=llama-3.3-70b
 lazypr config set FILTER_COMMITS=false
 lazypr config set CONTEXT="make it simple and cohesive"
 ```
@@ -186,14 +195,18 @@ lazypr main --no-filter -t
 
 This ensures your PR descriptions focus on actual feature work and bug fixes, making them more relevant and easier to review.
 
-## Model Selection 🤖
+## AI Providers 🤖
 
-While you can choose any model that supports structured output, we recommend using the **GPT-OSS** models for optimal results:
+`lazypr` supports multiple AI providers. You can switch between them based on your preference:
 
-- **`openai/gpt-oss-20b`** (default): Best for most use cases with standard commit histories
-- **`openai/gpt-oss-120b`**: Recommended for repositories with large or complex commit histories
+| Provider | Status | Description |
+|----------|--------|-------------|
+| [Groq](https://groq.com) | ✅ Available | Fast inference with LPU technology (default) |
+| [Cerebras](https://cerebras.ai) | ✅ Available | High-performance AI inference |
 
-The prompts have been specifically optimized and tested with these models, ensuring the highest quality PR titles and descriptions. For typical workflows, the 20B model provides excellent results with faster response times, while the 120B model excels at understanding and summarizing extensive commit contexts.
+### Model Selection
+
+The `MODEL` setting accepts any model name supported by your chosen provider. The default is `llama-3.3-70b` which works well with both Groq and Cerebras. Check your provider's documentation for available models.
 
 ## How it works 🧠
 
@@ -303,7 +316,7 @@ The project includes comprehensive test coverage for all core functionality:
 - `tests/utils/` - Unit tests for utility modules:
   - `config.test.ts` - Configuration file operations
   - `git.test.ts` - Git repository interactions
-  - `groq.test.ts` - AI integration and PR generation
+  - `provider.test.ts` - AI provider integration and PR generation
   - `info.test.ts` - Information display utilities
   - `labels.test.ts` - Label generation and formatting
   - `template.test.ts` - PR template processing
