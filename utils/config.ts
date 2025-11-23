@@ -11,10 +11,21 @@ type ConfigSchemaValue = {
 };
 
 export const CONFIG_SCHEMA = {
-  GROQ_API_KEY: {
-    required: true,
+  PROVIDER: {
+    default: "groq",
     validate: (v: string) => {
-      if (!v?.trim()) throw new Error("GROQ_API_KEY is required");
+      const provider = v?.trim().toLowerCase() || "groq";
+      const allowed = ["groq"];
+      if (!allowed.includes(provider)) {
+        throw new Error(`PROVIDER must be one of: ${allowed.join(", ")}`);
+      }
+      return provider;
+    },
+  },
+  GROQ_API_KEY: {
+    required: false, // Now conditionally required based on PROVIDER
+    validate: (v: string) => {
+      if (!v?.trim()) return "";
       if (!/^[A-Za-z0-9._-]{20,}$/.test(v.trim()))
         throw new Error("Invalid GROQ_API_KEY format");
       return v.trim();

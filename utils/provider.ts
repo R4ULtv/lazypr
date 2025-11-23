@@ -1,9 +1,65 @@
 import * as z from "zod/v4";
 import { generateObject } from "ai";
 import { createGroq } from "@ai-sdk/groq";
+import type { LanguageModel } from "ai";
 
 import type { GitCommit } from "./git";
 import { config } from "./config";
+
+// Provider types
+export type ProviderType = "groq";
+
+// Provider configuration interface
+interface ProviderConfig {
+  name: ProviderType;
+  apiKeyConfigKey: string;
+  createModel: (apiKey: string, model: string) => LanguageModel;
+}
+
+// Provider registry
+const providers: Record<ProviderType, ProviderConfig> = {
+  groq: {
+    name: "groq",
+    apiKeyConfigKey: "GROQ_API_KEY",
+    createModel: (apiKey: string, model: string) => {
+      const groq = createGroq({ apiKey });
+      return groq(model);
+    },
+  },
+};
+
+// Get the current provider configuration
+async function getProviderConfig(): Promise<ProviderConfig> {
+  const providerName = (await config.get("PROVIDER")) as ProviderType;
+  const providerConfig = providers[providerName];
+
+  if (!providerConfig) {
+    throw new Error(`Unknown provider: ${providerName}`);
+  }
+
+  return providerConfig;
+}
+
+// Validate that the required API key is set for the current provider
+export async function validateProviderApiKey(): Promise<void> {
+  const providerConfig = await getProviderConfig();
+  const apiKey = await config.get(
+    providerConfig.apiKeyConfigKey as Parameters<typeof config.get>[0],
+  );
+
+  if (!apiKey) {
+    throw new Error(
+      `${providerConfig.apiKeyConfigKey} is required for provider '${providerConfig.name}'. ` +
+        `Set it with: lazypr config set ${providerConfig.apiKeyConfigKey}=<your-api-key>`,
+    );
+  }
+}
+
+// Get the API key config key for the current provider
+export async function getProviderApiKeyConfigKey(): Promise<string> {
+  const providerConfig = await getProviderConfig();
+  return providerConfig.apiKeyConfigKey;
+}
 
 const pullRequestSchema = z.object({
   title: z.string().min(5).max(50),
@@ -18,17 +74,27 @@ export async function generatePullRequest(
   localeOverride?: string,
   contextOverride?: string,
 ) {
-  const groq = createGroq({
-    apiKey: await config.get("GROQ_API_KEY"),
-  });
+  const providerConfig = await getProviderConfig();
+  const apiKey = await config.get(
+    providerConfig.apiKeyConfigKey as Parameters<typeof config.get>[0],
+  );
+
+  if (!apiKey) {
+    throw new Error(
+      `${providerConfig.apiKeyConfigKey} is required. Set it with: lazypr config set ${providerConfig.apiKeyConfigKey}=<your-api-key>`,
+    );
+  }
+
   const locale = localeOverride || (await config.get("LOCALE"));
   const context = contextOverride || (await config.get("CONTEXT"));
   const model = await config.get("MODEL");
   const commitsString = commits.map((commit) => commit.message).join("\n");
   const hasTemplate = template && template.trim().length > 0;
 
+  const languageModel = providerConfig.createModel(apiKey, model);
+
   const { object, usage } = await generateObject({
-    model: groq(model),
+    model: languageModel,
     schema: pullRequestSchema,
     maxRetries: Number.parseInt(await config.get("MAX_RETRIES")),
     abortSignal: AbortSignal.timeout(
