@@ -4,6 +4,21 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/) and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## [1.3.0] - 2025-11-23
+
+### Added
+- **MULTI-PROVIDER SUPPORT:** Introduced a flexible provider system allowing users to choose between different AI providers. The new `PROVIDER` configuration option supports switching providers seamlessly.
+- **CEREBRAS PROVIDER:** Added Cerebras as a new AI provider option alongside Groq. Users can now leverage Cerebras' high-performance AI inference by setting `PROVIDER=cerebras` and configuring their `CEREBRAS_API_KEY`.
+- **PROVIDER CONFIGURATION:** Added `CEREBRAS_API_KEY` configuration option for Cerebras authentication.
+
+### Changed
+- **MODEL FLEXIBILITY:** Removed hardcoded model restrictions. The `MODEL` setting now accepts any model name supported by your chosen provider, giving users full flexibility.
+- **DEFAULT MODEL:** Changed the default model from `openai/gpt-oss-20b` to `llama-3.3-70b` which works well across multiple providers.
+- **ARCHITECTURE REFACTOR:** Refactored the AI integration layer from `groq.ts` to a generic `provider.ts` module, enabling easy addition of future providers.
+
+### Documentation
+- **README UPDATE:** Updated documentation with multi-provider setup instructions, provider comparison table, and future provider roadmap (OpenAI, Anthropic, Google AI coming soon).
+
 ## [1.2.7] - 2025-11-04
 
 ### Fixed
