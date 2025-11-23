@@ -1,13 +1,14 @@
 import * as z from "zod/v4";
 import { generateObject } from "ai";
 import { createGroq } from "@ai-sdk/groq";
+import { createCerebras } from "@ai-sdk/cerebras";
 import type { LanguageModel } from "ai";
 
 import type { GitCommit } from "./git";
 import { config } from "./config";
 
 // Provider types
-export type ProviderType = "groq";
+export type ProviderType = "groq" | "cerebras";
 
 // Provider configuration interface
 interface ProviderConfig {
@@ -24,6 +25,14 @@ const providers: Record<ProviderType, ProviderConfig> = {
     createModel: (apiKey: string, model: string) => {
       const groq = createGroq({ apiKey });
       return groq(model);
+    },
+  },
+  cerebras: {
+    name: "cerebras",
+    apiKeyConfigKey: "CEREBRAS_API_KEY",
+    createModel: (apiKey: string, model: string) => {
+      const cerebras = createCerebras({ apiKey });
+      return cerebras(model);
     },
   },
 };
