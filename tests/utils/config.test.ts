@@ -53,16 +53,14 @@ describe("CONFIG_SCHEMA", () => {
       expect(() => CONFIG_SCHEMA.GROQ_API_KEY.validate(validKey)).not.toThrow();
     });
 
-    test("should throw error for empty API key", () => {
-      expect(() => CONFIG_SCHEMA.GROQ_API_KEY.validate("")).toThrow(
-        "GROQ_API_KEY is required",
-      );
+    test("should return empty string for empty API key", () => {
+      const result = CONFIG_SCHEMA.GROQ_API_KEY.validate("");
+      expect(result).toBe("");
     });
 
-    test("should throw error for whitespace-only API key", () => {
-      expect(() => CONFIG_SCHEMA.GROQ_API_KEY.validate("   ")).toThrow(
-        "GROQ_API_KEY is required",
-      );
+    test("should return empty string for whitespace-only API key", () => {
+      const result = CONFIG_SCHEMA.GROQ_API_KEY.validate("   ");
+      expect(result).toBe("");
     });
 
     test("should throw error for invalid API key format", () => {
@@ -325,10 +323,9 @@ describe("Config class", () => {
       expect(locale).toBe("en");
     });
 
-    test("should throw error for required key not in config", async () => {
-      expect(config.get("GROQ_API_KEY")).rejects.toThrow(
-        "GROQ_API_KEY is required but not set",
-      );
+    test("should return empty string for GROQ_API_KEY when not in config", async () => {
+      const result = await config.get("GROQ_API_KEY");
+      expect(result).toBe("");
     });
 
     test("should return validated value from config file", async () => {
@@ -446,10 +443,10 @@ LOCALE=es`;
       expect(allConfig.MODEL).toBe("openai/gpt-oss-20b");
     });
 
-    test("should skip required keys that are missing", async () => {
+    test("should return empty string for GROQ_API_KEY when missing", async () => {
       const allConfig = await config.getAll();
 
-      expect(allConfig.GROQ_API_KEY).toBeUndefined();
+      expect(allConfig.GROQ_API_KEY).toBe("");
     });
 
     test("should return custom values", async () => {
@@ -465,15 +462,15 @@ LOCALE=es`;
   });
 
   describe("validate()", () => {
-    test("should return valid:false when required keys are missing", async () => {
+    test("should return valid:true when no required keys are missing", async () => {
+      // GROQ_API_KEY is no longer required (conditionally required based on provider)
       const result = await config.validate();
 
-      expect(result.valid).toBe(false);
-      expect(result.errors.length).toBeGreaterThan(0);
-      expect(result.errors.some((e) => e.includes("GROQ_API_KEY"))).toBe(true);
+      expect(result.valid).toBe(true);
+      expect(result.errors).toEqual([]);
     });
 
-    test("should return valid:true when all required keys are present and valid", async () => {
+    test("should return valid:true when GROQ_API_KEY is present and valid", async () => {
       await config.set("GROQ_API_KEY", "gsk_1234567890abcdefghij");
 
       const result = await config.validate();
@@ -528,7 +525,10 @@ LOCALE=es`;
       await config.clear();
 
       const allConfig = await config.getAll();
-      expect(allConfig.GROQ_API_KEY).toBeUndefined();
+      // GROQ_API_KEY returns empty string when not set (no longer required)
+      expect(allConfig.GROQ_API_KEY).toBe("");
+      // LOCALE returns default when not set
+      expect(allConfig.LOCALE).toBe("en");
     });
 
     test("should persist clear to file", async () => {
