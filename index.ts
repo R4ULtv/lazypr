@@ -20,7 +20,11 @@ import {
   getPullRequestCommits,
   isGitRepository,
 } from "./utils/git";
-import { generatePullRequest } from "./utils/groq";
+import {
+  generatePullRequest,
+  validateProviderApiKey,
+  getProviderApiKeyConfigKey,
+} from "./utils/provider";
 import {
   config,
   CONFIG_SCHEMA,
@@ -95,12 +99,12 @@ const createPullRequest = async (
     // Check if git repo
     await isGitRepository();
 
-    // Check for GROQ API KEY
+    // Check for provider API KEY
     try {
-      await config.get("GROQ_API_KEY");
-    } catch {
+      await validateProviderApiKey();
+    } catch (error) {
       exitWithError(
-        "Set the GROQ_API_KEY with: lazypr config set GROQ_API_KEY=<your-api-key>",
+        error instanceof Error ? error.message : "Provider API key is required",
       );
     }
 
@@ -408,7 +412,7 @@ program
 
         if (currentValue !== undefined && currentValue !== "") {
           // Mask sensitive values (API keys)
-          if (key === "GROQ_API_KEY") {
+          if (key.endsWith("_API_KEY")) {
             const masked =
               currentValue.length > 4
                 ? `${"*".repeat(currentValue.length - 4)}${currentValue.slice(-4)}`
