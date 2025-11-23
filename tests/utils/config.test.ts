@@ -77,6 +77,66 @@ describe("CONFIG_SCHEMA", () => {
     });
   });
 
+  describe("CEREBRAS_API_KEY validation", () => {
+    test("should validate correct API key format", () => {
+      const validKey = "csk_1234567890abcdefghij";
+      expect(() =>
+        CONFIG_SCHEMA.CEREBRAS_API_KEY.validate(validKey),
+      ).not.toThrow();
+    });
+
+    test("should return empty string for empty API key", () => {
+      const result = CONFIG_SCHEMA.CEREBRAS_API_KEY.validate("");
+      expect(result).toBe("");
+    });
+
+    test("should return empty string for whitespace-only API key", () => {
+      const result = CONFIG_SCHEMA.CEREBRAS_API_KEY.validate("   ");
+      expect(result).toBe("");
+    });
+
+    test("should throw error for invalid API key format", () => {
+      expect(() => CONFIG_SCHEMA.CEREBRAS_API_KEY.validate("invalid")).toThrow(
+        "Invalid CEREBRAS_API_KEY format",
+      );
+    });
+
+    test("should trim whitespace from API key", () => {
+      const result = CONFIG_SCHEMA.CEREBRAS_API_KEY.validate(
+        "  csk_1234567890abcdefghij  ",
+      );
+      expect(result).toBe("csk_1234567890abcdefghij");
+    });
+  });
+
+  describe("PROVIDER validation", () => {
+    test("should accept 'groq' as valid provider", () => {
+      const result = CONFIG_SCHEMA.PROVIDER.validate("groq");
+      expect(result).toBe("groq");
+    });
+
+    test("should accept 'cerebras' as valid provider", () => {
+      const result = CONFIG_SCHEMA.PROVIDER.validate("cerebras");
+      expect(result).toBe("cerebras");
+    });
+
+    test("should default to 'groq' for empty value", () => {
+      const result = CONFIG_SCHEMA.PROVIDER.validate("");
+      expect(result).toBe("groq");
+    });
+
+    test("should normalize provider to lowercase", () => {
+      expect(CONFIG_SCHEMA.PROVIDER.validate("GROQ")).toBe("groq");
+      expect(CONFIG_SCHEMA.PROVIDER.validate("CEREBRAS")).toBe("cerebras");
+    });
+
+    test("should throw error for invalid provider", () => {
+      expect(() => CONFIG_SCHEMA.PROVIDER.validate("openai")).toThrow(
+        "PROVIDER must be one of:",
+      );
+    });
+  });
+
   describe("LOCALE validation", () => {
     test("should accept valid locales", () => {
       const validLocales = [
@@ -188,25 +248,18 @@ describe("CONFIG_SCHEMA", () => {
   });
 
   describe("MODEL validation", () => {
-    test("should accept supported models", () => {
-      const supportedModels = [
-        "openai/gpt-oss-20b",
-        "openai/gpt-oss-120b",
-        "moonshotai/kimi-k2-instruct-0905",
-        "meta-llama/llama-4-maverick-17b-128e-instruct",
-        "meta-llama/llama-4-scout-17b-16e-instruct",
+    test("should accept any model name", () => {
+      const models = [
+        "llama-3.3-70b",
+        "gpt-4",
+        "claude-3-sonnet",
+        "custom/model-name",
       ];
 
-      supportedModels.forEach((model) => {
+      models.forEach((model) => {
         expect(() => CONFIG_SCHEMA.MODEL.validate(model)).not.toThrow();
         expect(CONFIG_SCHEMA.MODEL.validate(model)).toBe(model);
       });
-    });
-
-    test("should throw error for unsupported model", () => {
-      expect(() => CONFIG_SCHEMA.MODEL.validate("unsupported/model")).toThrow(
-        "MODEL must be one of the supported",
-      );
     });
 
     test("should throw error for empty model", () => {
@@ -216,8 +269,8 @@ describe("CONFIG_SCHEMA", () => {
     });
 
     test("should trim whitespace", () => {
-      const result = CONFIG_SCHEMA.MODEL.validate("  openai/gpt-oss-20b  ");
-      expect(result).toBe("openai/gpt-oss-20b");
+      const result = CONFIG_SCHEMA.MODEL.validate("  llama-3.3-70b  ");
+      expect(result).toBe("llama-3.3-70b");
     });
   });
 
@@ -440,7 +493,7 @@ LOCALE=es`;
       expect(allConfig.MAX_RETRIES).toBe("2");
       expect(allConfig.TIMEOUT).toBe("10000");
       expect(allConfig.DEFAULT_BRANCH).toBe("master");
-      expect(allConfig.MODEL).toBe("openai/gpt-oss-20b");
+      expect(allConfig.MODEL).toBe("llama-3.3-70b");
     });
 
     test("should return empty string for GROQ_API_KEY when missing", async () => {
