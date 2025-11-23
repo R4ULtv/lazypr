@@ -15,7 +15,7 @@ export const CONFIG_SCHEMA = {
     default: "groq",
     validate: (v: string) => {
       const provider = v?.trim().toLowerCase() || "groq";
-      const allowed = ["groq"];
+      const allowed = ["groq", "cerebras"];
       if (!allowed.includes(provider)) {
         throw new Error(`PROVIDER must be one of: ${allowed.join(", ")}`);
       }
@@ -23,11 +23,20 @@ export const CONFIG_SCHEMA = {
     },
   },
   GROQ_API_KEY: {
-    required: false, // Now conditionally required based on PROVIDER
+    required: false,
     validate: (v: string) => {
       if (!v?.trim()) return "";
       if (!/^[A-Za-z0-9._-]{20,}$/.test(v.trim()))
         throw new Error("Invalid GROQ_API_KEY format");
+      return v.trim();
+    },
+  },
+  CEREBRAS_API_KEY: {
+    required: false,
+    validate: (v: string) => {
+      if (!v?.trim()) return "";
+      if (!/^[A-Za-z0-9._-]{20,}$/.test(v.trim()))
+        throw new Error("Invalid CEREBRAS_API_KEY format");
       return v.trim();
     },
   },
@@ -82,26 +91,10 @@ export const CONFIG_SCHEMA = {
     },
   },
   MODEL: {
-    default: "openai/gpt-oss-20b",
+    default: "llama-3.3-70b",
     validate: (v: string) => {
       const model = v?.trim();
       if (!model) throw new Error("MODEL cannot be empty");
-
-      // Only allow models that support structured outputs
-      const supportedModels = [
-        "openai/gpt-oss-20b",
-        "openai/gpt-oss-120b",
-        "moonshotai/kimi-k2-instruct-0905",
-        "meta-llama/llama-4-maverick-17b-128e-instruct",
-        "meta-llama/llama-4-scout-17b-16e-instruct",
-      ];
-
-      if (!supportedModels.includes(model)) {
-        throw new Error(
-          `MODEL must be one of the supported structured output models: ${supportedModels.join(", ")}`,
-        );
-      }
-
       return model;
     },
   },

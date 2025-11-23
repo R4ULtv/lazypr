@@ -233,19 +233,6 @@ describe("CLI - config command", () => {
       );
     });
 
-    test("should reject unsupported MODEL", async () => {
-      const result = spawnSync(
-        "bun",
-        ["run", CLI_PATH, "config", "set", "MODEL=unsupported/model"],
-        { encoding: "utf8" },
-      );
-
-      expect(result.status).toBe(1);
-      expect(result.stderr || result.stdout).toContain(
-        "MODEL must be one of the supported",
-      );
-    });
-
     test("should set valid CONTEXT", async () => {
       const result = spawnSync(
         "bun",
@@ -740,16 +727,10 @@ describe("CLI - all supported locales", () => {
   });
 });
 
-describe("CLI - all supported models", () => {
-  const validModels = [
-    "openai/gpt-oss-20b",
-    "openai/gpt-oss-120b",
-    "moonshotai/kimi-k2-instruct-0905",
-    "meta-llama/llama-4-maverick-17b-128e-instruct",
-    "meta-llama/llama-4-scout-17b-16e-instruct",
-  ];
+describe("CLI - model configuration", () => {
+  const testModels = ["llama-3.3-70b", "gpt-4", "custom/model-name"];
 
-  validModels.forEach((model) => {
+  testModels.forEach((model) => {
     test(`should accept model: ${model}`, async () => {
       const result = spawnSync(
         "bun",
