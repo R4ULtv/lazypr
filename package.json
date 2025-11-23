@@ -37,6 +37,7 @@
     "typescript": "^5.9.2"
   },
   "dependencies": {
+    "@ai-sdk/cerebras": "^1.0.31",
     "@ai-sdk/groq": "^2.0.29",
     "@clack/prompts": "^0.11.0",
     "ai": "^5.0.93",
