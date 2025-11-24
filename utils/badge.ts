@@ -1,6 +1,7 @@
 import { note } from "@clack/prompts";
 
 interface BadgeConfig {
+  provider: string;
   smartFilter: boolean;
   locale: string;
   template?: string;
@@ -33,8 +34,8 @@ function formatBadgeItem(label: string, value: string | boolean): string {
 export function displayConfigBadge(config: BadgeConfig): void {
   const items: string[] = [];
 
-  // Model (always shown)
-  items.push(formatBadgeItem("Model", config.model));
+  // Provider + Model (always shown)
+  items.push(formatBadgeItem("Model", `${config.provider}/${config.model}`));
 
   // Locale (always shown)
   items.push(formatBadgeItem("Locale", config.locale.toUpperCase()));

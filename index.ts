@@ -249,6 +249,7 @@ const createPullRequest = async (
     }
 
     displayConfigBadge({
+      provider: await config.get("PROVIDER"),
       smartFilter: filterEnabled,
       locale: currentLocale,
       template: templateName,
