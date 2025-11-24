@@ -4,7 +4,7 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/) and this project adheres to [Semantic Versioning](http://semver.org/).
 
-## [1.3.0] - 2025-11-23
+## [1.3.0] - 2025-11-24
 
 ### Added
 - **MULTI-PROVIDER SUPPORT:** Introduced a flexible provider system allowing users to choose between different AI providers. The new `PROVIDER` configuration option supports switching providers seamlessly.
