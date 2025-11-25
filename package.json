@@ -24,13 +24,14 @@
   "type": "module",
   "bin": {
     "lazypr": "./dist/index.js",
-    "lzp": "./dist/index.js"
+    "lzp": "./dist/lzp.js"
   },
   "files": [
     "dist"
   ],
   "scripts": {
     "build": "bun build index.ts --outdir dist --target node --format esm --minify --external clipboardy",
+    "postbuild": "echo '#!/usr/bin/env node\nimport(\"./index.js\");' > dist/lzp.js",
     "dev": "bun run index.ts",
     "start": "node dist/index.js",
     "prepublishOnly": "bun run build"
