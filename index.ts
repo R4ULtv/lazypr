@@ -263,7 +263,11 @@ const createPullRequest = async (
     spin.start("Generating Pull Request");
 
     // Generate PR
-    const { object: pullRequest, usage } = await generatePullRequest(
+    const {
+      object: pullRequest,
+      usage,
+      finishReason,
+    } = await generatePullRequest(
       currentBranch,
       commits,
       templateContent,
@@ -276,7 +280,7 @@ const createPullRequest = async (
     // Display detailed usage if flag is set
     if (options.usage) {
       note(
-        `- Input: ${usage.inputTokens} tokens\n- Output: ${usage.outputTokens} tokens\n- Total: ${usage.totalTokens} tokens`,
+        `- Input: ${usage.inputTokens} tokens\n- Output: ${usage.outputTokens} tokens\n- Total: ${usage.totalTokens} tokens\n- Finish Reason: ${finishReason}`,
         "AI Model Usage",
       );
     }

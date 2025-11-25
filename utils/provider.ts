@@ -71,7 +71,7 @@ export async function getProviderApiKeyConfigKey(): Promise<string> {
 }
 
 const pullRequestSchema = z.object({
-  title: z.string().min(5).max(50),
+  title: z.string().min(5).max(100),
   description: z.string().min(100),
   labels: z.array(z.enum(["enhancement", "bug", "documentation"])),
 });
@@ -102,7 +102,7 @@ export async function generatePullRequest(
 
   const languageModel = providerConfig.createModel(apiKey, model);
 
-  const { object, usage } = await generateObject({
+  const { object, usage, finishReason } = await generateObject({
     model: languageModel,
     schema: pullRequestSchema,
     maxRetries: Number.parseInt(await config.get("MAX_RETRIES")),
@@ -174,5 +174,5 @@ export async function generatePullRequest(
     Generate the JSON object now:
     `,
   });
-  return { object, usage };
+  return { object, usage, finishReason };
 }
