@@ -4,6 +4,20 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/) and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## [1.3.1] - 2025-11-26
+
+### Added
+- **TEST COVERAGE:** Added comprehensive unit tests for the `config list` command to ensure proper functionality and output formatting.
+- **TEST COVERAGE:** Added comprehensive unit tests for the `displayConfigBadge` function to validate configuration badge display across various scenarios.
+
+### Changed
+- **BUILD PROCESS:** Updated lzp script path in package.json to point to `dist/lzp.js` and added a postbuild script to generate the lzp.js file for improved build automation.
+- **CI/CD:** Removed the specified bun version from the npm-publish workflow for improved flexibility.
+
+### Fixed
+- **PR GENERATION:** Included finish reason in pull request generation output for better debugging and transparency.
+- **VALIDATION:** Updated title validation length constraints to improve generated PR title quality.
+
 ## [1.3.0] - 2025-11-24
 
 ### Added
