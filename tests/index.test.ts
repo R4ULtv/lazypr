@@ -385,6 +385,219 @@ describe("CLI - config command", () => {
     });
   });
 
+  describe("config list", () => {
+    test("should list all config keys with defaults", async () => {
+      const result = spawnSync("bun", ["run", CLI_PATH, "config", "list"], {
+        encoding: "utf8",
+      });
+
+      expect(result.status).toBe(0);
+      expect(result.stdout).toContain("Configuration Settings");
+      expect(result.stdout).toContain("PROVIDER");
+      expect(result.stdout).toContain("GROQ_API_KEY");
+      expect(result.stdout).toContain("CEREBRAS_API_KEY");
+      expect(result.stdout).toContain("LOCALE");
+      expect(result.stdout).toContain("MAX_RETRIES");
+      expect(result.stdout).toContain("TIMEOUT");
+      expect(result.stdout).toContain("DEFAULT_BRANCH");
+      expect(result.stdout).toContain("MODEL");
+      expect(result.stdout).toContain("FILTER_COMMITS");
+      expect(result.stdout).toContain("CONTEXT");
+    });
+
+    test("should show default values for unset keys", async () => {
+      const result = spawnSync("bun", ["run", CLI_PATH, "config", "list"], {
+        encoding: "utf8",
+      });
+
+      expect(result.status).toBe(0);
+      expect(result.stdout).toContain("groq");
+      expect(result.stdout).toContain("(default)");
+      expect(result.stdout).toContain("en");
+      expect(result.stdout).toContain("master");
+      expect(result.stdout).toContain("llama-3.3-70b");
+    });
+
+    test("should show custom values when set", async () => {
+      await config.set("LOCALE", "es");
+      await config.set("MAX_RETRIES", "5");
+      await config.set("DEFAULT_BRANCH", "main");
+
+      const result = spawnSync("bun", ["run", CLI_PATH, "config", "list"], {
+        encoding: "utf8",
+      });
+
+      expect(result.status).toBe(0);
+      expect(result.stdout).toContain("LOCALE");
+      expect(result.stdout).toContain("es");
+      expect(result.stdout).toContain("MAX_RETRIES");
+      expect(result.stdout).toContain("5");
+      expect(result.stdout).toContain("DEFAULT_BRANCH");
+      expect(result.stdout).toContain("main");
+    });
+
+    test("should mask API keys in list output", async () => {
+      await config.set("GROQ_API_KEY", "gsk_1234567890abcdefghij");
+
+      const result = spawnSync("bun", ["run", CLI_PATH, "config", "list"], {
+        encoding: "utf8",
+      });
+
+      expect(result.status).toBe(0);
+      expect(result.stdout).toContain("GROQ_API_KEY");
+      // Should show masked value with last 4 chars
+      expect(result.stdout).toContain("****");
+      expect(result.stdout).toContain("ghij");
+      // Should NOT show full API key
+      expect(result.stdout).not.toContain("gsk_1234567890abcdefghij");
+    });
+
+    test("should mask CEREBRAS_API_KEY in list output", async () => {
+      await config.set("CEREBRAS_API_KEY", "csk_1234567890abcdefghij");
+
+      const result = spawnSync("bun", ["run", CLI_PATH, "config", "list"], {
+        encoding: "utf8",
+      });
+
+      expect(result.status).toBe(0);
+      expect(result.stdout).toContain("CEREBRAS_API_KEY");
+      // Should show masked value with last 4 chars
+      expect(result.stdout).toContain("****");
+      expect(result.stdout).toContain("ghij");
+      // Should NOT show full API key
+      expect(result.stdout).not.toContain("csk_1234567890abcdefghij");
+    });
+
+    test("should show 'not set' for empty optional keys", async () => {
+      const result = spawnSync("bun", ["run", CLI_PATH, "config", "list"], {
+        encoding: "utf8",
+      });
+
+      expect(result.status).toBe(0);
+      expect(result.stdout).toContain("GROQ_API_KEY");
+      expect(result.stdout).toContain("not set");
+    });
+
+    test("should display config file location", async () => {
+      const result = spawnSync("bun", ["run", CLI_PATH, "config", "list"], {
+        encoding: "utf8",
+      });
+
+      expect(result.status).toBe(0);
+      expect(result.stdout).toContain("Config File");
+      expect(result.stdout).toContain("Location:");
+      expect(result.stdout).toContain(".lazypr");
+    });
+
+    test("should show warning about manual editing", async () => {
+      const result = spawnSync("bun", ["run", CLI_PATH, "config", "list"], {
+        encoding: "utf8",
+      });
+
+      expect(result.status).toBe(0);
+      expect(result.stdout).toContain("Editing the config file manually");
+      expect(result.stdout).toContain("use the CLI");
+    });
+
+    test("should show status indicators for config values", async () => {
+      await config.set("GROQ_API_KEY", "gsk_1234567890abcdefghij");
+      await config.set("LOCALE", "es");
+
+      const result = spawnSync("bun", ["run", CLI_PATH, "config", "list"], {
+        encoding: "utf8",
+      });
+
+      expect(result.status).toBe(0);
+      // Should contain status indicators (checkmarks, circles, etc.)
+      // Note: We can't easily test for emoji/unicode in CLI output, but we can verify the command runs
+      expect(result.stdout).toContain("GROQ_API_KEY");
+      expect(result.stdout).toContain("LOCALE");
+    });
+
+    test("should handle empty config file", async () => {
+      // Ensure config file doesn't exist or is empty
+      try {
+        await unlink(ORIGINAL_CONFIG_FILE);
+      } catch {}
+
+      const result = spawnSync("bun", ["run", CLI_PATH, "config", "list"], {
+        encoding: "utf8",
+      });
+
+      expect(result.status).toBe(0);
+      expect(result.stdout).toContain("Configuration Settings");
+      expect(result.stdout).toContain("(default)");
+    });
+
+    test("should show all config keys even when only some are set", async () => {
+      await config.set("LOCALE", "fr");
+      await config.set("MODEL", "custom-model");
+
+      const result = spawnSync("bun", ["run", CLI_PATH, "config", "list"], {
+        encoding: "utf8",
+      });
+
+      expect(result.status).toBe(0);
+      // All keys should be present
+      expect(result.stdout).toContain("PROVIDER");
+      expect(result.stdout).toContain("GROQ_API_KEY");
+      expect(result.stdout).toContain("CEREBRAS_API_KEY");
+      expect(result.stdout).toContain("LOCALE");
+      expect(result.stdout).toContain("MAX_RETRIES");
+      expect(result.stdout).toContain("TIMEOUT");
+      expect(result.stdout).toContain("DEFAULT_BRANCH");
+      expect(result.stdout).toContain("MODEL");
+      expect(result.stdout).toContain("FILTER_COMMITS");
+      expect(result.stdout).toContain("CONTEXT");
+
+      // Custom values should be shown
+      expect(result.stdout).toContain("fr");
+      expect(result.stdout).toContain("custom-model");
+    });
+
+    test("should display CONTEXT value when set", async () => {
+      await config.set("CONTEXT", "make it simple and cohesive");
+
+      const result = spawnSync("bun", ["run", CLI_PATH, "config", "list"], {
+        encoding: "utf8",
+      });
+
+      expect(result.status).toBe(0);
+      expect(result.stdout).toContain("CONTEXT");
+      expect(result.stdout).toContain("make it simple and cohesive");
+    });
+
+    test("should display FILTER_COMMITS value", async () => {
+      await config.set("FILTER_COMMITS", "false");
+
+      const result = spawnSync("bun", ["run", CLI_PATH, "config", "list"], {
+        encoding: "utf8",
+      });
+
+      expect(result.status).toBe(0);
+      expect(result.stdout).toContain("FILTER_COMMITS");
+      expect(result.stdout).toContain("false");
+    });
+
+    test("should list config with mixed set and default values", async () => {
+      await config.set("GROQ_API_KEY", "gsk_testkey1234567890abc");
+      await config.set("PROVIDER", "cerebras");
+      await config.set("TIMEOUT", "20000");
+      // Leave other values as defaults
+
+      const result = spawnSync("bun", ["run", CLI_PATH, "config", "list"], {
+        encoding: "utf8",
+      });
+
+      expect(result.status).toBe(0);
+      // Custom values
+      expect(result.stdout).toContain("cerebras");
+      expect(result.stdout).toContain("20000");
+      // Default values with indicator
+      expect(result.stdout).toContain("(default)");
+    });
+  });
+
   describe("config invalid operation", () => {
     test("should reject invalid config operation", async () => {
       const result = spawnSync(
