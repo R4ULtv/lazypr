@@ -1,8 +1,8 @@
-import { expect, test, describe } from "bun:test";
+import { describe, expect, test } from "bun:test";
 import {
+  DEFAULT_COLOR,
   formatLabels,
   LABEL_COLORS,
-  DEFAULT_COLOR,
   RESET,
 } from "../../utils/labels";
 
@@ -133,8 +133,8 @@ describe("formatLabels - Integration", () => {
     // Verify it contains all necessary components
     expect(result).toContain("bug");
     expect(result).toContain("enhancement");
-    expect(result).toContain(LABEL_COLORS.bug!);
-    expect(result).toContain(LABEL_COLORS.enhancement!);
+    expect(result).toContain(LABEL_COLORS.bug ?? "");
+    expect(result).toContain(LABEL_COLORS.enhancement ?? "");
     expect(result).toContain(RESET);
   });
 
@@ -148,9 +148,9 @@ describe("formatLabels - Integration", () => {
     });
 
     // All should have their specific colors
-    expect(result).toContain(LABEL_COLORS.enhancement!);
-    expect(result).toContain(LABEL_COLORS.bug!);
-    expect(result).toContain(LABEL_COLORS.documentation!);
+    expect(result).toContain(LABEL_COLORS.enhancement ?? "");
+    expect(result).toContain(LABEL_COLORS.bug ?? "");
+    expect(result).toContain(LABEL_COLORS.documentation ?? "");
 
     // Should have proper reset codes
     const resetCount = (
@@ -171,7 +171,7 @@ describe("formatLabels - Integration", () => {
     expect(result.length).toBeGreaterThan(0);
 
     // Should start with color code
-    expect(result.startsWith(LABEL_COLORS.bug!)).toBe(true);
+    expect(result.startsWith(LABEL_COLORS.bug ?? "")).toBe(true);
 
     // Should end with reset code
     expect(result.endsWith(RESET)).toBe(true);

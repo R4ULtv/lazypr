@@ -1,11 +1,10 @@
-import * as z from "zod/v4";
-import { generateObject } from "ai";
-import { createGroq } from "@ai-sdk/groq";
 import { createCerebras } from "@ai-sdk/cerebras";
+import { createGroq } from "@ai-sdk/groq";
 import type { LanguageModel } from "ai";
-
-import type { GitCommit } from "./git";
+import { generateObject } from "ai";
+import * as z from "zod/v4";
 import { config } from "./config";
+import type { GitCommit } from "./git";
 
 // Provider types
 export type ProviderType = "groq" | "cerebras";
@@ -105,9 +104,9 @@ export async function generatePullRequest(
   const { object, usage, finishReason } = await generateObject({
     model: languageModel,
     schema: pullRequestSchema,
-    maxRetries: Number.parseInt(await config.get("MAX_RETRIES")),
+    maxRetries: Number.parseInt(await config.get("MAX_RETRIES"), 10),
     abortSignal: AbortSignal.timeout(
-      Number.parseInt(await config.get("TIMEOUT")),
+      Number.parseInt(await config.get("TIMEOUT"), 10),
     ),
     system: `
     You are a pull request content generator that creates professional PR titles and descriptions for code reviews.

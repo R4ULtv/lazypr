@@ -1,10 +1,10 @@
-import { expect, test, describe, beforeEach, afterEach } from "bun:test";
+import { afterEach, beforeEach, describe, expect, test } from "bun:test";
+import { readFile, unlink, writeFile } from "node:fs/promises";
 import { homedir } from "node:os";
 import { join } from "node:path";
-import { readFile, writeFile, unlink } from "node:fs/promises";
-import { generatePullRequest } from "../../utils/provider";
-import type { GitCommit } from "../../utils/git";
 import { config } from "../../utils/config";
+import type { GitCommit } from "../../utils/git";
+import { generatePullRequest } from "../../utils/provider";
 
 const ORIGINAL_CONFIG_FILE = join(homedir(), ".lazypr");
 

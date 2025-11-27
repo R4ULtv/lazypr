@@ -1,12 +1,12 @@
-import { expect, test, describe, beforeAll } from "bun:test";
+import { beforeAll, describe, expect, test } from "bun:test";
 import {
-  isGitRepository,
+  filterCommits,
+  type GitCommit,
   getAllBranches,
   getCurrentBranch,
   getPullRequestCommits,
+  isGitRepository,
   shouldFilterCommit,
-  filterCommits,
-  type GitCommit,
 } from "../../utils/git";
 
 describe("Git Utilities - Integration Tests", () => {

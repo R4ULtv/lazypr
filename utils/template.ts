@@ -1,6 +1,6 @@
-import { readFile, readdir, stat } from "node:fs/promises";
-import { join } from "node:path";
 import { existsSync } from "node:fs";
+import { readdir, readFile, stat } from "node:fs/promises";
+import { join } from "node:path";
 
 /**
  * Interface representing a PR template
