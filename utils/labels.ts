@@ -13,10 +13,7 @@ export function formatLabels(labels: string[]): string {
   }
 
   const coloredLabels = labels
-    .map(
-      (label) =>
-        `${LABEL_COLORS[label] || DEFAULT_COLOR} ${label} ${RESET}`,
-    )
+    .map((label) => `${LABEL_COLORS[label] || DEFAULT_COLOR} ${label} ${RESET}`)
     .join(" ");
 
   return coloredLabels;

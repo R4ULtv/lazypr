@@ -1,4 +1,4 @@
-import { expect, test, describe } from "bun:test";
+import { describe, expect, test } from "bun:test";
 import { pkg } from "../../utils/info";
 
 describe("Package Info", () => {

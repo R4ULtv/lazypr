@@ -1,8 +1,8 @@
-import { expect, test, describe } from "bun:test";
+import { describe, expect, test } from "bun:test";
 import {
+  DEFAULT_COLOR,
   formatLabels,
   LABEL_COLORS,
-  DEFAULT_COLOR,
   RESET,
 } from "../../utils/labels";
 

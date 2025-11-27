@@ -1,39 +1,34 @@
 #!/usr/bin/env node
 
-import { Command } from "commander";
-import clipboardy from "clipboardy";
 import {
-  intro,
-  outro,
   cancel,
-  log,
-  spinner,
   confirm,
-  select,
+  intro,
+  log,
   note,
+  outro,
+  select,
+  spinner,
 } from "@clack/prompts";
-
-import { pkg } from "./utils/info";
+import clipboardy from "clipboardy";
+import { Command } from "commander";
+import { displayConfigBadge } from "./utils/badge";
+import {
+  CONFIG_FILE,
+  CONFIG_SCHEMA,
+  type ConfigKey,
+  config,
+} from "./utils/config";
 import {
   getAllBranches,
   getCurrentBranch,
   getPullRequestCommits,
   isGitRepository,
 } from "./utils/git";
-import {
-  generatePullRequest,
-  validateProviderApiKey,
-  getProviderApiKeyConfigKey,
-} from "./utils/provider";
-import {
-  config,
-  CONFIG_SCHEMA,
-  CONFIG_FILE,
-  type ConfigKey,
-} from "./utils/config";
-import { findPRTemplates, getPRTemplate } from "./utils/template";
+import { pkg } from "./utils/info";
 import { formatLabels } from "./utils/labels";
-import { displayConfigBadge } from "./utils/badge";
+import { generatePullRequest, validateProviderApiKey } from "./utils/provider";
+import { findPRTemplates, getPRTemplate } from "./utils/template";
 
 const program = new Command();
 

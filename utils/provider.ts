@@ -1,11 +1,10 @@
-import * as z from "zod/v4";
-import { generateObject } from "ai";
-import { createGroq } from "@ai-sdk/groq";
 import { createCerebras } from "@ai-sdk/cerebras";
+import { createGroq } from "@ai-sdk/groq";
 import type { LanguageModel } from "ai";
-
-import type { GitCommit } from "./git";
+import { generateObject } from "ai";
+import * as z from "zod/v4";
 import { config } from "./config";
+import type { GitCommit } from "./git";
 
 // Provider types
 export type ProviderType = "groq" | "cerebras";

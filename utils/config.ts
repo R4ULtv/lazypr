@@ -1,6 +1,6 @@
+import { readFile, writeFile } from "node:fs/promises";
 import { homedir } from "node:os";
 import { join } from "node:path";
-import { readFile, writeFile } from "node:fs/promises";
 
 export const CONFIG_FILE = join(homedir(), ".lazypr");
 

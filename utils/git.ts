@@ -95,16 +95,16 @@ function handleGitError(error: any, context: string): never {
   const stderr = (error as any).stderr || "";
   const message = (error as Error).message || "";
 
-  if (
-    stderr.includes("not a git repository") ||
-    message.includes("ENOENT")
-  ) {
+  if (stderr.includes("not a git repository") || message.includes("ENOENT")) {
     throw new Error(
       "Not a git repository. Run 'git init' to initialize a new repository.",
     );
   }
 
-  if (stderr.includes("unknown revision") || stderr.includes("did not match any file(s) known to git")) {
+  if (
+    stderr.includes("unknown revision") ||
+    stderr.includes("did not match any file(s) known to git")
+  ) {
     throw new Error(
       `Branch or revision not found. Please check if the branch exists locally or remotely.`,
     );

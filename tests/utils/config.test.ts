@@ -1,8 +1,8 @@
-import { expect, test, describe, beforeEach, afterEach } from "bun:test";
+import { afterEach, beforeEach, describe, expect, test } from "bun:test";
+import { readFile, unlink, writeFile } from "node:fs/promises";
 import { homedir } from "node:os";
 import { join } from "node:path";
-import { readFile, writeFile, unlink } from "node:fs/promises";
-import { config, CONFIG_SCHEMA } from "../../utils/config";
+import { CONFIG_SCHEMA, config } from "../../utils/config";
 
 const ORIGINAL_CONFIG_FILE = join(homedir(), ".lazypr");
 

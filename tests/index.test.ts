@@ -1,8 +1,8 @@
-import { expect, test, describe, beforeEach, afterEach, mock } from "bun:test";
+import { afterEach, beforeEach, describe, expect, mock, test } from "bun:test";
+import { spawnSync } from "node:child_process";
+import { readFile, unlink, writeFile } from "node:fs/promises";
 import { homedir } from "node:os";
 import { join } from "node:path";
-import { readFile, writeFile, unlink } from "node:fs/promises";
-import { spawnSync } from "node:child_process";
 import { config } from "../utils/config";
 
 const ORIGINAL_CONFIG_FILE = join(homedir(), ".lazypr");
