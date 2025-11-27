@@ -4,6 +4,19 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/) and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## [1.3.2] - 2025-11-27
+
+### Added
+- **CODE QUALITY:** Introduced Biome configuration for consistent linting and formatting across the codebase.
+- **CI/CD:** Added automated linting step to both npm-publish and test workflows to ensure code quality before execution.
+
+### Changed
+- **CODE STRUCTURE:** Reorganized import statements across multiple files for improved readability and maintainability.
+- **TEST IMPROVEMENTS:** Enhanced test assertions to handle potential null values in label colors and refined parsing logic for configuration values.
+
+### Fixed
+- **CONFIGURATION:** Updated Biome linting rules and improved configuration parsing logic for better reliability.
+
 ## [1.3.1] - 2025-11-26
 
 ### Added
