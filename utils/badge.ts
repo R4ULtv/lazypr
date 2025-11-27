@@ -52,7 +52,7 @@ export function displayConfigBadge(config: BadgeConfig): void {
 
   // Context (only show if provided)
   if (config.context) {
-    items.push(formatBadgeItem("User Context", config.context ? true : false));
+    items.push(formatBadgeItem("User Context", !!config.context));
   }
 
   // Usage stats (only show if enabled)
