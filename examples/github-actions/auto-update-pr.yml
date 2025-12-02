@@ -1,0 +1,48 @@
+# Auto-Update PR Description
+#
+# Automatically updates the PR description when new commits are pushed.
+#
+# Setup:
+# 1. Add GROQ_API_KEY to repository secrets
+# 2. Copy this file to .github/workflows/auto-update-pr.yml
+
+name: Auto-Update PR
+
+on:
+  pull_request:
+    types: [opened, synchronize]
+
+permissions:
+  pull-requests: write
+  contents: read
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - run: npm install -g lazypr
+
+      - name: Generate and update PR
+        env:
+          GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          # Generate PR content
+          lazypr ${{ github.event.pull_request.base.ref }} > pr.txt
+
+          # Extract title and body
+          TITLE=$(head -n 1 pr.txt | sed 's/^# //')
+          BODY=$(tail -n +2 pr.txt)
+
+          # Update PR using GitHub CLI
+          gh pr edit ${{ github.event.pull_request.number }} \
+            --title "$TITLE" \
+            --body "$BODY"

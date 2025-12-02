@@ -1,0 +1,54 @@
+# Auto-Create PR
+#
+# Automatically creates a PR when you push to feature branches.
+#
+# Setup:
+# 1. Add GROQ_API_KEY to repository secrets
+# 2. Copy this file to .github/workflows/auto-create-pr.yml
+
+name: Auto-Create PR
+
+on:
+  push:
+    branches:
+      - "feature/**"
+      - "fix/**"
+
+permissions:
+  pull-requests: write
+  contents: read
+
+jobs:
+  create:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - run: npm install -g lazypr
+
+      - name: Create PR if needed
+        env:
+          GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          # Check if PR already exists
+          if gh pr list --head ${{ github.ref_name }} --json number | grep -q "number"; then
+            echo "PR already exists"
+            exit 0
+          fi
+
+          # Generate PR content
+          lazypr > pr.txt
+
+          # Extract title and body
+          TITLE=$(head -n 1 pr.txt | sed 's/^# //')
+          BODY=$(tail -n +2 pr.txt)
+
+          # Create PR
+          gh pr create --title "$TITLE" --body "$BODY"
