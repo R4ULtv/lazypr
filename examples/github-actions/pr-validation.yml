@@ -1,0 +1,69 @@
+# PR Validation
+#
+# Validates that PR has a good description. Suggests improvements if needed.
+#
+# Setup:
+# 1. Add GROQ_API_KEY to repository secrets
+# 2. Copy this file to .github/workflows/pr-validation.yml
+
+name: Validate PR
+
+on:
+  pull_request:
+    types: [opened, edited]
+
+permissions:
+  pull-requests: write
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - run: npm install -g lazypr
+
+      - name: Check PR description
+        env:
+          GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          # Get current PR body
+          CURRENT_BODY=$(gh pr view ${{ github.event.pull_request.number }} --json body -q .body)
+          LENGTH=${#CURRENT_BODY}
+
+          echo "PR description length: $LENGTH characters"
+
+          # Check if description is too short
+          if [ $LENGTH -lt 100 ]; then
+            echo "❌ Description too short (minimum 100 characters)"
+
+            # Generate suggestion
+            lazypr > suggestion.txt
+            SUGGESTED=$(cat suggestion.txt)
+
+            # Comment with suggestion
+            gh pr comment ${{ github.event.pull_request.number }} --body \
+              "## ⚠️ PR Description Too Short
+
+              Your PR description is only $LENGTH characters (minimum: 100).
+
+              **Suggested description:**
+
+              \`\`\`markdown
+              $SUGGESTED
+              \`\`\`
+
+              Run \`lazypr\` locally to regenerate."
+
+            exit 1
+          else
+            echo "✅ Description looks good"
+          fi
