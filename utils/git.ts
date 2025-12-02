@@ -91,8 +91,8 @@ export function filterCommits(commits: GitCommit[]): GitCommit[] {
 /**
  * Helper function to handle git errors with user-friendly messages
  */
-function handleGitError(error: any, context: string): never {
-  const stderr = (error as any).stderr || "";
+function handleGitError(error: unknown, context: string): never {
+  const stderr = (error as { stderr?: string }).stderr || "";
   const message = (error as Error).message || "";
 
   if (stderr.includes("not a git repository") || message.includes("ENOENT")) {
