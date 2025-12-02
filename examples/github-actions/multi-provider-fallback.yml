@@ -37,15 +37,30 @@ jobs:
           CEREBRAS_API_KEY: ${{ secrets.CEREBRAS_API_KEY }}
           GH_TOKEN: ${{ github.token }}
         run: |
+          # Configure lazypr for Groq on this runner
+          cat <<EOF > ~/.lazypr
+          GROQ_API_KEY=${GROQ_API_KEY}
+          CEREBRAS_API_KEY=${CEREBRAS_API_KEY}
+          PROVIDER=groq
+          EOF
+
           # Try Groq first
-          if lazypr --provider groq > pr.txt 2>/dev/null; then
+          if lazypr > pr.txt 2>/dev/null; then
             echo "✅ Used Groq"
-          # Fall back to Cerebras
-          elif lazypr --provider cerebras > pr.txt 2>/dev/null; then
-            echo "✅ Used Cerebras (Groq failed)"
           else
-            echo "❌ Both providers failed"
-            exit 1
+            # Fall back to Cerebras
+            cat <<EOF > ~/.lazypr
+            GROQ_API_KEY=${GROQ_API_KEY}
+            CEREBRAS_API_KEY=${CEREBRAS_API_KEY}
+            PROVIDER=cerebras
+            EOF
+
+            if lazypr > pr.txt 2>/dev/null; then
+              echo "✅ Used Cerebras (Groq failed)"
+            else
+              echo "❌ Both providers failed"
+              exit 1
+            fi
           fi
 
           # Extract title and body

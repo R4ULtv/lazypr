@@ -35,6 +35,12 @@ jobs:
           GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
           GH_TOKEN: ${{ github.token }}
         run: |
+          # Configure lazypr (write API key to ~/.lazypr for this runner)
+          cat <<EOF > ~/.lazypr
+          GROQ_API_KEY=${GROQ_API_KEY}
+          PROVIDER=groq
+          EOF
+
           # Generate PR content
           lazypr ${{ github.event.pull_request.base.ref }} > pr.txt
 

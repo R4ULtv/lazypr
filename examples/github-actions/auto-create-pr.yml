@@ -37,6 +37,12 @@ jobs:
           GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
           GH_TOKEN: ${{ github.token }}
         run: |
+          # Configure lazypr (write API key to ~/.lazypr for this runner)
+          cat <<EOF > ~/.lazypr
+          GROQ_API_KEY=${GROQ_API_KEY}
+          PROVIDER=groq
+          EOF
+
           # Check if PR already exists
           if gh pr list --head ${{ github.ref_name }} --json number | grep -q "number"; then
             echo "PR already exists"
