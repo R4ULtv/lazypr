@@ -4,6 +4,17 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/) and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## [1.3.3] - 2025-12-02
+
+### Added
+- **USAGE EXAMPLES:** Added comprehensive examples and configuration files demonstrating LazyPR usage, including CLI commands, GitHub Actions workflows, and multi-provider configuration setups to help users get started quickly.
+
+### Changed
+- **DEPENDENCIES:** Updated core dependencies, including bumping the `ai` package version to `5.0.106`, updating the Biome schema to `2.3.8`, and performing general dependency upgrades for improved stability and compatibility.
+
+### Fixed
+- **ERROR HANDLING:** Improved the `handleGitError` function to provide more robust and user-friendly error handling for Git-related failures.
+
 ## [1.3.2] - 2025-11-27
 
 ### Added
