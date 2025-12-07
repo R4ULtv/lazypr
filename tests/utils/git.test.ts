@@ -21,7 +21,7 @@ describe("Git Utilities - Integration Tests", () => {
       currentBranch = await getCurrentBranch();
       // Check if main branch exists (may not exist in shallow clones like CI)
       const branches = await getAllBranches();
-      hasMainBranch = branches.includes("main") || branches.includes("master");
+      hasMainBranch = branches.includes("main") || branches.includes("main");
     }
   });
 

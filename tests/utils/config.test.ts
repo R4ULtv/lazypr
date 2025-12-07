@@ -236,9 +236,9 @@ describe("CONFIG_SCHEMA", () => {
       expect(result).toBe("main");
     });
 
-    test("should default to 'master' for empty value", () => {
+    test("should default to 'main' for empty value", () => {
       const result = CONFIG_SCHEMA.DEFAULT_BRANCH.validate("");
-      expect(result).toBe("master");
+      expect(result).toBe("main");
     });
 
     test("should trim whitespace", () => {
@@ -492,7 +492,7 @@ LOCALE=es`;
       expect(allConfig.LOCALE).toBe("en");
       expect(allConfig.MAX_RETRIES).toBe("2");
       expect(allConfig.TIMEOUT).toBe("10000");
-      expect(allConfig.DEFAULT_BRANCH).toBe("master");
+      expect(allConfig.DEFAULT_BRANCH).toBe("main");
       expect(allConfig.MODEL).toBe("llama-3.3-70b");
     });
 

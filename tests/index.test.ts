@@ -338,7 +338,7 @@ describe("CLI - config command", () => {
       );
 
       expect(result.status).toBe(0);
-      expect(result.stdout).toContain("DEFAULT_BRANCH = master");
+      expect(result.stdout).toContain("DEFAULT_BRANCH = main");
     });
   });
 
@@ -414,7 +414,7 @@ describe("CLI - config command", () => {
       expect(result.stdout).toContain("groq");
       expect(result.stdout).toContain("(default)");
       expect(result.stdout).toContain("en");
-      expect(result.stdout).toContain("master");
+      expect(result.stdout).toContain("main");
       expect(result.stdout).toContain("llama-3.3-70b");
     });
 

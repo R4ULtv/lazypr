@@ -134,7 +134,7 @@ ANOTHER_KEY=another value
 
 | Key | Default | Description | Example |
 |-----|---------|-------------|---------|
-| `DEFAULT_BRANCH` | `main` | Default target branch | `main`, `develop`, `master` |
+| `DEFAULT_BRANCH` | `master` | Default target branch | `main`, `develop`, `master` |
 
 ### Generation Settings
 

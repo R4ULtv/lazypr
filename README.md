@@ -59,7 +59,7 @@ lazypr config set CEREBRAS_API_KEY=<your-api-key>
 2) From a git repo on a feature branch, run:
 
 ```bash
-lazypr               # compares against 'master' by default
+lazypr               # compares against 'main' by default
 ```
 
 or use the alias:
@@ -253,7 +253,7 @@ The AI will structure the PR description following your template format while in
 lazypr [target] [options]
 
 Arguments:
-  target                     Target branch name (default: master)
+  target                     Target branch name (default: main)
 
 Options:
   -t, --template [name]      Use a PR template from .github folder

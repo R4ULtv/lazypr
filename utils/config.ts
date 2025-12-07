@@ -84,9 +84,9 @@ export const CONFIG_SCHEMA = {
     },
   },
   DEFAULT_BRANCH: {
-    default: "master",
+    default: "main",
     validate: (v: string) => {
-      const branch = v?.trim().toLowerCase() || "master";
+      const branch = v?.trim().toLowerCase() || "main";
       return branch;
     },
   },
