@@ -4,6 +4,15 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/) and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## [1.3.4] - 2025-12-07
+
+### Added
+- **DOCUMENTATION WEBSITE:** Launched an official documentation website at [lazypr.raulcarini.dev](https://lazypr.raulcarini.dev) providing comprehensive guides, API references, and usage examples for users.
+
+### Changed
+- **BREAKING: DEFAULT BRANCH:** Changed the default branch from `master` to `main` to align with modern Git conventions. Users who previously relied on `master` as their default can restore it by running `lzp config set DEFAULT_BRANCH=master`.
+- **DOCUMENTATION:** Improved and streamlined README content, enhancing feature descriptions, installation instructions, and usage guidance.
+
 ## [1.3.3] - 2025-12-02
 
 ### Added
