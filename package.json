@@ -45,7 +45,7 @@
     "@ai-sdk/cerebras": "^1.0.32",
     "@ai-sdk/groq": "^2.0.32",
     "@clack/prompts": "^0.11.0",
-    "ai": "^5.0.106",
+    "ai": "^5.0.108",
     "clipboardy": "5.0.1",
     "commander": "^14.0.2",
     "zod": "^4.1.13"
