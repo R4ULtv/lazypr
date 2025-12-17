@@ -109,6 +109,67 @@ describe("CONFIG_SCHEMA", () => {
     });
   });
 
+  describe("OPENAI_API_KEY validation", () => {
+    test("should accept any non-empty API key", () => {
+      const result = CONFIG_SCHEMA.OPENAI_API_KEY.validate("sk-any-key-format");
+      expect(result).toBe("sk-any-key-format");
+    });
+
+    test("should return empty string for empty API key", () => {
+      const result = CONFIG_SCHEMA.OPENAI_API_KEY.validate("");
+      expect(result).toBe("");
+    });
+
+    test("should return empty string for whitespace-only API key", () => {
+      const result = CONFIG_SCHEMA.OPENAI_API_KEY.validate("   ");
+      expect(result).toBe("");
+    });
+
+    test("should trim whitespace from API key", () => {
+      const result = CONFIG_SCHEMA.OPENAI_API_KEY.validate("  sk-test-key  ");
+      expect(result).toBe("sk-test-key");
+    });
+  });
+
+  describe("OPENAI_BASE_URL validation", () => {
+    test("should accept valid URL", () => {
+      const result = CONFIG_SCHEMA.OPENAI_BASE_URL.validate(
+        "http://localhost:11434/v1",
+      );
+      expect(result).toBe("http://localhost:11434/v1");
+    });
+
+    test("should accept HTTPS URL", () => {
+      const result = CONFIG_SCHEMA.OPENAI_BASE_URL.validate(
+        "https://api.together.xyz/v1",
+      );
+      expect(result).toBe("https://api.together.xyz/v1");
+    });
+
+    test("should return empty string for empty URL", () => {
+      const result = CONFIG_SCHEMA.OPENAI_BASE_URL.validate("");
+      expect(result).toBe("");
+    });
+
+    test("should return empty string for whitespace-only URL", () => {
+      const result = CONFIG_SCHEMA.OPENAI_BASE_URL.validate("   ");
+      expect(result).toBe("");
+    });
+
+    test("should throw error for invalid URL format", () => {
+      expect(() =>
+        CONFIG_SCHEMA.OPENAI_BASE_URL.validate("not-a-valid-url"),
+      ).toThrow("Invalid OPENAI_BASE_URL format");
+    });
+
+    test("should trim whitespace from URL", () => {
+      const result = CONFIG_SCHEMA.OPENAI_BASE_URL.validate(
+        "  http://localhost:1234/v1  ",
+      );
+      expect(result).toBe("http://localhost:1234/v1");
+    });
+  });
+
   describe("PROVIDER validation", () => {
     test("should accept 'groq' as valid provider", () => {
       const result = CONFIG_SCHEMA.PROVIDER.validate("groq");
@@ -120,6 +181,11 @@ describe("CONFIG_SCHEMA", () => {
       expect(result).toBe("cerebras");
     });
 
+    test("should accept 'openai' as valid provider", () => {
+      const result = CONFIG_SCHEMA.PROVIDER.validate("openai");
+      expect(result).toBe("openai");
+    });
+
     test("should default to 'groq' for empty value", () => {
       const result = CONFIG_SCHEMA.PROVIDER.validate("");
       expect(result).toBe("groq");
@@ -128,10 +194,11 @@ describe("CONFIG_SCHEMA", () => {
     test("should normalize provider to lowercase", () => {
       expect(CONFIG_SCHEMA.PROVIDER.validate("GROQ")).toBe("groq");
       expect(CONFIG_SCHEMA.PROVIDER.validate("CEREBRAS")).toBe("cerebras");
+      expect(CONFIG_SCHEMA.PROVIDER.validate("OPENAI")).toBe("openai");
     });
 
     test("should throw error for invalid provider", () => {
-      expect(() => CONFIG_SCHEMA.PROVIDER.validate("openai")).toThrow(
+      expect(() => CONFIG_SCHEMA.PROVIDER.validate("invalid")).toThrow(
         "PROVIDER must be one of:",
       );
     });
