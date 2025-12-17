@@ -15,7 +15,7 @@ export const CONFIG_SCHEMA = {
     default: "groq",
     validate: (v: string) => {
       const provider = v?.trim().toLowerCase() || "groq";
-      const allowed = ["groq", "cerebras"];
+      const allowed = ["groq", "cerebras", "openai"];
       if (!allowed.includes(provider)) {
         throw new Error(`PROVIDER must be one of: ${allowed.join(", ")}`);
       }
@@ -38,6 +38,30 @@ export const CONFIG_SCHEMA = {
       if (!/^[A-Za-z0-9._-]{20,}$/.test(v.trim()))
         throw new Error("Invalid CEREBRAS_API_KEY format");
       return v.trim();
+    },
+  },
+  OPENAI_API_KEY: {
+    required: false,
+    validate: (v: string) => {
+      if (!v?.trim()) return "";
+      // Allow any non-empty string for API keys (local providers may use custom formats)
+      return v.trim();
+    },
+  },
+  OPENAI_BASE_URL: {
+    required: false,
+    validate: (v: string) => {
+      if (!v?.trim()) return "";
+      const url = v.trim();
+      // Validate URL format
+      try {
+        new URL(url);
+      } catch {
+        throw new Error(
+          "Invalid OPENAI_BASE_URL format. Must be a valid URL (e.g., http://localhost:11434/v1)",
+        );
+      }
+      return url;
     },
   },
   LOCALE: {

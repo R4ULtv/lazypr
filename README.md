@@ -11,7 +11,7 @@ Generate clean, consistent PRs from commits - powered by AI and your git history
 
 ## Features ✨
 
-- **Multi-provider AI:** [Groq and Cerebras support](https://lazypr.raulcarini.dev/docs/config/providers)
+- **Multi-provider AI:** [Groq, Cerebras, and OpenAI-compatible APIs](https://lazypr.raulcarini.dev/docs/config/providers)
 - **Smart commit filtering:** [Excludes noise commits](https://lazypr.raulcarini.dev/docs/advanced/commit-filtering)
 - **PR template support:** [Use your existing templates](https://lazypr.raulcarini.dev/docs/usage/templates)
 - **GitHub CLI integration:** [Generate `gh pr create` commands](https://lazypr.raulcarini.dev/docs/usage/github-integration)
@@ -50,11 +50,12 @@ lazypr config get KEY          # Get configuration
 ```
 
 **Common settings:**
-- `PROVIDER` - AI provider (`groq` or `cerebras`)
+- `PROVIDER` - AI provider (`groq`, `cerebras`, or `openai`)
 - `LOCALE` - Output language (`en`, `es`, `pt`, `fr`, etc.)
 - `MODEL` - AI model to use
 - `FILTER_COMMITS` - Smart commit filtering
 - `CONTEXT` - Custom guidance for AI generation
+- `OPENAI_BASE_URL` - Custom endpoint for OpenAI-compatible APIs
 
 **[View all settings →](https://lazypr.raulcarini.dev/docs/config/settings)** | **[Configuration examples →](https://lazypr.raulcarini.dev/docs/examples/configuration)**
 
@@ -66,6 +67,7 @@ lazypr config get KEY          # Get configuration
 - **[Multilingual Support](https://lazypr.raulcarini.dev/docs/advanced/multilingual)** - 12+ languages available
 - **[Context Guidance](https://lazypr.raulcarini.dev/docs/advanced/context-guidance)** - Customize AI generation style
 - **[GitHub Actions](https://lazypr.raulcarini.dev/docs/examples/github-actions)** - Automate PR generation in CI/CD
+- **[OpenAI-Compatible APIs](https://lazypr.raulcarini.dev/docs/config/providers)** - Use local providers (Ollama, LM Studio) or third-party services
 
 ## CLI Reference
 
