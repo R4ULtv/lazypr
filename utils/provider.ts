@@ -1,5 +1,6 @@
 import { createCerebras } from "@ai-sdk/cerebras";
 import { createGroq } from "@ai-sdk/groq";
+import { createOpenAI } from "@ai-sdk/openai";
 import type { LanguageModel } from "ai";
 import { generateObject } from "ai";
 import * as z from "zod/v4";
@@ -7,13 +8,14 @@ import { config } from "./config";
 import type { GitCommit } from "./git";
 
 // Provider types
-export type ProviderType = "groq" | "cerebras";
+export type ProviderType = "groq" | "cerebras" | "openai";
 
 // Provider configuration interface
 interface ProviderConfig {
   name: ProviderType;
   apiKeyConfigKey: string;
-  createModel: (apiKey: string, model: string) => LanguageModel;
+  apiKeyOptional?: boolean;
+  createModel: (apiKey: string, model: string, baseURL?: string) => LanguageModel;
 }
 
 // Provider registry
@@ -32,6 +34,18 @@ const providers: Record<ProviderType, ProviderConfig> = {
     createModel: (apiKey: string, model: string) => {
       const cerebras = createCerebras({ apiKey });
       return cerebras(model);
+    },
+  },
+  openai: {
+    name: "openai",
+    apiKeyConfigKey: "OPENAI_API_KEY",
+    apiKeyOptional: true, // API key is optional for local providers like Ollama, LM Studio
+    createModel: (apiKey: string, model: string, baseURL?: string) => {
+      const openai = createOpenAI({
+        apiKey: apiKey || "dummy-key", // Some local providers don't need a key but SDK requires one
+        baseURL: baseURL || undefined,
+      });
+      return openai(model);
     },
   },
 };
@@ -54,6 +68,11 @@ export async function validateProviderApiKey(): Promise<void> {
   const apiKey = await config.get(
     providerConfig.apiKeyConfigKey as Parameters<typeof config.get>[0],
   );
+
+  // Skip API key validation if provider allows optional keys (e.g., OpenAI for local providers)
+  if (providerConfig.apiKeyOptional) {
+    return;
+  }
 
   if (!apiKey) {
     throw new Error(
@@ -87,7 +106,8 @@ export async function generatePullRequest(
     providerConfig.apiKeyConfigKey as Parameters<typeof config.get>[0],
   );
 
-  if (!apiKey) {
+  // Only require API key if provider doesn't allow optional keys
+  if (!apiKey && !providerConfig.apiKeyOptional) {
     throw new Error(
       `${providerConfig.apiKeyConfigKey} is required. Set it with: lazypr config set ${providerConfig.apiKeyConfigKey}=<your-api-key>`,
     );
@@ -99,7 +119,13 @@ export async function generatePullRequest(
   const commitsString = commits.map((commit) => commit.message).join("\n");
   const hasTemplate = template && template.trim().length > 0;
 
-  const languageModel = providerConfig.createModel(apiKey, model);
+  // Get baseURL for OpenAI-compatible providers
+  const baseURL =
+    providerConfig.name === "openai"
+      ? await config.get("OPENAI_BASE_URL")
+      : undefined;
+
+  const languageModel = providerConfig.createModel(apiKey, model, baseURL);
 
   const { object, usage, finishReason } = await generateObject({
     model: languageModel,
