@@ -44,6 +44,7 @@
   "dependencies": {
     "@ai-sdk/cerebras": "^1.0.33",
     "@ai-sdk/groq": "^2.0.33",
+    "@ai-sdk/openai": "^2.0.88",
     "@clack/prompts": "^0.11.0",
     "ai": "^5.0.114",
     "clipboardy": "5.0.1",
