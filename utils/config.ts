@@ -142,6 +142,32 @@ export const CONFIG_SCHEMA = {
       return context;
     },
   },
+  CUSTOM_LABELS: {
+    default: "",
+    validate: (v: string) => {
+      const value = v?.trim() || "";
+      if (!value) return "";
+
+      const labels = value.split(",").map((l) => l.trim()).filter(Boolean);
+
+      if (labels.length > 17) {
+        throw new Error(
+          "CUSTOM_LABELS cannot exceed 17 labels (20 total with defaults)",
+        );
+      }
+
+      const labelNameRegex = /^[a-zA-Z][a-zA-Z0-9_-]{0,49}$/;
+      for (const name of labels) {
+        if (!labelNameRegex.test(name)) {
+          throw new Error(
+            `Invalid label '${name}'. Must start with letter, contain only alphanumeric/hyphen/underscore, max 50 chars.`,
+          );
+        }
+      }
+
+      return labels.join(",");
+    },
+  },
 } as const satisfies Record<string, ConfigSchemaValue>;
 
 export type ConfigKey = keyof typeof CONFIG_SCHEMA;
