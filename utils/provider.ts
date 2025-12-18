@@ -5,6 +5,7 @@ import { generateObject } from "ai";
 import * as z from "zod/v4";
 import { config } from "./config";
 import type { GitCommit } from "./git";
+import { DEFAULT_LABELS, getAvailableLabels } from "./labels";
 
 // Provider types
 export type ProviderType = "groq" | "cerebras";
@@ -69,11 +70,16 @@ export async function getProviderApiKeyConfigKey(): Promise<string> {
   return providerConfig.apiKeyConfigKey;
 }
 
-const pullRequestSchema = z.object({
-  title: z.string().min(5).max(100),
-  description: z.string().min(100),
-  labels: z.array(z.enum(["enhancement", "bug", "documentation"])),
-});
+// Build labels schema dynamically based on available labels
+function buildLabelsSchema(availableLabels: string[]) {
+  if (availableLabels.length === 0) {
+    return z.array(z.enum([...DEFAULT_LABELS]));
+  }
+
+  // Zod enum requires at least one value
+  const [first, ...rest] = availableLabels;
+  return z.array(z.enum([first, ...rest] as [string, ...string[]]));
+}
 
 export async function generatePullRequest(
   currentBranch: string,
@@ -96,10 +102,19 @@ export async function generatePullRequest(
   const locale = localeOverride || (await config.get("LOCALE"));
   const context = contextOverride || (await config.get("CONTEXT"));
   const model = await config.get("MODEL");
+  const customLabelsConfig = await config.get("CUSTOM_LABELS");
+  const availableLabels = getAvailableLabels(customLabelsConfig);
   const commitsString = commits.map((commit) => commit.message).join("\n");
   const hasTemplate = template && template.trim().length > 0;
 
   const languageModel = providerConfig.createModel(apiKey, model);
+
+  // Build schema with dynamic labels
+  const pullRequestSchema = z.object({
+    title: z.string().min(5).max(100),
+    description: z.string().min(100),
+    labels: buildLabelsSchema(availableLabels),
+  });
 
   const { object, usage, finishReason } = await generateObject({
     model: languageModel,
@@ -149,12 +164,18 @@ export async function generatePullRequest(
     **Additional Guidance:**
     - The user may provide additional context to guide the tone, style, and structure of the PR content
     - If provided, apply this guidance while maintaining professional quality and completeness
+
+    **Labels:**
+    - Select one or more labels that best describe the changes
+    - Only use labels from the provided list
+    - Default label meanings: enhancement (new features/improvements), bug (bug fixes), documentation (documentation changes)
     `,
     prompt: `
     ### Input Data:
 
     **Locale:** ${locale}
     **Target Branch:** ${currentBranch}${context ? `\n    **Additional Guidance:** ${context}` : ""}
+    **Available Labels:** ${availableLabels}
 
     **Commit History (most recent last):**
     \`\`\`
