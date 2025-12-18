@@ -1,8 +1,13 @@
 import { describe, expect, test } from "bun:test";
 import {
+  CUSTOM_LABEL_COLORS,
   DEFAULT_COLOR,
+  DEFAULT_LABELS,
   formatLabels,
+  getAvailableLabels,
+  getLabelColor,
   LABEL_COLORS,
+  parseCustomLabels,
   RESET,
 } from "../../utils/labels";
 
@@ -175,5 +180,138 @@ describe("formatLabels - Integration", () => {
 
     // Should end with reset code
     expect(result.endsWith(RESET)).toBe(true);
+  });
+});
+
+describe("DEFAULT_LABELS", () => {
+  test("should contain the three default labels", () => {
+    expect(DEFAULT_LABELS).toEqual(["enhancement", "bug", "documentation"]);
+  });
+});
+
+describe("CUSTOM_LABEL_COLORS", () => {
+  test("should have at least 5 colors in palette", () => {
+    expect(CUSTOM_LABEL_COLORS.length).toBeGreaterThanOrEqual(5);
+  });
+
+  test("should have valid ANSI color codes", () => {
+    CUSTOM_LABEL_COLORS.forEach((color) => {
+      expect(color).toMatch(/^\x1b\[\d+;?\d*m$/);
+    });
+  });
+});
+
+describe("parseCustomLabels", () => {
+  test("should return empty array for empty string", () => {
+    expect(parseCustomLabels("")).toEqual([]);
+  });
+
+  test("should return empty array for whitespace-only string", () => {
+    expect(parseCustomLabels("   ")).toEqual([]);
+  });
+
+  test("should parse single label", () => {
+    expect(parseCustomLabels("feature")).toEqual(["feature"]);
+  });
+
+  test("should parse comma-separated labels", () => {
+    expect(parseCustomLabels("feature,refactor,security")).toEqual([
+      "feature",
+      "refactor",
+      "security",
+    ]);
+  });
+
+  test("should trim whitespace from labels", () => {
+    expect(parseCustomLabels(" feature , refactor , security ")).toEqual([
+      "feature",
+      "refactor",
+      "security",
+    ]);
+  });
+
+  test("should filter out empty entries", () => {
+    expect(parseCustomLabels("feature,,refactor,")).toEqual([
+      "feature",
+      "refactor",
+    ]);
+  });
+});
+
+describe("getAvailableLabels", () => {
+  test("should return only defaults when no custom labels", () => {
+    const result = getAvailableLabels("");
+    expect(result).toEqual(["enhancement", "bug", "documentation"]);
+  });
+
+  test("should extend defaults with custom labels", () => {
+    const result = getAvailableLabels("feature,security");
+    expect(result).toContain("feature");
+    expect(result).toContain("security");
+    expect(result).toContain("enhancement");
+    expect(result).toContain("bug");
+    expect(result).toContain("documentation");
+  });
+
+  test("should put custom labels first", () => {
+    const result = getAvailableLabels("feature,security");
+    expect(result[0]).toBe("feature");
+    expect(result[1]).toBe("security");
+  });
+
+  test("should not duplicate if custom label matches default", () => {
+    const result = getAvailableLabels("bug,feature");
+    const bugCount = result.filter((l) => l === "bug").length;
+    expect(bugCount).toBe(1);
+  });
+
+  test("should handle empty custom labels string", () => {
+    const result = getAvailableLabels("");
+    expect(result).toEqual([...DEFAULT_LABELS]);
+  });
+});
+
+describe("getLabelColor", () => {
+  test("should return correct color for default labels", () => {
+    expect(getLabelColor("enhancement", [])).toBe(LABEL_COLORS.enhancement);
+    expect(getLabelColor("bug", [])).toBe(LABEL_COLORS.bug);
+    expect(getLabelColor("documentation", [])).toBe(LABEL_COLORS.documentation);
+  });
+
+  test("should return custom palette color for custom labels", () => {
+    const customLabels = ["feature", "security"];
+    expect(getLabelColor("feature", customLabels)).toBe(CUSTOM_LABEL_COLORS[0]);
+    expect(getLabelColor("security", customLabels)).toBe(CUSTOM_LABEL_COLORS[1]);
+  });
+
+  test("should cycle through palette for many custom labels", () => {
+    const manyLabels = Array.from({ length: 15 }, (_, i) => `label${i}`);
+    const color = getLabelColor("label10", manyLabels);
+    expect(color).toBe(
+      CUSTOM_LABEL_COLORS[10 % CUSTOM_LABEL_COLORS.length],
+    );
+  });
+
+  test("should return DEFAULT_COLOR for unknown labels", () => {
+    expect(getLabelColor("unknown", [])).toBe(DEFAULT_COLOR);
+  });
+});
+
+describe("formatLabels with custom labels config", () => {
+  test("should use custom palette colors for custom labels", () => {
+    const result = formatLabels(["feature"], "feature,security");
+    expect(result).toContain(CUSTOM_LABEL_COLORS[0]);
+    expect(result).toContain("feature");
+  });
+
+  test("should still use default colors for default labels", () => {
+    const result = formatLabels(["bug"], "feature,security");
+    expect(result).toContain(LABEL_COLORS.bug);
+  });
+
+  test("should handle mixed default and custom labels", () => {
+    const result = formatLabels(["bug", "feature"], "feature,security");
+    expect(result).toContain(LABEL_COLORS.bug);
+    expect(result).toContain(CUSTOM_LABEL_COLORS[0]);
   });
 });

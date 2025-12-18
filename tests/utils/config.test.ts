@@ -367,6 +367,86 @@ describe("CONFIG_SCHEMA", () => {
       expect(CONFIG_SCHEMA.CONTEXT.validate(context)).toBe(context);
     });
   });
+
+  describe("CUSTOM_LABELS validation", () => {
+    test("should accept empty string", () => {
+      const result = CONFIG_SCHEMA.CUSTOM_LABELS.validate("");
+      expect(result).toBe("");
+    });
+
+    test("should accept valid label names", () => {
+      const result = CONFIG_SCHEMA.CUSTOM_LABELS.validate(
+        "feature,refactor,security",
+      );
+      expect(result).toBe("feature,refactor,security");
+    });
+
+    test("should accept labels with hyphens and underscores", () => {
+      const result = CONFIG_SCHEMA.CUSTOM_LABELS.validate(
+        "feature-request,code_review",
+      );
+      expect(result).toBe("feature-request,code_review");
+    });
+
+    test("should accept labels with numbers", () => {
+      const result = CONFIG_SCHEMA.CUSTOM_LABELS.validate("v2-feature,fix123");
+      expect(result).toBe("v2-feature,fix123");
+    });
+
+    test("should trim whitespace from labels", () => {
+      const result = CONFIG_SCHEMA.CUSTOM_LABELS.validate(
+        " feature , refactor , security ",
+      );
+      expect(result).toBe("feature,refactor,security");
+    });
+
+    test("should throw error for labels starting with number", () => {
+      expect(() =>
+        CONFIG_SCHEMA.CUSTOM_LABELS.validate("123invalid"),
+      ).toThrow("Invalid label '123invalid'");
+    });
+
+    test("should throw error for labels with spaces", () => {
+      expect(() =>
+        CONFIG_SCHEMA.CUSTOM_LABELS.validate("has space"),
+      ).toThrow("Invalid label");
+    });
+
+    test("should throw error for labels with special characters", () => {
+      expect(() =>
+        CONFIG_SCHEMA.CUSTOM_LABELS.validate("feature!,test@"),
+      ).toThrow("Invalid label");
+    });
+
+    test("should throw error if exceeding 17 labels", () => {
+      const tooMany = Array.from({ length: 18 }, (_, i) => `label${i}`).join(
+        ",",
+      );
+      expect(() => CONFIG_SCHEMA.CUSTOM_LABELS.validate(tooMany)).toThrow(
+        "cannot exceed 17 labels",
+      );
+    });
+
+    test("should accept exactly 17 labels", () => {
+      const maxLabels = Array.from({ length: 17 }, (_, i) => `label${i}`).join(
+        ",",
+      );
+      expect(() =>
+        CONFIG_SCHEMA.CUSTOM_LABELS.validate(maxLabels),
+      ).not.toThrow();
+    });
+
+    test("should filter out empty entries from result", () => {
+      const result = CONFIG_SCHEMA.CUSTOM_LABELS.validate(
+        "feature,,refactor,",
+      );
+      expect(result).toBe("feature,refactor");
+    });
+
+    test("should have default value of empty string", () => {
+      expect(CONFIG_SCHEMA.CUSTOM_LABELS.default).toBe("");
+    });
+  });
 });
 
 describe("Config class", () => {
