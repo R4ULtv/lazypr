@@ -281,7 +281,8 @@ const createPullRequest = async (
     }
 
     if (pullRequest.labels?.length) {
-      const coloredLabels = formatLabels(pullRequest.labels);
+      const customLabelsConfig = await config.get("CUSTOM_LABELS");
+      const coloredLabels = formatLabels(pullRequest.labels, customLabelsConfig);
       log.info(`Pull Request Labels: ${coloredLabels}`);
     }
 
