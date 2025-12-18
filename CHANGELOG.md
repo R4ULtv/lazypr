@@ -4,6 +4,21 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/) and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## [1.4.0] - 2025-12-18
+
+### Added
+- **OPENAI PROVIDER SUPPORT:** Added OpenAI as a new AI provider option, enabling compatibility with OpenAI's API and any OpenAI-compatible endpoints. This includes support for:
+  - **Local providers:** Ollama (`http://localhost:11434/v1`), LM Studio (`http://localhost:1234/v1`), LocalAI
+  - **Third-party providers:** Together.ai, OpenRouter, and other services using the OpenAI API format
+  - **Self-hosted deployments:** Custom endpoints with OpenAI-compatible APIs
+- **OPENAI CONFIGURATION:** Added `OPENAI_API_KEY` and `OPENAI_BASE_URL` configuration options. The API key is optional for local providers that don't require authentication.
+- **CUSTOM LABELS:** Introduced the `CUSTOM_LABELS` configuration option, allowing users to define their own set of labels for PR generation. Users can now specify any labels used in their project instead of being limited to the default set (`enhancement`, `bug`, `documentation`).
+- **EXTENDED COLOR PALETTE:** Added an extended color palette for custom label display in the terminal, supporting a wider variety of label names with distinct colors.
+
+### Changed
+- **DEPENDENCIES:** Updated core dependencies including `@ai-sdk/cerebras`, `@ai-sdk/groq`, `ai`, `zod`, and `@types/bun` to their latest versions.
+- **DYNAMIC LABEL SCHEMA:** The label schema for PR generation is now dynamically built based on available labels (default or custom), providing better validation and AI guidance.
+
 ## [1.3.4] - 2025-12-07
 
 ### Added
