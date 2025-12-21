@@ -153,11 +153,19 @@ const createPullRequest = async (
 
     // Get commits (with optional filtering override)
     // When --no-filter is used, options.filter is false
-    const commits = await getPullRequestCommits(
-      targetBranch,
-      options.filter === false,
-    );
+    const filterDisabled = options.filter === false;
+    const commits = await getPullRequestCommits(targetBranch, filterDisabled);
+
     if (!commits || commits.length === 0) {
+      const filterEnabled =
+        !filterDisabled && (await config.get("FILTER_COMMITS")) === "true";
+
+      if (filterEnabled) {
+        exitWithError(
+          "No commits found after filtering. All commits were filtered out (merge commits, dependency updates, or formatting changes). Use --no-filter to include them.",
+        );
+      }
+
       exitWithError("No commits found for pull request");
     }
 
@@ -282,7 +290,10 @@ const createPullRequest = async (
 
     if (pullRequest.labels?.length) {
       const customLabelsConfig = await config.get("CUSTOM_LABELS");
-      const coloredLabels = formatLabels(pullRequest.labels, customLabelsConfig);
+      const coloredLabels = formatLabels(
+        pullRequest.labels,
+        customLabelsConfig,
+      );
       log.info(`Pull Request Labels: ${coloredLabels}`);
     }
 
