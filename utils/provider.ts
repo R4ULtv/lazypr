@@ -16,7 +16,11 @@ interface ProviderConfig {
   name: ProviderType;
   apiKeyConfigKey: string;
   apiKeyOptional?: boolean;
-  createModel: (apiKey: string, model: string, baseURL?: string) => LanguageModel;
+  createModel: (
+    apiKey: string,
+    model: string,
+    baseURL?: string,
+  ) => LanguageModel;
 }
 
 // Provider registry
@@ -170,7 +174,7 @@ export async function generatePullRequest(
 
     ### Requirements:
     **Title:**
-    - Exactly 5-50 characters
+    - Exactly 5-100 characters
     - Imperative mood, capitalize first letter, no trailing period
     - Summarize the main change or feature
 
