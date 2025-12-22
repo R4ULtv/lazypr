@@ -1,14 +1,15 @@
 {
   "name": "lazypr",
-  "version": "1.4.0",
-  "description": "Generate clean, consistent PRs from commits - powered by AI (Groq, Cerebras) and your git history.",
+  "version": "1.4.1",
+  "description": "Generate clean, consistent PRs from commits - powered by your favorite AI and your git history.",
   "keywords": [
     "cli",
     "git",
     "pull-request",
     "ai",
     "groq",
-    "cerebras"
+    "cerebras",
+    "openai"
   ],
   "author": "Raul Carini <contact@raulcarini.dev> (https://raulcarini.dev)",
   "license": "MIT",
