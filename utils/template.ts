@@ -59,6 +59,13 @@ async function readTemplateFile(path: string): Promise<string> {
 }
 
 /**
+ * Generates a content hash for deduplication
+ */
+function generateContentHash(content: string): string {
+  return `${content.substring(0, 200)}-${content.substring(Math.floor(content.length / 2), Math.floor(content.length / 2) + 100)}-${content.substring(Math.max(0, content.length - 100))}-${content.length}`;
+}
+
+/**
  * Gets the display name for a template from its filename
  */
 function getTemplateName(filename: string): string {
@@ -98,7 +105,7 @@ export async function findPRTemplates(
 
       const content = await readTemplateFile(fullPath);
       // Check if we've already seen this exact content (handles case-insensitive FS)
-      const contentHash = `${content.substring(0, 200)}-${content.substring(Math.floor(content.length / 2), Math.floor(content.length / 2) + 100)}-${content.substring(Math.max(0, content.length - 100))}-${content.length}`;
+      const contentHash = generateContentHash(content);
       if (seenContents.has(contentHash)) {
         continue;
       }
@@ -129,7 +136,7 @@ export async function findPRTemplates(
           const filePath = join(fullPath, file);
           const content = await readTemplateFile(filePath);
           // Check if we've already seen this exact content
-          const contentHash = `${content.substring(0, 200)}-${content.substring(Math.floor(content.length / 2), Math.floor(content.length / 2) + 100)}-${content.substring(Math.max(0, content.length - 100))}-${content.length}`;
+          const contentHash = generateContentHash(content);
           if (seenContents.has(contentHash)) {
             continue;
           }
