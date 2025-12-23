@@ -8,6 +8,11 @@ import { config } from "./config";
 import type { GitCommit } from "./git";
 import { DEFAULT_LABELS, getAvailableLabels } from "./labels";
 
+// PR validation constants
+const MIN_TITLE_LENGTH = 5;
+const MAX_TITLE_LENGTH = 100;
+const MIN_DESCRIPTION_LENGTH = 100;
+
 // Provider types
 export type ProviderType = "groq" | "cerebras" | "openai";
 
@@ -149,8 +154,8 @@ export async function generatePullRequest(
 
   // Build schema with dynamic labels
   const pullRequestSchema = z.object({
-    title: z.string().min(5).max(100),
-    description: z.string().min(100),
+    title: z.string().min(MIN_TITLE_LENGTH).max(MAX_TITLE_LENGTH),
+    description: z.string().min(MIN_DESCRIPTION_LENGTH),
     labels: buildLabelsSchema(availableLabels),
   });
 
@@ -182,12 +187,12 @@ export async function generatePullRequest(
 
     ### Requirements:
     **Title:**
-    - Exactly 5-100 characters
+    - Exactly ${MIN_TITLE_LENGTH}-${MAX_TITLE_LENGTH} characters
     - Imperative mood, capitalize first letter, no trailing period
     - Summarize the main change or feature
 
     **Description:**
-    - Minimum 100 characters (should be verbose and detailed)
+    - Minimum ${MIN_DESCRIPTION_LENGTH} characters (should be verbose and detailed)
     - Start with a general overview paragraph explaining the purpose/goal
     - Follow with detailed sections using markdown formatting
     - Include key changes, impacts, technical details, and context
@@ -223,11 +228,11 @@ export async function generatePullRequest(
 
     ### Required Output:
     Generate JSON with exactly these keys:
-    - title (string, 5-50 chars, imperative mood)
-    - description (string, 100+ chars, markdown formatted, verbose with general overview first)
+    - title (string, ${MIN_TITLE_LENGTH}-${MAX_TITLE_LENGTH} chars, imperative mood)
+    - description (string, ${MIN_DESCRIPTION_LENGTH}+ chars, markdown formatted, verbose with general overview first)
 
     ### Example Output:
-    {"title":"Add user authentication system","description":"This pull request introduces a comprehensive user authentication system to enhance application security and user management capabilities.\\n\\n## Key Changes\\n- Implemented JWT-based authentication with secure token generation\\n- Added login/logout API endpoints with proper validation\\n- Updated user model to include password hashing using bcrypt\\n- Added middleware for route protection\\n\\n## Technical Details\\n- Uses industry-standard JWT tokens for session management\\n- Passwords are hashed with salt rounds for security\\n- Includes proper error handling and validation"}
+    {"title":"Add user authentication system","description":"This pull request introduces a comprehensive user authentication system to enhance application security and user management capabilities.\\n\\n## Key Changes\\n- Implemented JWT-based authentication with secure token generation\\n- Added login/logout API endpoints with proper validation\\n- Updated user model to include password hashing using bcrypt\\n- Added middleware for route protection\\n\\n## Technical Details\\n- Uses industry-standard JWT tokens for session management\\n- Passwords are hashed with salt rounds for security\\n- Includes proper error handling and validation","labels":["enhancement"]}
 
     Generate the JSON object now:
     `,

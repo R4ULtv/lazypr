@@ -4,6 +4,13 @@ import { join } from "node:path";
 
 export const CONFIG_FILE = join(homedir(), ".lazypr");
 
+// Validation constants
+const MIN_API_KEY_LENGTH = 20;
+const MAX_CONTEXT_LENGTH = 200;
+const MAX_CUSTOM_LABELS = 17;
+const MAX_TOTAL_LABELS = 20;
+const MAX_LABEL_NAME_LENGTH = 50;
+
 type ConfigSchemaValue = {
   required?: boolean;
   default?: string;
@@ -26,7 +33,8 @@ export const CONFIG_SCHEMA = {
     required: false,
     validate: (v: string) => {
       if (!v?.trim()) return "";
-      if (!/^[A-Za-z0-9._-]{20,}$/.test(v.trim()))
+      const pattern = new RegExp(`^[A-Za-z0-9._-]{${MIN_API_KEY_LENGTH},}$`);
+      if (!pattern.test(v.trim()))
         throw new Error("Invalid GROQ_API_KEY format");
       return v.trim();
     },
@@ -35,7 +43,8 @@ export const CONFIG_SCHEMA = {
     required: false,
     validate: (v: string) => {
       if (!v?.trim()) return "";
-      if (!/^[A-Za-z0-9._-]{20,}$/.test(v.trim()))
+      const pattern = new RegExp(`^[A-Za-z0-9._-]{${MIN_API_KEY_LENGTH},}$`);
+      if (!pattern.test(v.trim()))
         throw new Error("Invalid CEREBRAS_API_KEY format");
       return v.trim();
     },
@@ -136,8 +145,10 @@ export const CONFIG_SCHEMA = {
     default: "",
     validate: (v: string) => {
       const context = v?.trim() || "";
-      if (context.length > 200) {
-        throw new Error("CONTEXT must be 200 characters or less");
+      if (context.length > MAX_CONTEXT_LENGTH) {
+        throw new Error(
+          `CONTEXT must be ${MAX_CONTEXT_LENGTH} characters or less`,
+        );
       }
       return context;
     },
@@ -153,17 +164,19 @@ export const CONFIG_SCHEMA = {
         .map((l) => l.trim())
         .filter(Boolean);
 
-      if (labels.length > 17) {
+      if (labels.length > MAX_CUSTOM_LABELS) {
         throw new Error(
-          "CUSTOM_LABELS cannot exceed 17 labels (20 total with defaults)",
+          `CUSTOM_LABELS cannot exceed ${MAX_CUSTOM_LABELS} labels (${MAX_TOTAL_LABELS} total with defaults)`,
         );
       }
 
-      const labelNameRegex = /^[a-zA-Z][a-zA-Z0-9_-]{0,49}$/;
+      const labelNameRegex = new RegExp(
+        `^[a-zA-Z][a-zA-Z0-9_-]{0,${MAX_LABEL_NAME_LENGTH - 1}}$`,
+      );
       for (const name of labels) {
         if (!labelNameRegex.test(name)) {
           throw new Error(
-            `Invalid label '${name}'. Must start with letter, contain only alphanumeric/hyphen/underscore, max 50 chars.`,
+            `Invalid label '${name}'. Must start with letter, contain only alphanumeric/hyphen/underscore, max ${MAX_LABEL_NAME_LENGTH} chars.`,
           );
         }
       }
