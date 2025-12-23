@@ -170,8 +170,15 @@ const createPullRequest = async (
         !filterDisabled && (await config.get("FILTER_COMMITS")) === "true";
 
       if (filterEnabled) {
+        // Get unfiltered commits to show how many were filtered
+        const unfilteredCommits = await getPullRequestCommits(
+          targetBranch,
+          true,
+        );
+        const filteredCount = unfilteredCommits.length;
+
         exitWithError(
-          "No commits found after filtering. All commits were filtered out (merge commits, dependency updates, or formatting changes). Use --no-filter to include them.",
+          `No commits found after filtering. ${filteredCount} commit${filteredCount === 1 ? "" : "s"} filtered out (merge commits, dependency updates, or formatting changes).\nUse --no-filter to include all commits.`,
         );
       }
 
