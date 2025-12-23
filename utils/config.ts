@@ -148,7 +148,10 @@ export const CONFIG_SCHEMA = {
       const value = v?.trim() || "";
       if (!value) return "";
 
-      const labels = value.split(",").map((l) => l.trim()).filter(Boolean);
+      const labels = value
+        .split(",")
+        .map((l) => l.trim())
+        .filter(Boolean);
 
       if (labels.length > 17) {
         throw new Error(
@@ -175,30 +178,38 @@ export type ConfigKey = keyof typeof CONFIG_SCHEMA;
 class Config {
   private cache = new Map<string, string>();
   private loaded = false;
+  private loadPromise: Promise<void> | null = null;
 
   // Load and parse config file
   private async load(): Promise<void> {
     if (this.loaded) return;
+    if (this.loadPromise) return this.loadPromise;
 
-    try {
-      const content = await readFile(CONFIG_FILE, "utf8");
-      this.cache = new Map(
-        content
-          .split("\n")
-          .map((line) => line.trim())
-          .filter((line) => line && !line.startsWith("#"))
-          .map((line) => {
-            const [key, ...rest] = line.split("=");
-            return [key?.trim(), rest.join("=")?.trim()] as [string, string];
-          })
-          .filter(([key, value]) => key && value !== undefined),
-      );
-    } catch (err) {
-      if ((err as NodeJS.ErrnoException).code !== "ENOENT") throw err;
-      // File doesn't exist, start with empty cache
-    }
+    this.loadPromise = (async () => {
+      try {
+        const content = await readFile(CONFIG_FILE, "utf8");
+        this.cache = new Map(
+          content
+            .split("\n")
+            .map((line) => line.trim())
+            .filter((line) => line && !line.startsWith("#"))
+            .map((line) => {
+              const [key, ...rest] = line.split("=");
+              return [key?.trim(), rest.join("=")?.trim()] as [string, string];
+            })
+            .filter(([key, value]) => key && value !== undefined),
+        );
+        this.loaded = true;
+      } catch (err) {
+        if ((err as NodeJS.ErrnoException).code !== "ENOENT") throw err;
+        // File doesn't exist, start with empty cache
+        this.loaded = true;
+      } finally {
+        this.loadPromise = null;
+      }
+    })();
 
-    this.loaded = true;
+    return this.loadPromise;
   }
 
   // Save config to file

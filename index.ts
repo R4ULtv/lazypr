@@ -114,14 +114,14 @@ const createPullRequest = async (
 
     // Check if branches are the same
     if (currentBranch === targetBranch) {
-      log.warning(
+      log.warn(
         `Target branch '${targetBranch}' is the same as current branch '${currentBranch}'`,
       );
     }
 
     // Check if target branch exists
     if (!branches.includes(targetBranch)) {
-      log.warning(
+      log.warn(
         `Target branch '${targetBranch}' doesn't exist. You can change the default branch in the config.`,
       );
     }
@@ -189,7 +189,7 @@ const createPullRequest = async (
         const availableTemplates = await findPRTemplates();
 
         if (availableTemplates.length === 0) {
-          log.warning("No PR templates found in .github folder");
+          log.warn("No PR templates found in .github folder");
         } else if (availableTemplates.length === 1) {
           // Only one template, use it automatically
           const firstTemplate = availableTemplates[0];
@@ -226,7 +226,7 @@ const createPullRequest = async (
           templateContent = template.content;
           log.info(`Using template: ${template.name}`);
         } else {
-          log.warning(
+          log.warn(
             `Template '${options.template}' not found, continuing without template`,
           );
         }
@@ -511,16 +511,16 @@ program
 
       if (!(key in CONFIG_SCHEMA)) {
         log.error(
-          `Error: Unknown config config '${key}'. Valid config: ${Object.keys(CONFIG_SCHEMA).join(", ")}`,
+          `Error: Unknown config key '${key}'.\nRun 'lazypr config list' to see all available keys.`,
         );
         process.exit(1);
       }
       const value = await config.get(key as ConfigKey).catch(() => undefined);
 
       if (value !== undefined) {
-        log.warning(`${key} = ${value}`);
+        log.warn(`${key} = ${value}`);
       } else {
-        log.warning(`Key '${key}' not found in config`);
+        log.warn(`Key '${key}' not found in config`);
       }
     } else if (type === "remove") {
       // For remove operation, keyValue is just the key
