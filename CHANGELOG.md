@@ -4,6 +4,28 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/) and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## [1.4.1] - 2025-12-23
+
+### Fixed
+- **CRITICAL: Terminal Output Crash** - Fixed a critical bug where the CLI would crash when using `log.warning()` which doesn't exist in `@clack/prompts`. Replaced all 6 instances with the correct `log.warn()` method.
+- **Config Race Condition** - Fixed a race condition in configuration loading that could cause multiple concurrent file reads and potential cache corruption. Added a promise-based locking mechanism to ensure safe concurrent access.
+- **Typo in Error Message** - Fixed error message typo: "Unknown config config" → "Unknown config key".
+- **Title Length Inconsistency** - Fixed inconsistency in PR title length documentation where example output stated "5-50 chars" but schema enforced "5-100 chars". Now consistently uses 100 characters maximum.
+
+### Changed
+- **Improved Error Messages** - Enhanced error messages throughout the application with more helpful context:
+  - Added example usage to config set errors: `Example: lazypr config set LOCALE=es`
+  - Replaced long key lists with suggestion to run `lazypr config list`
+  - Added provider-specific API key URLs (Groq, Cerebras, OpenAI) to error messages
+  - Include branch name in git error messages for better debugging
+  - Improved clipboard error message with actionable guidance
+- **Better Filtering Feedback** - When all commits are filtered out, the CLI now shows exactly how many commits were filtered (e.g., "5 commits filtered out") instead of a generic message.
+- **Code Quality Improvements**:
+  - Extracted all magic numbers to named constants for better maintainability
+  - Standardized ANSI escape codes to named constants instead of inline hex values
+  - Removed code duplication by extracting content hash logic to a helper function
+- **Dependencies** - Updated clipboardy dependency to v5.0.2.
+
 ## [1.4.0] - 2025-12-18
 
 ### Added
