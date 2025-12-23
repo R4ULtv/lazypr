@@ -32,6 +32,13 @@ import { findPRTemplates, getPRTemplate } from "./utils/template";
 
 const program = new Command();
 
+// ANSI formatting constants
+const ANSI = {
+  bold: "\x1b[1m",
+  underline: "\x1b[4m",
+  reset: "\x1b[0m",
+} as const;
+
 // Simple error handler
 const exitWithError = (message: string): never => {
   cancel(message);
@@ -68,7 +75,7 @@ const createPullRequest = async (
   },
 ): Promise<void> => {
   try {
-    intro("\x1b[30;47m lazypr \x1b[0m");
+    intro("\x1b[30;47m lazypr \x1b[0m"); // Black text on white background for branding
     let targetBranch = target || (await config.get("DEFAULT_BRANCH"));
 
     // Validate locale if provided
@@ -175,7 +182,7 @@ const createPullRequest = async (
     log.info(
       `You want to merge ${commitCount} commit${
         commitCount === 1 ? "" : "s"
-      } into \x1B[1;4m${targetBranch}\x1b[0m from \x1B[1;4m${currentBranch}\x1b[0m`,
+      } into ${ANSI.bold}${ANSI.underline}${targetBranch}${ANSI.reset} from ${ANSI.bold}${ANSI.underline}${currentBranch}${ANSI.reset}`,
     );
 
     // Handle template selection

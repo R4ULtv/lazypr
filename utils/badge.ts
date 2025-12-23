@@ -1,5 +1,13 @@
 import { note } from "@clack/prompts";
 
+// ANSI color constants
+const COLORS = {
+  green: "\x1b[32m",
+  reset: "\x1b[0m",
+  bold: "\x1b[1m",
+  dim: "\x1b[2m",
+} as const;
+
 interface BadgeConfig {
   provider: string;
   smartFilter: boolean;
@@ -15,17 +23,13 @@ interface BadgeConfig {
  * Formats a badge item with color and styling
  */
 function formatBadgeItem(label: string, value: string | boolean): string {
-  const color = "\x1b[32m"; // Green
-  const reset = "\x1b[0m";
-  const bold = "\x1b[1m";
-  const dim = "\x1b[2m";
   const statusIcon = "✓";
 
   if (typeof value === "boolean") {
-    return `${color}${statusIcon}${reset} ${bold}${label}${reset}`;
+    return `${COLORS.green}${statusIcon}${COLORS.reset} ${COLORS.bold}${label}${COLORS.reset}`;
   }
 
-  return `${color}${statusIcon}${reset} ${bold}${label}${reset}${dim}:${reset} ${value}`;
+  return `${COLORS.green}${statusIcon}${COLORS.reset} ${COLORS.bold}${label}${COLORS.reset}${COLORS.dim}:${COLORS.reset} ${value}`;
 }
 
 /**
@@ -65,6 +69,6 @@ export function displayConfigBadge(config: BadgeConfig): void {
     items.push(formatBadgeItem("GH CLI", config.ghCli));
   }
 
-  const badge = items.join("\x1b[2m | \x1b[0m");
+  const badge = items.join(`${COLORS.dim} | ${COLORS.reset}`);
   note(badge, "Configuration");
 }
