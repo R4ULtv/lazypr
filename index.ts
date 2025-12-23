@@ -49,7 +49,9 @@ const copyToClipboard = async (content: string): Promise<void> => {
     await clipboardy.write(content);
     success("Copied to clipboard!");
   } catch {
-    log.warn("Couldn't copy to clipboard");
+    log.warn(
+      "Failed to copy to clipboard. You can manually copy the content above.",
+    );
   }
 };
 
@@ -470,7 +472,7 @@ program
       // Check if the keyValue contains '='
       if (!keyValue.includes("=")) {
         log.error(
-          "Error: For 'set' operation, key-value pair must be in format KEY=VALUE",
+          "Error: For 'set' operation, key-value pair must be in format KEY=VALUE\nExample: lazypr config set LOCALE=es",
         );
         process.exit(1);
       }
@@ -489,7 +491,7 @@ program
       const trimmedKey = key.trim();
       if (!(trimmedKey in CONFIG_SCHEMA)) {
         log.error(
-          `Error: Unknown config key '${trimmedKey}'. Valid keys: ${Object.keys(CONFIG_SCHEMA).join(", ")}`,
+          `Error: Unknown config key '${trimmedKey}'.\nRun 'lazypr config list' to see all available keys.`,
         );
         process.exit(1);
       }

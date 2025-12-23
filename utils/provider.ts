@@ -67,6 +67,13 @@ async function getProviderConfig(): Promise<ProviderConfig> {
   return providerConfig;
 }
 
+// Provider API key URLs
+const apiKeyLinks: Record<ProviderType, string> = {
+  groq: "https://console.groq.com/keys",
+  cerebras: "https://cloud.cerebras.ai/",
+  openai: "https://platform.openai.com/api-keys",
+};
+
 // Validate that the required API key is set for the current provider
 export async function validateProviderApiKey(): Promise<void> {
   const providerConfig = await getProviderConfig();
@@ -81,8 +88,9 @@ export async function validateProviderApiKey(): Promise<void> {
 
   if (!apiKey) {
     throw new Error(
-      `${providerConfig.apiKeyConfigKey} is required for provider '${providerConfig.name}'. ` +
-        `Set it with: lazypr config set ${providerConfig.apiKeyConfigKey}=<your-api-key>`,
+      `${providerConfig.apiKeyConfigKey} is required for provider '${providerConfig.name}'.\n` +
+        `Get your API key: ${apiKeyLinks[providerConfig.name]}\n` +
+        `Then set it with: lazypr config set ${providerConfig.apiKeyConfigKey}=<your-api-key>`,
     );
   }
 }

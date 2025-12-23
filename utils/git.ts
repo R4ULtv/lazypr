@@ -91,7 +91,11 @@ export function filterCommits(commits: GitCommit[]): GitCommit[] {
 /**
  * Helper function to handle git errors with user-friendly messages
  */
-function handleGitError(error: unknown, context: string): never {
+function handleGitError(
+  error: unknown,
+  context: string,
+  branch?: string,
+): never {
   const stderr = (error as { stderr?: string }).stderr || "";
   const message = (error as Error).message || "";
 
@@ -105,8 +109,9 @@ function handleGitError(error: unknown, context: string): never {
     stderr.includes("unknown revision") ||
     stderr.includes("did not match any file(s) known to git")
   ) {
+    const branchMsg = branch ? ` Branch: '${branch}'` : "";
     throw new Error(
-      `Branch or revision not found. Please check if the branch exists locally or remotely.`,
+      `Branch or revision not found.${branchMsg} Please check if the branch exists locally or remotely.`,
     );
   }
 
@@ -216,6 +221,6 @@ export async function getPullRequestCommits(
     const shouldFilter = (await config.get("FILTER_COMMITS")) === "true";
     return shouldFilter ? filterCommits(commits) : commits;
   } catch (error) {
-    handleGitError(error, "fetching PR commits");
+    handleGitError(error, "fetching PR commits", targetBranch);
   }
 }
