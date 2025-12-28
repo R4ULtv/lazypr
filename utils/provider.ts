@@ -2,7 +2,7 @@ import { createCerebras } from "@ai-sdk/cerebras";
 import { createGroq } from "@ai-sdk/groq";
 import { createOpenAI } from "@ai-sdk/openai";
 import type { LanguageModel } from "ai";
-import { generateObject } from "ai";
+import { Output, generateText } from "ai";
 import * as z from "zod/v4";
 import { config } from "./config";
 import type { GitCommit } from "./git";
@@ -159,9 +159,9 @@ export async function generatePullRequest(
     labels: buildLabelsSchema(availableLabels),
   });
 
-  const { object, usage, finishReason } = await generateObject({
+  const { output, usage, finishReason } = await generateText({
     model: languageModel,
-    schema: pullRequestSchema,
+    output: Output.object({ schema: pullRequestSchema }),
     maxRetries: Number.parseInt(await config.get("MAX_RETRIES"), 10),
     abortSignal: AbortSignal.timeout(
       Number.parseInt(await config.get("TIMEOUT"), 10),
@@ -237,5 +237,5 @@ export async function generatePullRequest(
     Generate the JSON object now:
     `,
   });
-  return { object, usage, finishReason };
+  return { object: output, usage, finishReason };
 }
