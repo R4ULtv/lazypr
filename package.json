@@ -43,11 +43,11 @@
     "typescript": "^5.9.2"
   },
   "dependencies": {
-    "@ai-sdk/cerebras": "^1.0.33",
-    "@ai-sdk/groq": "^2.0.33",
-    "@ai-sdk/openai": "^2.0.88",
+    "@ai-sdk/cerebras": "^2.0.2",
+    "@ai-sdk/groq": "^3.0.1",
+    "@ai-sdk/openai": "^3.0.1",
     "@clack/prompts": "^0.11.0",
-    "ai": "^5.0.116",
+    "ai": "^6.0.3",
     "clipboardy": "^5.0.2",
     "commander": "^14.0.2",
     "zod": "^4.2.1"
