@@ -23,6 +23,9 @@
   },
   "module": "index.ts",
   "type": "module",
+  "engines": {
+    "node": ">=20.0.0"
+  },
   "bin": {
     "lazypr": "./dist/index.js",
     "lzp": "./dist/lzp.js"
@@ -39,18 +42,15 @@
     "lint:fix": "biome lint --write",
     "prepublishOnly": "bun run build"
   },
-  "peerDependencies": {
-    "typescript": "^5.9.2"
-  },
   "dependencies": {
-    "@ai-sdk/cerebras": "^2.0.2",
-    "@ai-sdk/groq": "^3.0.1",
-    "@ai-sdk/openai": "^3.0.1",
+    "@ai-sdk/cerebras": "^2.0.3",
+    "@ai-sdk/groq": "^3.0.2",
+    "@ai-sdk/openai": "^3.0.2",
     "@clack/prompts": "^0.11.0",
-    "ai": "^6.0.3",
+    "ai": "^6.0.5",
     "clipboardy": "^5.0.2",
     "commander": "^14.0.2",
-    "zod": "^4.2.1"
+    "zod": "^4.3.2"
   },
   "devDependencies": {
     "@biomejs/biome": "2.3.10",
