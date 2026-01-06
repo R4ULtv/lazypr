@@ -1,6 +1,6 @@
 {
   "name": "lazypr",
-  "version": "1.4.1",
+  "version": "1.4.2",
   "description": "Generate clean, consistent PRs from commits - powered by your favorite AI and your git history.",
   "keywords": [
     "cli",

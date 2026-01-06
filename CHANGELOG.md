@@ -4,6 +4,20 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/) and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## [1.4.2] - 2026-01-06
+
+### Changed
+- **DEPENDENCIES:** Updated core dependencies to latest versions:
+  - Bumped `zod` to version 4.3.4
+  - Updated all other dependencies to their latest versions
+  - Removed TypeScript as a peer dependency for better compatibility
+
+### Refactored
+- **AI SDK V6 MIGRATION:** Migrated from Vercel AI SDK v5 to v6 ([#26](https://github.com/R4ULtv/lazypr/pull/26))
+  - Refactored AI generation to use `generateText` for structured object generation
+  - Updated provider integrations to work with the new AI SDK architecture
+  - Improved type safety and consistency across AI interactions
+
 ## [1.4.1] - 2025-12-23
 
 ### Fixed
