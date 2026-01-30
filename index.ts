@@ -12,6 +12,7 @@ import {
 } from "@clack/prompts";
 import clipboardy from "clipboardy";
 import { Command } from "commander";
+import pc from "picocolors";
 import { displayConfigBadge } from "./utils/badge";
 import {
   CONFIG_FILE,
@@ -31,13 +32,6 @@ import { generatePullRequest, validateProviderApiKey } from "./utils/provider";
 import { findPRTemplates, getPRTemplate } from "./utils/template";
 
 const program = new Command();
-
-// ANSI formatting constants
-const ANSI = {
-  bold: "\x1b[1m",
-  underline: "\x1b[4m",
-  reset: "\x1b[0m",
-} as const;
 
 // Simple error handler
 const exitWithError = (message: string): never => {
@@ -75,7 +69,7 @@ const createPullRequest = async (
   },
 ): Promise<void> => {
   try {
-    intro("\x1b[30;47m lazypr \x1b[0m"); // Black text on white background for branding
+    intro(pc.bgWhite(pc.black(" lazypr ")));
     let targetBranch = target || (await config.get("DEFAULT_BRANCH"));
 
     // Validate locale if provided
@@ -189,7 +183,7 @@ const createPullRequest = async (
     log.info(
       `You want to merge ${commitCount} commit${
         commitCount === 1 ? "" : "s"
-      } into ${ANSI.bold}${ANSI.underline}${targetBranch}${ANSI.reset} from ${ANSI.bold}${ANSI.underline}${currentBranch}${ANSI.reset}`,
+      } into ${pc.bold(pc.underline(targetBranch))} from ${pc.bold(pc.underline(currentBranch))}`,
     );
 
     // Handle template selection
@@ -455,23 +449,23 @@ program
                 ? `${"*".repeat(currentValue.length - 4)}${currentValue.slice(-4)}`
                 : "****";
             displayValue = masked;
-            status = "\x1b[32m✓\x1b[0m"; // Green checkmark
+            status = pc.green("✓");
           } else {
             displayValue = currentValue;
-            status = "\x1b[32m✓\x1b[0m"; // Green checkmark
+            status = pc.green("✓");
           }
         } else if (defaultValue !== undefined) {
-          displayValue = `${defaultValue} \x1b[2m(default)\x1b[0m`;
-          status = "\x1b[33m○\x1b[0m"; // Yellow circle
+          displayValue = `${defaultValue} ${pc.dim("(default)")}`;
+          status = pc.yellow("○");
         } else if (isRequired) {
-          displayValue = "\x1b[31mNOT SET (required)\x1b[0m";
-          status = "\x1b[31m✗\x1b[0m"; // Red X
+          displayValue = pc.red("NOT SET (required)");
+          status = pc.red("✗");
         } else {
-          displayValue = "\x1b[2mnot set\x1b[0m";
-          status = "\x1b[2m○\x1b[0m"; // Dim circle
+          displayValue = pc.dim("not set");
+          status = pc.dim("○");
         }
 
-        lines.push(`${status} \x1b[1m${key}\x1b[0m: ${displayValue}`);
+        lines.push(`${status} ${pc.bold(key)}: ${displayValue}`);
       }
 
       // Display configuration settings in first note
@@ -479,13 +473,15 @@ program
 
       // Display file location and warning in second note
       const locationLines: string[] = [];
-      locationLines.push(`\x1b[2mLocation: ${CONFIG_FILE}\x1b[0m`);
+      locationLines.push(pc.dim(`Location: ${CONFIG_FILE}`));
       locationLines.push("");
       locationLines.push(
-        "\x1b[33m⚠️  Editing the config file manually is not recommended - use the CLI\x1b[0m",
+        pc.yellow(
+          "⚠️  Editing the config file manually is not recommended - use the CLI",
+        ),
       );
       locationLines.push(
-        "\x1b[33m   commands instead to avoid misconfigurations\x1b[0m",
+        pc.yellow("   commands instead to avoid misconfigurations"),
       );
 
       note(locationLines.join("\n"), "Config File");

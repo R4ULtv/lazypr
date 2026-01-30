@@ -1,24 +1,28 @@
-export const LABEL_COLORS: Record<string, string> = {
-  enhancement: "\x1b[30;42m",
-  bug: "\x1b[30;41m",
-  documentation: "\x1b[30;44m",
+import pc from "picocolors";
+
+type ColorFn = (text: string) => string;
+
+// Label color formatters using picocolors
+const LABEL_FORMATTERS: Record<string, ColorFn> = {
+  enhancement: (text) => pc.bgGreen(pc.black(text)),
+  bug: (text) => pc.bgRed(pc.black(text)),
+  documentation: (text) => pc.bgBlue(pc.black(text)),
 };
 
 // Extended color palette for custom labels
-export const CUSTOM_LABEL_COLORS: string[] = [
-  "\x1b[30;46m", // Cyan
-  "\x1b[30;45m", // Magenta
-  "\x1b[30;43m", // Yellow
-  "\x1b[97;100m", // Bright white on gray
-  "\x1b[30;102m", // Bright green
-  "\x1b[30;103m", // Bright yellow
-  "\x1b[30;104m", // Bright blue
-  "\x1b[30;105m", // Bright magenta
-  "\x1b[30;106m", // Bright cyan
+const CUSTOM_LABEL_FORMATTERS: ColorFn[] = [
+  (text) => pc.bgCyan(pc.black(text)),
+  (text) => pc.bgMagenta(pc.black(text)),
+  (text) => pc.bgYellow(pc.black(text)),
+  (text) => pc.inverse(text), // White on gray equivalent
+  (text) => pc.bgGreen(pc.black(text)),
+  (text) => pc.bgYellow(pc.black(text)),
+  (text) => pc.bgBlue(pc.black(text)),
+  (text) => pc.bgMagenta(pc.black(text)),
+  (text) => pc.bgCyan(pc.black(text)),
 ];
 
-export const DEFAULT_COLOR = "\x1b[30;47m";
-export const RESET = "\x1b[0m";
+const DEFAULT_FORMATTER: ColorFn = (text) => pc.bgWhite(pc.black(text));
 
 export const DEFAULT_LABELS = ["enhancement", "bug", "documentation"] as const;
 
@@ -55,23 +59,24 @@ export function getAvailableLabels(customLabelsConfig: string): string[] {
 }
 
 /**
- * Get color for a label, using custom palette for non-default labels
+ * Get formatter for a label, using custom palette for non-default labels
  */
-export function getLabelColor(label: string, customLabels: string[]): string {
-  // Default labels have fixed colors
-  const defaultColor = LABEL_COLORS[label];
-  if (defaultColor) {
-    return defaultColor;
+function getLabelFormatter(label: string, customLabels: string[]): ColorFn {
+  // Default labels have fixed formatters
+  const defaultFormatter = LABEL_FORMATTERS[label];
+  if (defaultFormatter) {
+    return defaultFormatter;
   }
 
-  // Custom labels get colors from the palette based on their index
+  // Custom labels get formatters from the palette based on their index
   const customIndex = customLabels.indexOf(label);
   if (customIndex !== -1) {
-    const color = CUSTOM_LABEL_COLORS[customIndex % CUSTOM_LABEL_COLORS.length];
-    return color ?? DEFAULT_COLOR;
+    const formatter =
+      CUSTOM_LABEL_FORMATTERS[customIndex % CUSTOM_LABEL_FORMATTERS.length];
+    return formatter ?? DEFAULT_FORMATTER;
   }
 
-  return DEFAULT_COLOR;
+  return DEFAULT_FORMATTER;
 }
 
 export function formatLabels(
@@ -86,8 +91,8 @@ export function formatLabels(
 
   const coloredLabels = labels
     .map((label) => {
-      const color = getLabelColor(label, customLabels);
-      return `${color} ${label} ${RESET}`;
+      const formatter = getLabelFormatter(label, customLabels);
+      return formatter(` ${label} `);
     })
     .join(" ");
 
