@@ -278,23 +278,32 @@ const createPullRequest = async (
       context: currentContext,
     });
 
-    const spin = spinner({ indicator: "timer" });
+    const spin = spinner();
     spin.start("Generating Pull Request");
 
     // Generate PR
-    const {
-      object: pullRequest,
-      usage,
-      finishReason,
-    } = await generatePullRequest(
-      currentBranch,
-      commits,
-      templateContent,
-      options.locale,
-      options.context,
-    );
+    let pullRequest: Awaited<ReturnType<typeof generatePullRequest>>["object"];
+    let usage: Awaited<ReturnType<typeof generatePullRequest>>["usage"];
+    let finishReason: Awaited<
+      ReturnType<typeof generatePullRequest>
+    >["finishReason"];
 
-    spin.stop("Generated Pull Request");
+    try {
+      const result = await generatePullRequest(
+        currentBranch,
+        commits,
+        templateContent,
+        options.locale,
+        options.context,
+      );
+      pullRequest = result.object;
+      usage = result.usage;
+      finishReason = result.finishReason;
+      spin.stop("Generated Pull Request");
+    } catch (error) {
+      spin.error("Failed to generate Pull Request");
+      throw error;
+    }
 
     // Display detailed usage if flag is set
     if (options.usage) {
