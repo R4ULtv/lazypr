@@ -4,6 +4,24 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/) and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## [1.5.0] - 2026-01-31
+
+### Added
+- **AUTOCOMPLETE BRANCH SELECTION:** Branch selection now uses an autocomplete input with type-ahead filtering, making it faster and easier to find the target branch.
+- **AUTOCOMPLETE TEMPLATE SELECTION:** Template selection now uses autocomplete with type-ahead filtering for a better user experience.
+
+### Changed
+- **TERMINAL COLORING:** Migrated from `chalk` to `picocolors` for terminal coloring, resulting in a smaller bundle size and faster startup time.
+- **DEPENDENCIES:** Updated AI SDK and related dependencies to their latest versions, including improved spinner behavior with timer indicator.
+
+### Refactored
+- **CODE ORGANIZATION:** Improved code organization and maintainability:
+  - Extracted shell escaping utilities to `utils/shell.ts` (`escapeShellArg`, `buildGhPrCommand`)
+  - Extracted PR generation prompts to `utils/prompts.ts` for better separation of concerns
+  - Added `validateOption` helper to DRY up locale/context validation
+  - Added `selectTargetBranch` and `selectTemplate` helper functions for cleaner main flow
+  - Implemented parallel config loading using `Promise.all()` for improved performance
+
 ## [1.4.2] - 2026-01-06
 
 ### Changed
