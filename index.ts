@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 
 import {
+  autocomplete,
   cancel,
   confirm,
   intro,
@@ -29,7 +30,11 @@ import {
 import { pkg } from "./utils/info";
 import { formatLabels } from "./utils/labels";
 import { generatePullRequest, validateProviderApiKey } from "./utils/provider";
+import { buildGhPrCommand } from "./utils/shell";
 import { findPRTemplates, getPRTemplate } from "./utils/template";
+
+// Threshold for switching from select to autocomplete
+const AUTOCOMPLETE_THRESHOLD = 10;
 
 const program = new Command();
 
@@ -42,6 +47,132 @@ const exitWithError = (message: string): never => {
 // Simple success message
 const success = (message: string): void => {
   log.success(message);
+};
+
+// Validate config option value
+const validateOption = <K extends "LOCALE" | "CONTEXT">(
+  value: string | undefined,
+  key: K,
+): string | undefined => {
+  if (!value) return undefined;
+  try {
+    return CONFIG_SCHEMA[key].validate(value);
+  } catch (error) {
+    exitWithError(
+      `Invalid ${key.toLowerCase()}: ${error instanceof Error ? error.message : "Unknown error"}`,
+    );
+  }
+};
+
+// Select target branch with autocomplete for large lists
+const selectTargetBranch = async (
+  currentBranch: string,
+  availableBranches: string[],
+): Promise<string> => {
+  if (availableBranches.length === 0) {
+    exitWithError("No other branches available to merge into");
+  }
+
+  const options = availableBranches.map((branch) => ({
+    value: branch,
+    label: branch,
+  }));
+
+  const selectedBranch =
+    availableBranches.length > AUTOCOMPLETE_THRESHOLD
+      ? await autocomplete({
+          message: `Select target branch to merge '${currentBranch}' into:`,
+          options,
+          placeholder: "Type to filter...",
+        })
+      : await select({
+          message: `Select target branch to merge '${currentBranch}' into:`,
+          options,
+        });
+
+  if (typeof selectedBranch === "symbol") {
+    exitWithError("Branch selection cancelled");
+  }
+
+  return selectedBranch as string;
+};
+
+// Select PR template interactively or by name
+const selectTemplate = async (
+  templateOption: string | boolean | undefined,
+): Promise<{ content: string | undefined; name: string | undefined }> => {
+  if (templateOption === undefined) {
+    return { content: undefined, name: undefined };
+  }
+
+  // Flag without value or --template flag: show interactive selection
+  if (
+    templateOption === "" ||
+    templateOption === "true" ||
+    templateOption === true
+  ) {
+    const availableTemplates = await findPRTemplates();
+
+    if (availableTemplates.length === 0) {
+      log.warn("No PR templates found in .github folder");
+      return { content: undefined, name: undefined };
+    }
+
+    if (availableTemplates.length === 1) {
+      const firstTemplate = availableTemplates[0];
+      if (firstTemplate) {
+        log.info(`Using template: ${firstTemplate.name}`);
+        return { content: firstTemplate.content, name: firstTemplate.name };
+      }
+    }
+
+    // Multiple templates, let user choose (use autocomplete for large lists)
+    const options = availableTemplates.map((tmpl) => ({
+      value: tmpl.path,
+      label: `${tmpl.name} (${tmpl.path})`,
+    }));
+
+    const selectedTemplate =
+      availableTemplates.length > AUTOCOMPLETE_THRESHOLD
+        ? await autocomplete({
+            message: "Select a PR template:",
+            options,
+            placeholder: "Type to filter...",
+          })
+        : await select({
+            message: "Select a PR template:",
+            options,
+          });
+
+    if (typeof selectedTemplate === "symbol") {
+      log.info("No template selected, continuing without template");
+      return { content: undefined, name: undefined };
+    }
+
+    const template = availableTemplates.find(
+      (t) => t.path === selectedTemplate,
+    );
+    if (template) {
+      log.info(`Using template: ${template.name}`);
+      return { content: template.content, name: template.name };
+    }
+
+    return { content: undefined, name: undefined };
+  }
+
+  // Specific template name/path provided
+  if (typeof templateOption === "string") {
+    const template = await getPRTemplate(templateOption);
+    if (template) {
+      log.info(`Using template: ${template.name}`);
+      return { content: template.content, name: template.name };
+    }
+    log.warn(
+      `Template '${templateOption}' not found, continuing without template`,
+    );
+  }
+
+  return { content: undefined, name: undefined };
 };
 
 // Copy to clipboard
@@ -72,27 +203,9 @@ const createPullRequest = async (
     intro(pc.bgWhite(pc.black(" lazypr ")));
     let targetBranch = target || (await config.get("DEFAULT_BRANCH"));
 
-    // Validate locale if provided
-    if (options.locale) {
-      try {
-        options.locale = CONFIG_SCHEMA.LOCALE.validate(options.locale);
-      } catch (error) {
-        exitWithError(
-          `Invalid locale: ${error instanceof Error ? error.message : "Unknown error"}`,
-        );
-      }
-    }
-
-    // Validate context if provided
-    if (options.context) {
-      try {
-        options.context = CONFIG_SCHEMA.CONTEXT.validate(options.context);
-      } catch (error) {
-        exitWithError(
-          `Invalid context: ${error instanceof Error ? error.message : "Unknown error"}`,
-        );
-      }
-    }
+    // Validate options
+    options.locale = validateOption(options.locale, "LOCALE");
+    options.context = validateOption(options.context, "CONTEXT");
 
     // Check if git repo
     await isGitRepository();
@@ -134,24 +247,7 @@ const createPullRequest = async (
       const availableBranches = branches.filter(
         (branch) => branch !== currentBranch,
       );
-
-      if (availableBranches.length === 0) {
-        exitWithError("No other branches available to merge into");
-      }
-
-      const selectedBranch = await select({
-        message: `Select target branch to merge '${currentBranch}' into:`,
-        options: availableBranches.map((branch) => ({
-          value: branch,
-          label: branch,
-        })),
-      });
-
-      if (typeof selectedBranch === "symbol") {
-        exitWithError("Branch selection cancelled");
-      }
-
-      targetBranch = selectedBranch as string;
+      targetBranch = await selectTargetBranch(currentBranch, availableBranches);
     }
 
     // Get commits (with optional filtering override)
@@ -187,92 +283,36 @@ const createPullRequest = async (
     );
 
     // Handle template selection
-    let templateContent: string | undefined;
-    if (options.template !== undefined) {
-      // Template flag was provided
-      if (
-        options.template === "" ||
-        options.template === "true" ||
-        options.template === true
-      ) {
-        // Flag without value or --template flag: show interactive selection
-        const availableTemplates = await findPRTemplates();
+    const { content: templateContent, name: templateName } =
+      await selectTemplate(options.template);
 
-        if (availableTemplates.length === 0) {
-          log.warn("No PR templates found in .github folder");
-        } else if (availableTemplates.length === 1) {
-          // Only one template, use it automatically
-          const firstTemplate = availableTemplates[0];
-          if (firstTemplate) {
-            templateContent = firstTemplate.content;
-            log.info(`Using template: ${firstTemplate.name}`);
-          }
-        } else {
-          // Multiple templates, let user choose
-          const selectedTemplate = await select({
-            message: "Select a PR template:",
-            options: availableTemplates.map((tmpl) => ({
-              value: tmpl.path,
-              label: `${tmpl.name} (${tmpl.path})`,
-            })),
-          });
+    // Load config values in parallel
+    const [configLocale, configContext, filterCommitsConfig, provider, model] =
+      await Promise.all([
+        config.get("LOCALE"),
+        config.get("CONTEXT"),
+        config.get("FILTER_COMMITS"),
+        config.get("PROVIDER"),
+        config.get("MODEL"),
+      ]);
 
-          if (typeof selectedTemplate === "symbol") {
-            log.info("No template selected, continuing without template");
-          } else {
-            const template = availableTemplates.find(
-              (t) => t.path === selectedTemplate,
-            );
-            if (template) {
-              templateContent = template.content;
-              log.info(`Using template: ${template.name}`);
-            }
-          }
-        }
-      } else if (typeof options.template === "string") {
-        // Specific template name/path provided
-        const template = await getPRTemplate(options.template);
-        if (template) {
-          templateContent = template.content;
-          log.info(`Using template: ${template.name}`);
-        } else {
-          log.warn(
-            `Template '${options.template}' not found, continuing without template`,
-          );
-        }
-      }
-    }
-
-    // Display configuration badge before generating PR
-    const currentLocale = options.locale || (await config.get("LOCALE"));
-    const currentContext = options.context || (await config.get("CONTEXT"));
+    const currentLocale = options.locale || configLocale;
+    const currentContext = options.context || configContext;
     const filterEnabled =
-      options.filter !== false &&
-      (await config.get("FILTER_COMMITS")) === "true";
-
-    // Extract template name from templateContent if available
-    let templateName: string | undefined;
-    if (templateContent) {
-      // Try to find template name from the previous logs or use generic name
-      const availableTemplates = await findPRTemplates();
-      const matchedTemplate = availableTemplates.find(
-        (t) => t.content === templateContent,
-      );
-      templateName = matchedTemplate?.name || "Custom Template";
-    }
+      options.filter !== false && filterCommitsConfig === "true";
 
     displayConfigBadge({
-      provider: await config.get("PROVIDER"),
+      provider,
       smartFilter: filterEnabled,
       locale: currentLocale,
       template: templateName,
       usage: options.usage || false,
       ghCli: options.gh || false,
-      model: await config.get("MODEL"),
+      model,
       context: currentContext,
     });
 
-    const spin = spinner();
+    const spin = spinner({ indicator: "timer" });
     spin.start("Generating Pull Request");
 
     // Generate PR
@@ -321,27 +361,7 @@ const createPullRequest = async (
 
     // If --gh flag is provided, generate and copy the gh pr create command
     if (options.gh) {
-      // Helper function to escape shell special characters for $'...' syntax
-      const escapeShellArg = (str: string): string => {
-        return str
-          .replace(/\\/g, "\\\\") // Escape backslashes first
-          .replace(/'/g, "\\'") // Escape single quotes for $'...' syntax
-          .replace(/`/g, "\\`") // Escape backticks
-          .replace(/\$/g, "\\$") // Escape dollar signs
-          .replace(/\n/g, "\\n"); // Keep newlines as \n for $'...' syntax
-      };
-
-      const escapedTitle = escapeShellArg(pullRequest.title);
-      const escapedDescription = escapeShellArg(pullRequest.description);
-
-      // Build labels part of the command
-      const labelsArg =
-        pullRequest.labels && pullRequest.labels.length > 0
-          ? `-l "${pullRequest.labels.join(", ")}"`
-          : "";
-
-      // Use $'...' syntax for the body to properly interpret \n as newlines
-      const ghCommand = `gh pr create -B ${targetBranch} ${labelsArg} -t $'${escapedTitle}' -b $'${escapedDescription}'`;
+      const ghCommand = buildGhPrCommand(targetBranch, pullRequest);
 
       const copyCommand = await confirm({
         message: "Do you want to copy the GitHub CLI command?",
@@ -369,10 +389,9 @@ const createPullRequest = async (
       }
     }
 
-    log.info(
-      "Remember: AI can make mistakes, always review the generated content.",
+    outro(
+      "Done - Remember: AI can make mistakes, always review the generated content.",
     );
-    outro("Done!");
   } catch (error) {
     exitWithError(
       `Failed: ${error instanceof Error ? error.message : "Unknown error"}`,
