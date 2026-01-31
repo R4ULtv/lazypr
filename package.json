@@ -15,7 +15,7 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/r4ultv/lazypr.git"
+    "url": "https://github.com/r4ultv/lazypr.git"
   },
   "homepage": "https://lazypr.vercel.app",
   "bugs": {
