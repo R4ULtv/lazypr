@@ -15,7 +15,7 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/r4ultv/lazypr.git"
+    "url": "git+https://github.com/r4ultv/lazypr.git"
   },
   "homepage": "https://lazypr.vercel.app",
   "bugs": {
@@ -27,8 +27,8 @@
     "node": ">=20.0.0"
   },
   "bin": {
-    "lazypr": "./dist/index.js",
-    "lzp": "./dist/lzp.js"
+    "lazypr": "dist/index.js",
+    "lzp": "dist/lzp.js"
   },
   "files": [
     "dist"
@@ -39,8 +39,7 @@
     "dev": "bun run index.ts",
     "start": "node dist/index.js",
     "lint": "biome lint",
-    "lint:fix": "biome lint --write",
-    "prepublishOnly": "bun run build"
+    "lint:fix": "biome lint --write"
   },
   "dependencies": {
     "@ai-sdk/cerebras": "^2.0.27",
