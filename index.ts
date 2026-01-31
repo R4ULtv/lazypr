@@ -8,7 +8,6 @@ import {
   log,
   note,
   outro,
-  select,
   spinner,
 } from "@clack/prompts";
 import clipboardy from "clipboardy";
@@ -32,9 +31,6 @@ import { formatLabels } from "./utils/labels";
 import { generatePullRequest, validateProviderApiKey } from "./utils/provider";
 import { buildGhPrCommand } from "./utils/shell";
 import { findPRTemplates, getPRTemplate } from "./utils/template";
-
-// Threshold for switching from select to autocomplete
-const AUTOCOMPLETE_THRESHOLD = 10;
 
 const program = new Command();
 
@@ -64,7 +60,7 @@ const validateOption = <K extends "LOCALE" | "CONTEXT">(
   }
 };
 
-// Select target branch with autocomplete for large lists
+// Select target branch with autocomplete
 const selectTargetBranch = async (
   currentBranch: string,
   availableBranches: string[],
@@ -73,22 +69,14 @@ const selectTargetBranch = async (
     exitWithError("No other branches available to merge into");
   }
 
-  const options = availableBranches.map((branch) => ({
-    value: branch,
-    label: branch,
-  }));
-
-  const selectedBranch =
-    availableBranches.length > AUTOCOMPLETE_THRESHOLD
-      ? await autocomplete({
-          message: `Select target branch to merge '${currentBranch}' into:`,
-          options,
-          placeholder: "Type to filter...",
-        })
-      : await select({
-          message: `Select target branch to merge '${currentBranch}' into:`,
-          options,
-        });
+  const selectedBranch = await autocomplete({
+    message: `Select target branch to merge '${currentBranch}' into:`,
+    options: availableBranches.map((branch) => ({
+      value: branch,
+      label: branch,
+    })),
+    placeholder: "Type to filter...",
+  });
 
   if (typeof selectedBranch === "symbol") {
     exitWithError("Branch selection cancelled");
@@ -126,23 +114,15 @@ const selectTemplate = async (
       }
     }
 
-    // Multiple templates, let user choose (use autocomplete for large lists)
-    const options = availableTemplates.map((tmpl) => ({
-      value: tmpl.path,
-      label: `${tmpl.name} (${tmpl.path})`,
-    }));
-
-    const selectedTemplate =
-      availableTemplates.length > AUTOCOMPLETE_THRESHOLD
-        ? await autocomplete({
-            message: "Select a PR template:",
-            options,
-            placeholder: "Type to filter...",
-          })
-        : await select({
-            message: "Select a PR template:",
-            options,
-          });
+    // Multiple templates, let user choose
+    const selectedTemplate = await autocomplete({
+      message: "Select a PR template:",
+      options: availableTemplates.map((tmpl) => ({
+        value: tmpl.path,
+        label: `${tmpl.name} (${tmpl.path})`,
+      })),
+      placeholder: "Type to filter...",
+    });
 
     if (typeof selectedTemplate === "symbol") {
       log.info("No template selected, continuing without template");
