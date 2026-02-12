@@ -468,15 +468,15 @@ describe("CONFIG_SCHEMA", () => {
     });
 
     test("should throw error for labels starting with number", () => {
-      expect(() =>
-        CONFIG_SCHEMA.CUSTOM_LABELS.validate("123invalid"),
-      ).toThrow("Invalid label '123invalid'");
+      expect(() => CONFIG_SCHEMA.CUSTOM_LABELS.validate("123invalid")).toThrow(
+        "Invalid label '123invalid'",
+      );
     });
 
     test("should throw error for labels with spaces", () => {
-      expect(() =>
-        CONFIG_SCHEMA.CUSTOM_LABELS.validate("has space"),
-      ).toThrow("Invalid label");
+      expect(() => CONFIG_SCHEMA.CUSTOM_LABELS.validate("has space")).toThrow(
+        "Invalid label",
+      );
     });
 
     test("should throw error for labels with special characters", () => {
@@ -504,9 +504,7 @@ describe("CONFIG_SCHEMA", () => {
     });
 
     test("should filter out empty entries from result", () => {
-      const result = CONFIG_SCHEMA.CUSTOM_LABELS.validate(
-        "feature,,refactor,",
-      );
+      const result = CONFIG_SCHEMA.CUSTOM_LABELS.validate("feature,,refactor,");
       expect(result).toBe("feature,refactor");
     });
 
