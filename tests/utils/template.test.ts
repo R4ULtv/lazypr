@@ -150,7 +150,10 @@ describe("PR Template Utils", () => {
       await writeFile(join(templateDir, "feature_request.md"), "# Feature Request");
 
       const templates = await findPRTemplates(testDir);
-      expect(templates.map((t) => t.name).toSorted()).toEqual(["Bug Fix Template", "Feature Request"]);
+      expect(templates.map((t) => t.name).toSorted()).toEqual([
+        "Bug Fix Template",
+        "Feature Request",
+      ]);
     });
   });
 });

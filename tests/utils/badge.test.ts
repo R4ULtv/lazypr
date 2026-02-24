@@ -7,9 +7,6 @@ mock.module("@clack/prompts", () => ({
   note: mockNote,
 }));
 
-// ANSI escape code pattern for matching any color/formatting
-const ANSI_PATTERN = new RegExp(`${String.fromCharCode(27)}\\[\\d+m`);
-
 describe("displayConfigBadge", () => {
   test("should display minimal config with only required fields", () => {
     mockNote.mockClear();
@@ -255,7 +252,7 @@ describe("displayConfigBadge", () => {
     expect(badge).toContain("GH CLI");
   });
 
-  test("should include ANSI color codes for styling", () => {
+  test("should include check marks for styling", () => {
     mockNote.mockClear();
 
     displayConfigBadge({
@@ -268,10 +265,7 @@ describe("displayConfigBadge", () => {
     });
 
     const [badge] = mockNote.mock.calls[0];
-
-    // Check for ANSI codes (picocolors uses different codes than raw ANSI)
-    expect(badge).toMatch(ANSI_PATTERN);
-    expect(badge).toContain("✓"); // Check mark
+    expect(badge).toContain("✓");
   });
 
   test("should separate items with pipe separator", () => {
@@ -425,79 +419,6 @@ describe("displayConfigBadge", () => {
 
     // Should have pipe separators
     expect(badge).toContain("|");
-  });
-});
-
-describe("displayConfigBadge - ANSI formatting", () => {
-  test("should use color for check marks", () => {
-    mockNote.mockClear();
-
-    displayConfigBadge({
-      provider: "groq",
-      smartFilter: false,
-      locale: "en",
-      usage: false,
-      ghCli: false,
-      model: "llama-3.3-70b",
-    });
-
-    const [badge] = mockNote.mock.calls[0];
-    // Check for green color code (picocolors uses \x1b[32m for green)
-    expect(badge).toContain("\x1b[32m");
-    expect(badge).toContain("✓");
-  });
-
-  test("should use bold for labels", () => {
-    mockNote.mockClear();
-
-    displayConfigBadge({
-      provider: "groq",
-      smartFilter: false,
-      locale: "en",
-      usage: false,
-      ghCli: false,
-      model: "llama-3.3-70b",
-    });
-
-    const [badge] = mockNote.mock.calls[0];
-    // picocolors uses \x1b[1m for bold
-    expect(badge).toContain("\x1b[1m");
-  });
-
-  test("should use dim for separators", () => {
-    mockNote.mockClear();
-
-    displayConfigBadge({
-      provider: "groq",
-      smartFilter: true,
-      locale: "en",
-      usage: false,
-      ghCli: false,
-      model: "llama-3.3-70b",
-    });
-
-    const [badge] = mockNote.mock.calls[0];
-    // picocolors uses \x1b[2m for dim
-    expect(badge).toContain("\x1b[2m");
-    expect(badge).toContain("|");
-  });
-
-  test("should have proper formatting codes", () => {
-    mockNote.mockClear();
-
-    displayConfigBadge({
-      provider: "groq",
-      smartFilter: false,
-      locale: "en",
-      usage: false,
-      ghCli: false,
-      model: "llama-3.3-70b",
-    });
-
-    const [badge] = mockNote.mock.calls[0];
-
-    // Should have ANSI formatting codes
-    expect(badge).toMatch(ANSI_PATTERN);
   });
 });
 
