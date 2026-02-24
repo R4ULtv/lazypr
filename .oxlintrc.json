@@ -5,9 +5,6 @@
     "suspicious": "warn",
     "nursery": "off"
   },
-  "rules": {
-    "no-control-regex": "off",
-    "@typescript-eslint/no-explicit-any": "off"
-  },
+  "rules": {},
   "ignorePatterns": ["dist"]
 }
