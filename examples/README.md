@@ -54,7 +54,7 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: "20"
 
       - run: npm install -g lazypr
 
@@ -77,27 +77,27 @@ See [github-actions/](./github-actions/) for more workflows.
 
 ### CLI Examples
 
-| Example | Description |
-|---------|-------------|
-| [Basic Usage](./cli/basic-usage.md) | Simple commands and common patterns |
+| Example                                       | Description                               |
+| --------------------------------------------- | ----------------------------------------- |
+| [Basic Usage](./cli/basic-usage.md)           | Simple commands and common patterns       |
 | [Advanced Options](./cli/advanced-options.md) | Filters, templates, providers, and models |
 
 ### GitHub Actions Examples
 
-| Workflow | Description |
-|----------|-------------|
-| [Auto-Update PR](./github-actions/auto-update-pr.yml) | Update PR on new commits |
-| [Auto-Create PR](./github-actions/auto-create-pr.yml) | Create PR when pushing to feature branches |
-| [Multi-Provider Fallback](./github-actions/multi-provider-fallback.yml) | Groq with Cerebras fallback |
-| [PR Validation](./github-actions/pr-validation.yml) | Validate and suggest improvements |
+| Workflow                                                                | Description                                |
+| ----------------------------------------------------------------------- | ------------------------------------------ |
+| [Auto-Update PR](./github-actions/auto-update-pr.yml)                   | Update PR on new commits                   |
+| [Auto-Create PR](./github-actions/auto-create-pr.yml)                   | Create PR when pushing to feature branches |
+| [Multi-Provider Fallback](./github-actions/multi-provider-fallback.yml) | Groq with Cerebras fallback                |
+| [PR Validation](./github-actions/pr-validation.yml)                     | Validate and suggest improvements          |
 
 ### Configuration Examples
 
-| Config | Description |
-|--------|-------------|
-| [Minimal](./config/minimal.conf) | Bare minimum to get started |
-| [Team](./config/team.conf) | Shared team standards |
-| [Multi-Provider](./config/multi-provider.conf) | Multiple AI provider setup |
+| Config                                         | Description                 |
+| ---------------------------------------------- | --------------------------- |
+| [Minimal](./config/minimal.conf)               | Bare minimum to get started |
+| [Team](./config/team.conf)                     | Shared team standards       |
+| [Multi-Provider](./config/multi-provider.conf) | Multiple AI provider setup  |
 
 ## Getting started
 
@@ -110,6 +110,7 @@ npm install -g lazypr
 ### 2. Get an API key
 
 Sign up for a free API key:
+
 - **Groq:** [console.groq.com](https://console.groq.com/keys)
 - **Cerebras:** [cloud.cerebras.ai](https://cloud.cerebras.ai)
 
@@ -131,6 +132,7 @@ lazypr
 ### For individual developers
 
 **Quick PR generation:**
+
 ```bash
 lazypr                    # Generate PR description
 lazypr --template bug     # Use bug template
@@ -138,6 +140,7 @@ lazypr develop            # Target develop branch
 ```
 
 **With GitHub CLI:**
+
 ```bash
 lazypr --gh               # Get gh pr create command
 ```

@@ -71,18 +71,14 @@ function getLabelFormatter(label: string, customLabels: string[]): ColorFn {
   // Custom labels get formatters from the palette based on their index
   const customIndex = customLabels.indexOf(label);
   if (customIndex !== -1) {
-    const formatter =
-      CUSTOM_LABEL_FORMATTERS[customIndex % CUSTOM_LABEL_FORMATTERS.length];
+    const formatter = CUSTOM_LABEL_FORMATTERS[customIndex % CUSTOM_LABEL_FORMATTERS.length];
     return formatter ?? DEFAULT_FORMATTER;
   }
 
   return DEFAULT_FORMATTER;
 }
 
-export function formatLabels(
-  labels: string[],
-  customLabelsConfig?: string,
-): string {
+export function formatLabels(labels: string[], customLabelsConfig?: string): string {
   if (!labels || labels.length === 0) {
     return "";
   }

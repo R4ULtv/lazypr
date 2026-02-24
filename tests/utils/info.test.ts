@@ -59,8 +59,7 @@ describe("Package Info", () => {
 
   describe("Version format", () => {
     test("should follow semver format (X.Y.Z)", () => {
-      const semverRegex =
-        /^\d+\.\d+\.\d+(-[a-zA-Z0-9.-]+)?(\+[a-zA-Z0-9.-]+)?$/;
+      const semverRegex = /^\d+\.\d+\.\d+(-[a-zA-Z0-9.-]+)?(\+[a-zA-Z0-9.-]+)?$/;
       expect(semverRegex.test(pkg.version)).toBe(true);
     });
 
@@ -113,13 +112,7 @@ describe("Package Info", () => {
 
   describe("Package metadata completeness", () => {
     test("should have all essential npm fields", () => {
-      const essentialFields = [
-        "name",
-        "version",
-        "description",
-        "author",
-        "license",
-      ];
+      const essentialFields = ["name", "version", "description", "author", "license"];
       essentialFields.forEach((field) => {
         expect(pkg).toHaveProperty(field);
       });

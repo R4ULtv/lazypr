@@ -348,8 +348,7 @@ describe("displayConfigBadge", () => {
   test("should handle long template names", () => {
     mockNote.mockClear();
 
-    const longTemplate =
-      "very_long_pull_request_template_name_with_subdirectory.md";
+    const longTemplate = "very_long_pull_request_template_name_with_subdirectory.md";
 
     displayConfigBadge({
       provider: "groq",

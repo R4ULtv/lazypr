@@ -70,9 +70,7 @@ describe("CONFIG_SCHEMA", () => {
     });
 
     test("should trim whitespace from API key", () => {
-      const result = CONFIG_SCHEMA.GROQ_API_KEY.validate(
-        "  gsk_1234567890abcdefghij  ",
-      );
+      const result = CONFIG_SCHEMA.GROQ_API_KEY.validate("  gsk_1234567890abcdefghij  ");
       expect(result).toBe("gsk_1234567890abcdefghij");
     });
   });
@@ -80,9 +78,7 @@ describe("CONFIG_SCHEMA", () => {
   describe("CEREBRAS_API_KEY validation", () => {
     test("should validate correct API key format", () => {
       const validKey = "csk_1234567890abcdefghij";
-      expect(() =>
-        CONFIG_SCHEMA.CEREBRAS_API_KEY.validate(validKey),
-      ).not.toThrow();
+      expect(() => CONFIG_SCHEMA.CEREBRAS_API_KEY.validate(validKey)).not.toThrow();
     });
 
     test("should return empty string for empty API key", () => {
@@ -102,9 +98,7 @@ describe("CONFIG_SCHEMA", () => {
     });
 
     test("should trim whitespace from API key", () => {
-      const result = CONFIG_SCHEMA.CEREBRAS_API_KEY.validate(
-        "  csk_1234567890abcdefghij  ",
-      );
+      const result = CONFIG_SCHEMA.CEREBRAS_API_KEY.validate("  csk_1234567890abcdefghij  ");
       expect(result).toBe("csk_1234567890abcdefghij");
     });
   });
@@ -133,16 +127,12 @@ describe("CONFIG_SCHEMA", () => {
 
   describe("OPENAI_BASE_URL validation", () => {
     test("should accept valid URL", () => {
-      const result = CONFIG_SCHEMA.OPENAI_BASE_URL.validate(
-        "http://localhost:11434/v1",
-      );
+      const result = CONFIG_SCHEMA.OPENAI_BASE_URL.validate("http://localhost:11434/v1");
       expect(result).toBe("http://localhost:11434/v1");
     });
 
     test("should accept HTTPS URL", () => {
-      const result = CONFIG_SCHEMA.OPENAI_BASE_URL.validate(
-        "https://api.together.xyz/v1",
-      );
+      const result = CONFIG_SCHEMA.OPENAI_BASE_URL.validate("https://api.together.xyz/v1");
       expect(result).toBe("https://api.together.xyz/v1");
     });
 
@@ -157,15 +147,13 @@ describe("CONFIG_SCHEMA", () => {
     });
 
     test("should throw error for invalid URL format", () => {
-      expect(() =>
-        CONFIG_SCHEMA.OPENAI_BASE_URL.validate("not-a-valid-url"),
-      ).toThrow("Invalid OPENAI_BASE_URL format");
+      expect(() => CONFIG_SCHEMA.OPENAI_BASE_URL.validate("not-a-valid-url")).toThrow(
+        "Invalid OPENAI_BASE_URL format",
+      );
     });
 
     test("should trim whitespace from URL", () => {
-      const result = CONFIG_SCHEMA.OPENAI_BASE_URL.validate(
-        "  http://localhost:1234/v1  ",
-      );
+      const result = CONFIG_SCHEMA.OPENAI_BASE_URL.validate("  http://localhost:1234/v1  ");
       expect(result).toBe("http://localhost:1234/v1");
     });
   });
@@ -198,25 +186,13 @@ describe("CONFIG_SCHEMA", () => {
     });
 
     test("should throw error for invalid provider", () => {
-      expect(() => CONFIG_SCHEMA.PROVIDER.validate("invalid")).toThrow(
-        "PROVIDER must be one of:",
-      );
+      expect(() => CONFIG_SCHEMA.PROVIDER.validate("invalid")).toThrow("PROVIDER must be one of:");
     });
   });
 
   describe("LOCALE validation", () => {
     test("should accept valid locales", () => {
-      const validLocales = [
-        "en",
-        "es",
-        "pt",
-        "fr",
-        "de",
-        "it",
-        "ja",
-        "ko",
-        "zh",
-      ];
+      const validLocales = ["en", "es", "pt", "fr", "de", "it", "ja", "ko", "zh"];
       validLocales.forEach((locale) => {
         expect(() => CONFIG_SCHEMA.LOCALE.validate(locale)).not.toThrow();
       });
@@ -233,9 +209,7 @@ describe("CONFIG_SCHEMA", () => {
     });
 
     test("should throw error for invalid locale", () => {
-      expect(() => CONFIG_SCHEMA.LOCALE.validate("invalid")).toThrow(
-        "LOCALE must be one of:",
-      );
+      expect(() => CONFIG_SCHEMA.LOCALE.validate("invalid")).toThrow("LOCALE must be one of:");
     });
 
     test("should trim whitespace from locale", () => {
@@ -316,12 +290,7 @@ describe("CONFIG_SCHEMA", () => {
 
   describe("MODEL validation", () => {
     test("should accept any model name", () => {
-      const models = [
-        "llama-3.3-70b",
-        "gpt-4",
-        "claude-3-sonnet",
-        "custom/model-name",
-      ];
+      const models = ["llama-3.3-70b", "gpt-4", "claude-3-sonnet", "custom/model-name"];
 
       models.forEach((model) => {
         expect(() => CONFIG_SCHEMA.MODEL.validate(model)).not.toThrow();
@@ -330,9 +299,7 @@ describe("CONFIG_SCHEMA", () => {
     });
 
     test("should throw error for empty model", () => {
-      expect(() => CONFIG_SCHEMA.MODEL.validate("")).toThrow(
-        "MODEL cannot be empty",
-      );
+      expect(() => CONFIG_SCHEMA.MODEL.validate("")).toThrow("MODEL cannot be empty");
     });
 
     test("should trim whitespace", () => {
@@ -442,16 +409,12 @@ describe("CONFIG_SCHEMA", () => {
     });
 
     test("should accept valid label names", () => {
-      const result = CONFIG_SCHEMA.CUSTOM_LABELS.validate(
-        "feature,refactor,security",
-      );
+      const result = CONFIG_SCHEMA.CUSTOM_LABELS.validate("feature,refactor,security");
       expect(result).toBe("feature,refactor,security");
     });
 
     test("should accept labels with hyphens and underscores", () => {
-      const result = CONFIG_SCHEMA.CUSTOM_LABELS.validate(
-        "feature-request,code_review",
-      );
+      const result = CONFIG_SCHEMA.CUSTOM_LABELS.validate("feature-request,code_review");
       expect(result).toBe("feature-request,code_review");
     });
 
@@ -461,9 +424,7 @@ describe("CONFIG_SCHEMA", () => {
     });
 
     test("should trim whitespace from labels", () => {
-      const result = CONFIG_SCHEMA.CUSTOM_LABELS.validate(
-        " feature , refactor , security ",
-      );
+      const result = CONFIG_SCHEMA.CUSTOM_LABELS.validate(" feature , refactor , security ");
       expect(result).toBe("feature,refactor,security");
     });
 
@@ -474,33 +435,23 @@ describe("CONFIG_SCHEMA", () => {
     });
 
     test("should throw error for labels with spaces", () => {
-      expect(() => CONFIG_SCHEMA.CUSTOM_LABELS.validate("has space")).toThrow(
-        "Invalid label",
-      );
+      expect(() => CONFIG_SCHEMA.CUSTOM_LABELS.validate("has space")).toThrow("Invalid label");
     });
 
     test("should throw error for labels with special characters", () => {
-      expect(() =>
-        CONFIG_SCHEMA.CUSTOM_LABELS.validate("feature!,test@"),
-      ).toThrow("Invalid label");
+      expect(() => CONFIG_SCHEMA.CUSTOM_LABELS.validate("feature!,test@")).toThrow("Invalid label");
     });
 
     test("should throw error if exceeding 17 labels", () => {
-      const tooMany = Array.from({ length: 18 }, (_, i) => `label${i}`).join(
-        ",",
-      );
+      const tooMany = Array.from({ length: 18 }, (_, i) => `label${i}`).join(",");
       expect(() => CONFIG_SCHEMA.CUSTOM_LABELS.validate(tooMany)).toThrow(
         "cannot exceed 17 labels",
       );
     });
 
     test("should accept exactly 17 labels", () => {
-      const maxLabels = Array.from({ length: 17 }, (_, i) => `label${i}`).join(
-        ",",
-      );
-      expect(() =>
-        CONFIG_SCHEMA.CUSTOM_LABELS.validate(maxLabels),
-      ).not.toThrow();
+      const maxLabels = Array.from({ length: 17 }, (_, i) => `label${i}`).join(",");
+      expect(() => CONFIG_SCHEMA.CUSTOM_LABELS.validate(maxLabels)).not.toThrow();
     });
 
     test("should filter out empty entries from result", () => {
@@ -577,11 +528,7 @@ LOCALE=es`;
       await config.get("GROQ_API_KEY");
 
       // Change file content
-      await writeFile(
-        ORIGINAL_CONFIG_FILE,
-        "GROQ_API_KEY=gsk_different_key_value",
-        "utf8",
-      );
+      await writeFile(ORIGINAL_CONFIG_FILE, "GROQ_API_KEY=gsk_different_key_value", "utf8");
 
       // Should still return original value (cached)
       const result = await config.get("GROQ_API_KEY");
@@ -599,9 +546,7 @@ LOCALE=es`;
     });
 
     test("should throw error for invalid value", async () => {
-      expect(config.set("GROQ_API_KEY", "invalid")).rejects.toThrow(
-        "Invalid GROQ_API_KEY format",
-      );
+      expect(config.set("GROQ_API_KEY", "invalid")).rejects.toThrow("Invalid GROQ_API_KEY format");
     });
 
     test("should update existing key", async () => {
@@ -685,9 +630,7 @@ LOCALE=es`;
       const result = await config.validate();
 
       expect(result.valid).toBe(false);
-      expect(
-        result.errors.some((e) => e.includes("Invalid GROQ_API_KEY format")),
-      ).toBe(true);
+      expect(result.errors.some((e) => e.includes("Invalid GROQ_API_KEY format"))).toBe(true);
     });
   });
 

@@ -2,11 +2,7 @@ import { afterEach, beforeEach, describe, expect, test } from "bun:test";
 import { mkdir, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import {
-  findPRTemplates,
-  getPRTemplate,
-  hasPRTemplates,
-} from "../../utils/template";
+import { findPRTemplates, getPRTemplate, hasPRTemplates } from "../../utils/template";
 
 describe("PR Template Utils", () => {
   let testDir: string;
@@ -50,10 +46,7 @@ describe("PR Template Utils", () => {
     test("should find uppercase template file", async () => {
       const githubDir = join(testDir, ".github");
       await mkdir(githubDir, { recursive: true });
-      await writeFile(
-        join(githubDir, "PULL_REQUEST_TEMPLATE.md"),
-        "# Uppercase Template",
-      );
+      await writeFile(join(githubDir, "PULL_REQUEST_TEMPLATE.md"), "# Uppercase Template");
 
       const templates = await findPRTemplates(testDir);
       expect(templates).toHaveLength(1);
@@ -69,19 +62,13 @@ describe("PR Template Utils", () => {
 
       const templates = await findPRTemplates(testDir);
       expect(templates).toHaveLength(2);
-      expect(templates.map((t) => t.name).sort()).toEqual([
-        "Bug Fix",
-        "Feature",
-      ]);
+      expect(templates.map((t) => t.name).sort()).toEqual(["Bug Fix", "Feature"]);
     });
 
     test("should find templates in docs folder", async () => {
       const docsDir = join(testDir, "docs");
       await mkdir(docsDir, { recursive: true });
-      await writeFile(
-        join(docsDir, "pull_request_template.md"),
-        "# Docs Template",
-      );
+      await writeFile(join(docsDir, "pull_request_template.md"), "# Docs Template");
 
       const templates = await findPRTemplates(testDir);
       expect(templates).toHaveLength(1);
@@ -128,10 +115,7 @@ describe("PR Template Utils", () => {
     });
 
     test("should find template by path", async () => {
-      const template = await getPRTemplate(
-        ".github/pull_request_template/bug_fix.md",
-        testDir,
-      );
+      const template = await getPRTemplate(".github/pull_request_template/bug_fix.md", testDir);
       expect(template).not.toBeNull();
       expect(template?.name).toBe("Bug Fix");
     });
@@ -151,10 +135,7 @@ describe("PR Template Utils", () => {
     test("should return true when templates exist", async () => {
       const githubDir = join(testDir, ".github");
       await mkdir(githubDir, { recursive: true });
-      await writeFile(
-        join(githubDir, "pull_request_template.md"),
-        "# Template",
-      );
+      await writeFile(join(githubDir, "pull_request_template.md"), "# Template");
 
       const hasTemplates = await hasPRTemplates(testDir);
       expect(hasTemplates).toBe(true);
@@ -166,16 +147,10 @@ describe("PR Template Utils", () => {
       const templateDir = join(testDir, ".github", "pull_request_template");
       await mkdir(templateDir, { recursive: true });
       await writeFile(join(templateDir, "bug_fix_template.md"), "# Bug Fix");
-      await writeFile(
-        join(templateDir, "feature_request.md"),
-        "# Feature Request",
-      );
+      await writeFile(join(templateDir, "feature_request.md"), "# Feature Request");
 
       const templates = await findPRTemplates(testDir);
-      expect(templates.map((t) => t.name).sort()).toEqual([
-        "Bug Fix Template",
-        "Feature Request",
-      ]);
+      expect(templates.map((t) => t.name).sort()).toEqual(["Bug Fix Template", "Feature Request"]);
     });
   });
 });

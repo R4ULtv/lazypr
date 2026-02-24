@@ -19,10 +19,7 @@ interface PullRequestData {
 /**
  * Build a gh pr create command with properly escaped arguments
  */
-export const buildGhPrCommand = (
-  targetBranch: string,
-  pullRequest: PullRequestData,
-): string => {
+export const buildGhPrCommand = (targetBranch: string, pullRequest: PullRequestData): string => {
   const escapedTitle = escapeShellArg(pullRequest.title);
   const escapedDescription = escapeShellArg(pullRequest.description);
 

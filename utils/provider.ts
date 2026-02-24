@@ -23,11 +23,7 @@ interface ProviderConfig {
   name: ProviderType;
   apiKeyConfigKey: string;
   apiKeyOptional?: boolean;
-  createModel: (
-    apiKey: string,
-    model: string,
-    baseURL?: string,
-  ) => LanguageModel;
+  createModel: (apiKey: string, model: string, baseURL?: string) => LanguageModel;
 }
 
 // Provider registry
@@ -147,9 +143,7 @@ export async function generatePullRequest(
 
   // Get baseURL for OpenAI-compatible providers
   const baseURL =
-    providerConfig.name === "openai"
-      ? await config.get("OPENAI_BASE_URL")
-      : undefined;
+    providerConfig.name === "openai" ? await config.get("OPENAI_BASE_URL") : undefined;
 
   const languageModel = providerConfig.createModel(apiKey, model, baseURL);
 
@@ -164,18 +158,9 @@ export async function generatePullRequest(
     model: languageModel,
     output: Output.object({ schema: pullRequestSchema }),
     maxRetries: Number.parseInt(await config.get("MAX_RETRIES"), 10),
-    abortSignal: AbortSignal.timeout(
-      Number.parseInt(await config.get("TIMEOUT"), 10),
-    ),
+    abortSignal: AbortSignal.timeout(Number.parseInt(await config.get("TIMEOUT"), 10)),
     system: getSystemPrompt(),
-    prompt: buildPrompt(
-      locale,
-      currentBranch,
-      context,
-      availableLabels,
-      commitsString,
-      template,
-    ),
+    prompt: buildPrompt(locale, currentBranch, context, availableLabels, commitsString, template),
   });
   return { object: output, usage, finishReason };
 }

@@ -91,18 +91,12 @@ export function filterCommits(commits: GitCommit[]): GitCommit[] {
 /**
  * Helper function to handle git errors with user-friendly messages
  */
-function handleGitError(
-  error: unknown,
-  context: string,
-  branch?: string,
-): never {
+function handleGitError(error: unknown, context: string, branch?: string): never {
   const stderr = (error as { stderr?: string }).stderr || "";
   const message = (error as Error).message || "";
 
   if (stderr.includes("not a git repository") || message.includes("ENOENT")) {
-    throw new Error(
-      "Not a git repository. Run 'git init' to initialize a new repository.",
-    );
+    throw new Error("Not a git repository. Run 'git init' to initialize a new repository.");
   }
 
   if (
@@ -115,10 +109,7 @@ function handleGitError(
     );
   }
 
-  if (
-    stderr.includes("Connection refused") ||
-    stderr.includes("Could not resolve host")
-  ) {
+  if (stderr.includes("Connection refused") || stderr.includes("Could not resolve host")) {
     throw new Error(
       "Network error: Could not connect to remote repository. Please check your internet connection.",
     );

@@ -34,8 +34,7 @@ export const CONFIG_SCHEMA = {
     validate: (v: string) => {
       if (!v?.trim()) return "";
       const pattern = new RegExp(`^[A-Za-z0-9._-]{${MIN_API_KEY_LENGTH},}$`);
-      if (!pattern.test(v.trim()))
-        throw new Error("Invalid GROQ_API_KEY format");
+      if (!pattern.test(v.trim())) throw new Error("Invalid GROQ_API_KEY format");
       return v.trim();
     },
   },
@@ -44,8 +43,7 @@ export const CONFIG_SCHEMA = {
     validate: (v: string) => {
       if (!v?.trim()) return "";
       const pattern = new RegExp(`^[A-Za-z0-9._-]{${MIN_API_KEY_LENGTH},}$`);
-      if (!pattern.test(v.trim()))
-        throw new Error("Invalid CEREBRAS_API_KEY format");
+      if (!pattern.test(v.trim())) throw new Error("Invalid CEREBRAS_API_KEY format");
       return v.trim();
     },
   },
@@ -111,8 +109,7 @@ export const CONFIG_SCHEMA = {
     default: "10000",
     validate: (v: string) => {
       const num = Number.parseInt(v, 10);
-      if (Number.isNaN(num) || num < 0)
-        throw new Error("TIMEOUT must be a non-negative number");
+      if (Number.isNaN(num) || num < 0) throw new Error("TIMEOUT must be a non-negative number");
       return num.toString();
     },
   },
@@ -146,9 +143,7 @@ export const CONFIG_SCHEMA = {
     validate: (v: string) => {
       const context = v?.trim() || "";
       if (context.length > MAX_CONTEXT_LENGTH) {
-        throw new Error(
-          `CONTEXT must be ${MAX_CONTEXT_LENGTH} characters or less`,
-        );
+        throw new Error(`CONTEXT must be ${MAX_CONTEXT_LENGTH} characters or less`);
       }
       return context;
     },
@@ -170,9 +165,7 @@ export const CONFIG_SCHEMA = {
         );
       }
 
-      const labelNameRegex = new RegExp(
-        `^[a-zA-Z][a-zA-Z0-9_-]{0,${MAX_LABEL_NAME_LENGTH - 1}}$`,
-      );
+      const labelNameRegex = new RegExp(`^[a-zA-Z][a-zA-Z0-9_-]{0,${MAX_LABEL_NAME_LENGTH - 1}}$`);
       for (const name of labels) {
         if (!labelNameRegex.test(name)) {
           throw new Error(
@@ -244,15 +237,11 @@ class Config {
     // Handle missing values
     if (!raw) {
       const isRequired =
-        "required" in schema &&
-        Boolean((schema as { required?: boolean }).required);
+        "required" in schema && Boolean((schema as { required?: boolean }).required);
       if (isRequired) {
         throw new Error(`${key} is required but not set.`);
       }
-      const def =
-        "default" in schema
-          ? (schema as { default?: string }).default
-          : undefined;
+      const def = "default" in schema ? (schema as { default?: string }).default : undefined;
       return def || "";
     }
 

@@ -155,9 +155,7 @@ describe("Git Utilities - Integration Tests", () => {
   describe("getPullRequestCommits()", () => {
     test("should return an array", async () => {
       if (!isInGitRepo || !hasMainBranch) {
-        console.log(
-          "Skipping test: not in a git repository or main branch not available",
-        );
+        console.log("Skipping test: not in a git repository or main branch not available");
         return;
       }
 
@@ -168,9 +166,7 @@ describe("Git Utilities - Integration Tests", () => {
 
     test("should return commits with correct structure", async () => {
       if (!isInGitRepo || !hasMainBranch) {
-        console.log(
-          "Skipping test: not in a git repository or main branch not available",
-        );
+        console.log("Skipping test: not in a git repository or main branch not available");
         return;
       }
 
@@ -197,9 +193,7 @@ describe("Git Utilities - Integration Tests", () => {
 
     test("should have hash longer than shortHash", async () => {
       if (!isInGitRepo || !hasMainBranch) {
-        console.log(
-          "Skipping test: not in a git repository or main branch not available",
-        );
+        console.log("Skipping test: not in a git repository or main branch not available");
         return;
       }
 
@@ -216,9 +210,7 @@ describe("Git Utilities - Integration Tests", () => {
 
     test("should have valid date format (YYYY-MM-DD)", async () => {
       if (!isInGitRepo || !hasMainBranch) {
-        console.log(
-          "Skipping test: not in a git repository or main branch not available",
-        );
+        console.log("Skipping test: not in a git repository or main branch not available");
         return;
       }
 
@@ -237,9 +229,7 @@ describe("Git Utilities - Integration Tests", () => {
 
     test("should not have empty hashes", async () => {
       if (!isInGitRepo || !hasMainBranch) {
-        console.log(
-          "Skipping test: not in a git repository or main branch not available",
-        );
+        console.log("Skipping test: not in a git repository or main branch not available");
         return;
       }
 
@@ -812,9 +802,7 @@ describe("Git Utilities - Integration Tests", () => {
     describe("Integration with getPullRequestCommits()", () => {
       test("should apply filtering by default when config is true", async () => {
         if (!isInGitRepo || !hasMainBranch) {
-          console.log(
-            "Skipping test: not in a git repository or main branch not available",
-          );
+          console.log("Skipping test: not in a git repository or main branch not available");
           return;
         }
 
@@ -830,9 +818,7 @@ describe("Git Utilities - Integration Tests", () => {
 
       test("should skip filtering when noFilter parameter is true", async () => {
         if (!isInGitRepo || !hasMainBranch) {
-          console.log(
-            "Skipping test: not in a git repository or main branch not available",
-          );
+          console.log("Skipping test: not in a git repository or main branch not available");
           return;
         }
 

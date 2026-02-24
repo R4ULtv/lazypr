@@ -21,6 +21,7 @@ Copy one of the workflow files below to `.github/workflows/` in your repository.
 **What it does:** Updates PR title and description when you push new commits.
 
 **When it runs:**
+
 - PR is opened
 - New commits are pushed
 
@@ -41,6 +42,7 @@ git push
 **What it does:** Automatically creates a PR when you push to feature branches.
 
 **When it runs:**
+
 - Push to `feature/*` or `fix/*` branches
 
 **Copy to:** `.github/workflows/auto-create-pr.yml`
@@ -60,6 +62,7 @@ git push
 **What it does:** Tries Groq first, falls back to Cerebras if it fails.
 
 **When it runs:**
+
 - PR is opened
 - New commits are pushed
 
@@ -74,6 +77,7 @@ git push
 **What it does:** Checks if PR description is good quality. Suggests improvements if too short.
 
 **When it runs:**
+
 - PR is opened
 - PR description is edited
 
@@ -88,7 +92,7 @@ git push
 Default is to use the PR's base branch. To hardcode:
 
 ```yaml
-lazypr main  # Change to your branch
+lazypr main # Change to your branch
 ```
 
 ### Use Different Provider
@@ -106,7 +110,7 @@ run: lazypr --provider cerebras
 By default, merge commits and dependency updates are filtered out:
 
 ```yaml
-lazypr --no-filter  # Include everything
+lazypr --no-filter # Include everything
 ```
 
 ### Use PR Templates
@@ -130,6 +134,7 @@ lazypr --context "Security fix - please review carefully"
 ### Workflow Not Running
 
 **Check permissions** in the workflow file:
+
 ```yaml
 permissions:
   pull-requests: write
@@ -137,6 +142,7 @@ permissions:
 ```
 
 **Check triggers** match your use case:
+
 ```yaml
 on:
   pull_request:
@@ -146,18 +152,20 @@ on:
 ### API Key Not Found
 
 Make sure the secret name matches:
+
 ```yaml
 env:
-  GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}  # Must match secret name
+  GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }} # Must match secret name
 ```
 
 ### Can't Find Commits
 
 Ensure full history is fetched:
+
 ```yaml
 - uses: actions/checkout@v4
   with:
-    fetch-depth: 0  # Important!
+    fetch-depth: 0 # Important!
 ```
 
 ### Permission Denied
@@ -186,7 +194,7 @@ Add manual trigger to any workflow:
 on:
   pull_request:
     types: [opened, synchronize]
-  workflow_dispatch:  # Allows manual trigger
+  workflow_dispatch: # Allows manual trigger
 ```
 
 Then run from **Actions** tab → Select workflow → **Run workflow**

@@ -7,14 +7,17 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 ## [1.5.0] - 2026-01-31
 
 ### Added
+
 - **AUTOCOMPLETE BRANCH SELECTION:** Branch selection now uses an autocomplete input with type-ahead filtering, making it faster and easier to find the target branch.
 - **AUTOCOMPLETE TEMPLATE SELECTION:** Template selection now uses autocomplete with type-ahead filtering for a better user experience.
 
 ### Changed
+
 - **TERMINAL COLORING:** Migrated from `chalk` to `picocolors` for terminal coloring, resulting in a smaller bundle size and faster startup time.
 - **DEPENDENCIES:** Updated AI SDK and related dependencies to their latest versions, including improved spinner behavior with timer indicator.
 
 ### Refactored
+
 - **CODE ORGANIZATION:** Improved code organization and maintainability:
   - Extracted shell escaping utilities to `utils/shell.ts` (`escapeShellArg`, `buildGhPrCommand`)
   - Extracted PR generation prompts to `utils/prompts.ts` for better separation of concerns
@@ -25,12 +28,14 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 ## [1.4.2] - 2026-01-06
 
 ### Changed
+
 - **DEPENDENCIES:** Updated core dependencies to latest versions:
   - Bumped `zod` to version 4.3.4
   - Updated all other dependencies to their latest versions
   - Removed TypeScript as a peer dependency for better compatibility
 
 ### Refactored
+
 - **AI SDK V6 MIGRATION:** Migrated from Vercel AI SDK v5 to v6 ([#26](https://github.com/R4ULtv/lazypr/pull/26))
   - Refactored AI generation to use `generateText` for structured object generation
   - Updated provider integrations to work with the new AI SDK architecture
@@ -39,12 +44,14 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 ## [1.4.1] - 2025-12-23
 
 ### Fixed
+
 - **CRITICAL: Terminal Output Crash** - Fixed a critical bug where the CLI would crash when using `log.warning()` which doesn't exist in `@clack/prompts`. Replaced all 6 instances with the correct `log.warn()` method.
 - **Config Race Condition** - Fixed a race condition in configuration loading that could cause multiple concurrent file reads and potential cache corruption. Added a promise-based locking mechanism to ensure safe concurrent access.
 - **Typo in Error Message** - Fixed error message typo: "Unknown config config" → "Unknown config key".
 - **Title Length Inconsistency** - Fixed inconsistency in PR title length documentation where example output stated "5-50 chars" but schema enforced "5-100 chars". Now consistently uses 100 characters maximum.
 
 ### Changed
+
 - **Improved Error Messages** - Enhanced error messages throughout the application with more helpful context:
   - Added example usage to config set errors: `Example: lazypr config set LOCALE=es`
   - Replaced long key lists with suggestion to run `lazypr config list`
@@ -61,6 +68,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 ## [1.4.0] - 2025-12-18
 
 ### Added
+
 - **OPENAI PROVIDER SUPPORT:** Added OpenAI as a new AI provider option, enabling compatibility with OpenAI's API and any OpenAI-compatible endpoints. This includes support for:
   - **Local providers:** Ollama (`http://localhost:11434/v1`), LM Studio (`http://localhost:1234/v1`), LocalAI
   - **Third-party providers:** Together.ai, OpenRouter, and other services using the OpenAI API format
@@ -70,120 +78,146 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 - **EXTENDED COLOR PALETTE:** Added an extended color palette for custom label display in the terminal, supporting a wider variety of label names with distinct colors.
 
 ### Changed
+
 - **DEPENDENCIES:** Updated core dependencies including `@ai-sdk/cerebras`, `@ai-sdk/groq`, `ai`, `zod`, and `@types/bun` to their latest versions.
 - **DYNAMIC LABEL SCHEMA:** The label schema for PR generation is now dynamically built based on available labels (default or custom), providing better validation and AI guidance.
 
 ## [1.3.4] - 2025-12-07
 
 ### Added
+
 - **DOCUMENTATION WEBSITE:** Launched an official documentation website at [lazypr.raulcarini.dev](https://lazypr.raulcarini.dev) providing comprehensive guides, API references, and usage examples for users.
 
 ### Changed
+
 - **BREAKING: DEFAULT BRANCH:** Changed the default branch from `master` to `main` to align with modern Git conventions. Users who previously relied on `master` as their default can restore it by running `lzp config set DEFAULT_BRANCH=master`.
 - **DOCUMENTATION:** Improved and streamlined README content, enhancing feature descriptions, installation instructions, and usage guidance.
 
 ## [1.3.3] - 2025-12-02
 
 ### Added
+
 - **USAGE EXAMPLES:** Added comprehensive examples and configuration files demonstrating LazyPR usage, including CLI commands, GitHub Actions workflows, and multi-provider configuration setups to help users get started quickly.
 
 ### Changed
+
 - **DEPENDENCIES:** Updated core dependencies, including bumping the `ai` package version to `5.0.106`, updating the Biome schema to `2.3.8`, and performing general dependency upgrades for improved stability and compatibility.
 
 ### Fixed
+
 - **ERROR HANDLING:** Improved the `handleGitError` function to provide more robust and user-friendly error handling for Git-related failures.
 
 ## [1.3.2] - 2025-11-27
 
 ### Added
+
 - **CODE QUALITY:** Introduced Biome configuration for consistent linting and formatting across the codebase.
 - **CI/CD:** Added automated linting step to both npm-publish and test workflows to ensure code quality before execution.
 
 ### Changed
+
 - **CODE STRUCTURE:** Reorganized import statements across multiple files for improved readability and maintainability.
 - **TEST IMPROVEMENTS:** Enhanced test assertions to handle potential null values in label colors and refined parsing logic for configuration values.
 
 ### Fixed
+
 - **CONFIGURATION:** Updated Biome linting rules and improved configuration parsing logic for better reliability.
 
 ## [1.3.1] - 2025-11-26
 
 ### Added
+
 - **TEST COVERAGE:** Added comprehensive unit tests for the `config list` command to ensure proper functionality and output formatting.
 - **TEST COVERAGE:** Added comprehensive unit tests for the `displayConfigBadge` function to validate configuration badge display across various scenarios.
 
 ### Changed
+
 - **BUILD PROCESS:** Updated lzp script path in package.json to point to `dist/lzp.js` and added a postbuild script to generate the lzp.js file for improved build automation.
 - **CI/CD:** Removed the specified bun version from the npm-publish workflow for improved flexibility.
 
 ### Fixed
+
 - **PR GENERATION:** Included finish reason in pull request generation output for better debugging and transparency.
 - **VALIDATION:** Updated title validation length constraints to improve generated PR title quality.
 
 ## [1.3.0] - 2025-11-24
 
 ### Added
+
 - **MULTI-PROVIDER SUPPORT:** Introduced a flexible provider system allowing users to choose between different AI providers. The new `PROVIDER` configuration option supports switching providers seamlessly.
 - **CEREBRAS PROVIDER:** Added Cerebras as a new AI provider option alongside Groq. Users can now leverage Cerebras' high-performance AI inference by setting `PROVIDER=cerebras` and configuring their `CEREBRAS_API_KEY`.
 - **PROVIDER CONFIGURATION:** Added `CEREBRAS_API_KEY` configuration option for Cerebras authentication.
 
 ### Changed
+
 - **MODEL FLEXIBILITY:** Removed hardcoded model restrictions. The `MODEL` setting now accepts any model name supported by your chosen provider, giving users full flexibility.
 - **DEFAULT MODEL:** Changed the default model from `openai/gpt-oss-20b` to `llama-3.3-70b` which works well across multiple providers.
 - **ARCHITECTURE REFACTOR:** Refactored the AI integration layer from `groq.ts` to a generic `provider.ts` module, enabling easy addition of future providers.
 
 ### Documentation
+
 - **README UPDATE:** Updated documentation with multi-provider setup instructions, provider comparison table, and future provider roadmap (OpenAI, Anthropic, Google AI coming soon).
 
 ## [1.2.7] - 2025-11-04
 
 ### Fixed
+
 - **CRITICAL BUILD FIX:** Fixed a misconfigured file that broke CLI commands in v1.2.6, restoring full functionality. The bin paths in package.json now correctly point to the bundled output.
 
 ## [1.2.6] - 2025-11-04
 
 ### Added
+
 - **CONFIG LIST COMMAND:** Introduced a new `list` subcommand for configuration management, allowing users to view all current configuration settings with their statuses. Sensitive values (like API keys) are automatically masked for security.
 
 ### Fixed
+
 - **BUILD SIZE OPTIMIZATION:** Resolved a build configuration issue that was duplicating files in the distribution bundle, which had doubled the package size. The build process now correctly generates a single, optimized output.
 
 ### Changed
+
 - **CI/CD OPTIMIZATION:** Removed the build step from the npm publish workflow, streamlining the deployment process.
 - **DEPENDENCIES:** Updated project dependencies to their latest versions.
 
 ## [1.2.5] - 2025-10-24
 
 ### Added
+
 - **CUSTOM CONTEXT OPTION:** Introduced the ability for users to provide custom context to guide PR generation via the `--context` (`-c`) flag or the `CONTEXT` configuration key. This allows users to influence the tone, style, and structure of the generated PR content (e.g., "make it simple and cohesive", "be more technical"). Context is limited to 200 characters maximum.
 - **CONTEXT BADGE DISPLAY:** Added context display to the configuration badge, providing visual confirmation when custom context is being used for PR generation.
 - **CONTEXT VALIDATION:** Implemented comprehensive validation and testing for the new CONTEXT configuration option to ensure length constraints and proper integration.
 
 ### Changed
+
 - **BADGE REFACTOR:** Refactored badge display logic to only show enabled settings, providing a cleaner and more focused configuration summary before PR generation.
 
 ## [1.2.4] - 2025-10-17
 
 ### Added
+
 - **MODEL BADGE:** Added model name display to the configuration badge shown before PR generation, providing better visibility of which AI model is being used.
 
 ### Changed
+
 - **REFACTOR:** Replaced `noFilter` option with clearer `filter` parameter for improved code clarity and consistency.
 - **DEPENDENCIES:** Updated dependencies to latest versions in package.json and bun.lock.
 
 ### Fixed
+
 - **CI/CD:** Corrected npm publish command in workflow to use `bunx` and removed redundant 'public' flag.
 - **CI/CD:** Updated npm publish workflow to include provenance flag and adjusted dependency installation.
 
 ## [1.2.3] - 2025-10-10
 
 ### Fixed
+
 - **TESTING & CODE ALIGNMENT:** Addressed minor issues in test files and logic:
-    - Replaced backtick strings with plain strings in tests and removed unnecessary imports (`mock` from `bun:test`).
-    - Updated color access to use named constants (`LABEL_COLORS.bug`, etc.) instead of array indexing.
-    - Corrected parameter usage when defaulting to the `DEFAULT_BRANCH` to align with the renamed `target` argument.
+  - Replaced backtick strings with plain strings in tests and removed unnecessary imports (`mock` from `bun:test`).
+  - Updated color access to use named constants (`LABEL_COLORS.bug`, etc.) instead of array indexing.
+  - Corrected parameter usage when defaulting to the `DEFAULT_BRANCH` to align with the renamed `target` argument.
 
 ### Changed
+
 - **PERFORMANCE:** Achieved a significant reduction in the overall package size from **526 KB to 370 KB**, representing a massive **35% reduction**.
 - **DEPENDENCIES:** Bumped the versions for the `ai` and `zod` dependencies.
 - **INTERNAL REFACTOR:** Cleaned up and improved the internal parsing and error handling logic within utility files.
@@ -216,18 +250,18 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 
 - **GITHUB CLI INTEGRATION:** Introduced the `--gh` flag to automatically generate a complete `gh pr create` command using the AI-generated title, description, and labels. This command is then copied to the clipboard, streamlining the process for users who deploy PRs with the GitHub CLI.
 - **SMART COMMIT FILTERING:** Implemented intelligent commit filtering to improve the quality of AI-generated content.
-    - Commits deemed low-value (e.g., `docs:`, `test:`, `chore:`) are now excluded from the prompt sent to the AI.
-    - Added the `FILTER_COMMITS` configuration option (default `true`) and the `--no-filter` CLI flag to disable this feature.
+  - Commits deemed low-value (e.g., `docs:`, `test:`, `chore:`) are now excluded from the prompt sent to the AI.
+  - Added the `FILTER_COMMITS` configuration option (default `true`) and the `--no-filter` CLI flag to disable this feature.
 - **PULL REQUEST LABEL MANAGEMENT:** The AI is now capable of suggesting and generating a core set of labels (`enhancement`, `bug`, `documentation`) based on the changes in the commits, which are included in the generated output and the new `gh pr create` command.
 - **ENHANCED VISUALS & UX:** Improved the command-line user experience with colorization:
-    - Colorized the intro banner and branch names in log output.
-    - Added colored formatting for the new PR labels in the console output.
+  - Colorized the intro banner and branch names in log output.
+  - Added colored formatting for the new PR labels in the console output.
 
 ### Changed
 
 - **PR MESSAGE FORMATTING:**
-    - Removed emojis from the AI-generated Pull Request titles and descriptions.
-    - Added a standard "Review Reminder" boilerplate to the bottom of the generated PR message.
+  - Removed emojis from the AI-generated Pull Request titles and descriptions.
+  - Added a standard "Review Reminder" boilerplate to the bottom of the generated PR message.
 - **CI/CD:** Updated the NPM publish script to include a mandatory test step and removed the push-based trigger from the pipeline.
 
 ## [1.1.0] - 2025-10-02
@@ -241,7 +275,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 ### Security
 
 - **PREVENTED COMMAND INJECTION:** Patched a security vulnerability by replacing the insecure `child_process.exec` with `child_process.execFile` in the `getPullRequestCommits` function. This prevents shell interpretation of commands, mitigating potential **command injection** risks.
-    - Added an integration test to safely handle branch names containing special shell characters, confirming the fix. ([e108786](https://github.com/R4ULtv/lazypr/commit/e108786e5d3f2daa64947b2f0059f95a947ea24d))
+  - Added an integration test to safely handle branch names containing special shell characters, confirming the fix. ([e108786](https://github.com/R4ULtv/lazypr/commit/e108786e5d3f2daa64947b2f0059f95a947ea24d))
 
 ## [1.0.4] - 2025-09-30
 
@@ -262,8 +296,8 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/) and this p
 ### Changed
 
 - **UX/DEPENDENCY MIGRATION:** Migrated the entire interactive prompt system from legacy libraries (like `Inquirer`) to **`@clack/prompts`** for a modern, consistent, and performant command-line user experience. ([#5](https://github.com/R4ULtv/lazypr/pull/5))
-    - **Performance:** This migration resulted in a reduction of the overall package bundle size by approximately **5%** (from 545 KB to 517 KB).
-    - Implemented the Clack timer spinner for real-time feedback during long operations (e.g., waiting for AI generation).
+  - **Performance:** This migration resulted in a reduction of the overall package bundle size by approximately **5%** (from 545 KB to 517 KB).
+  - Implemented the Clack timer spinner for real-time feedback during long operations (e.g., waiting for AI generation).
 
 ## [1.0.2] - 2025-09-28
 

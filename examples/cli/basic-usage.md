@@ -9,6 +9,7 @@ lazypr
 ```
 
 This will:
+
 1. Analyze commits between your current branch and main
 2. Generate a professional PR title and description
 3. Offer to copy the result to clipboard
@@ -58,6 +59,7 @@ ls .github/PULL_REQUEST_TEMPLATE/
 ```
 
 Template locations searched:
+
 - `.github/pull_request_template.md`
 - `.github/PULL_REQUEST_TEMPLATE/*.md`
 - `docs/pull_request_template.md`
@@ -215,6 +217,7 @@ lazypr config set GROQ_API_KEY "your-key-here"
 ### Rate Limiting
 
 If you hit rate limits, try:
+
 - Using a different provider: `lazypr --provider cerebras`
 - Waiting a few minutes
 - Checking your API quota

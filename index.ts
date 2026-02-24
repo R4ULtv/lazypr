@@ -1,25 +1,11 @@
 #!/usr/bin/env node
 
-import {
-  autocomplete,
-  cancel,
-  confirm,
-  intro,
-  log,
-  note,
-  outro,
-  spinner,
-} from "@clack/prompts";
+import { autocomplete, cancel, confirm, intro, log, note, outro, spinner } from "@clack/prompts";
 import clipboardy from "clipboardy";
 import { Command } from "commander";
 import pc from "picocolors";
 import { displayConfigBadge } from "./utils/badge";
-import {
-  CONFIG_FILE,
-  CONFIG_SCHEMA,
-  type ConfigKey,
-  config,
-} from "./utils/config";
+import { CONFIG_FILE, CONFIG_SCHEMA, type ConfigKey, config } from "./utils/config";
 import {
   getAllBranches,
   getCurrentBranch,
@@ -94,11 +80,7 @@ const selectTemplate = async (
   }
 
   // Flag without value or --template flag: show interactive selection
-  if (
-    templateOption === "" ||
-    templateOption === "true" ||
-    templateOption === true
-  ) {
+  if (templateOption === "" || templateOption === "true" || templateOption === true) {
     const availableTemplates = await findPRTemplates();
 
     if (availableTemplates.length === 0) {
@@ -129,9 +111,7 @@ const selectTemplate = async (
       return { content: undefined, name: undefined };
     }
 
-    const template = availableTemplates.find(
-      (t) => t.path === selectedTemplate,
-    );
+    const template = availableTemplates.find((t) => t.path === selectedTemplate);
     if (template) {
       log.info(`Using template: ${template.name}`);
       return { content: template.content, name: template.name };
@@ -147,9 +127,7 @@ const selectTemplate = async (
       log.info(`Using template: ${template.name}`);
       return { content: template.content, name: template.name };
     }
-    log.warn(
-      `Template '${templateOption}' not found, continuing without template`,
-    );
+    log.warn(`Template '${templateOption}' not found, continuing without template`);
   }
 
   return { content: undefined, name: undefined };
@@ -161,9 +139,7 @@ const copyToClipboard = async (content: string): Promise<void> => {
     await clipboardy.write(content);
     success("Copied to clipboard!");
   } catch {
-    log.warn(
-      "Failed to copy to clipboard. You can manually copy the content above.",
-    );
+    log.warn("Failed to copy to clipboard. You can manually copy the content above.");
   }
 };
 
@@ -194,9 +170,7 @@ const createPullRequest = async (
     try {
       await validateProviderApiKey();
     } catch (error) {
-      exitWithError(
-        error instanceof Error ? error.message : "Provider API key is required",
-      );
+      exitWithError(error instanceof Error ? error.message : "Provider API key is required");
     }
 
     // Get current branch
@@ -210,9 +184,7 @@ const createPullRequest = async (
 
     // Check if branches are the same
     if (currentBranch === targetBranch) {
-      log.warn(
-        `Target branch '${targetBranch}' is the same as current branch '${currentBranch}'`,
-      );
+      log.warn(`Target branch '${targetBranch}' is the same as current branch '${currentBranch}'`);
     }
 
     // Check if target branch exists
@@ -224,9 +196,7 @@ const createPullRequest = async (
 
     // If either condition is true, show branch selection
     if (currentBranch === targetBranch || !branches.includes(targetBranch)) {
-      const availableBranches = branches.filter(
-        (branch) => branch !== currentBranch,
-      );
+      const availableBranches = branches.filter((branch) => branch !== currentBranch);
       targetBranch = await selectTargetBranch(currentBranch, availableBranches);
     }
 
@@ -236,15 +206,11 @@ const createPullRequest = async (
     const commits = await getPullRequestCommits(targetBranch, filterDisabled);
 
     if (!commits || commits.length === 0) {
-      const filterEnabled =
-        !filterDisabled && (await config.get("FILTER_COMMITS")) === "true";
+      const filterEnabled = !filterDisabled && (await config.get("FILTER_COMMITS")) === "true";
 
       if (filterEnabled) {
         // Get unfiltered commits to show how many were filtered
-        const unfilteredCommits = await getPullRequestCommits(
-          targetBranch,
-          true,
-        );
+        const unfilteredCommits = await getPullRequestCommits(targetBranch, true);
         const filteredCount = unfilteredCommits.length;
 
         exitWithError(
@@ -263,23 +229,20 @@ const createPullRequest = async (
     );
 
     // Handle template selection
-    const { content: templateContent, name: templateName } =
-      await selectTemplate(options.template);
+    const { content: templateContent, name: templateName } = await selectTemplate(options.template);
 
     // Load config values in parallel
-    const [configLocale, configContext, filterCommitsConfig, provider, model] =
-      await Promise.all([
-        config.get("LOCALE"),
-        config.get("CONTEXT"),
-        config.get("FILTER_COMMITS"),
-        config.get("PROVIDER"),
-        config.get("MODEL"),
-      ]);
+    const [configLocale, configContext, filterCommitsConfig, provider, model] = await Promise.all([
+      config.get("LOCALE"),
+      config.get("CONTEXT"),
+      config.get("FILTER_COMMITS"),
+      config.get("PROVIDER"),
+      config.get("MODEL"),
+    ]);
 
     const currentLocale = options.locale || configLocale;
     const currentContext = options.context || configContext;
-    const filterEnabled =
-      options.filter !== false && filterCommitsConfig === "true";
+    const filterEnabled = options.filter !== false && filterCommitsConfig === "true";
 
     displayConfigBadge({
       provider,
@@ -298,9 +261,7 @@ const createPullRequest = async (
     // Generate PR
     let pullRequest: Awaited<ReturnType<typeof generatePullRequest>>["object"];
     let usage: Awaited<ReturnType<typeof generatePullRequest>>["usage"];
-    let finishReason: Awaited<
-      ReturnType<typeof generatePullRequest>
-    >["finishReason"];
+    let finishReason: Awaited<ReturnType<typeof generatePullRequest>>["finishReason"];
 
     try {
       const result = await generatePullRequest(
@@ -329,10 +290,7 @@ const createPullRequest = async (
 
     if (pullRequest.labels?.length) {
       const customLabelsConfig = await config.get("CUSTOM_LABELS");
-      const coloredLabels = formatLabels(
-        pullRequest.labels,
-        customLabelsConfig,
-      );
+      const coloredLabels = formatLabels(pullRequest.labels, customLabelsConfig);
       log.info(`Pull Request Labels: ${coloredLabels}`);
     }
 
@@ -369,13 +327,9 @@ const createPullRequest = async (
       }
     }
 
-    outro(
-      "Done - Remember: AI can make mistakes, always review the generated content.",
-    );
+    outro("Done - Remember: AI can make mistakes, always review the generated content.");
   } catch (error) {
-    exitWithError(
-      `Failed: ${error instanceof Error ? error.message : "Unknown error"}`,
-    );
+    exitWithError(`Failed: ${error instanceof Error ? error.message : "Unknown error"}`);
   }
 };
 
@@ -429,13 +383,9 @@ program
         const schema = CONFIG_SCHEMA[key];
         const currentValue = allConfig[key];
         const defaultValue =
-          "default" in schema
-            ? (schema as { default?: string }).default
-            : undefined;
+          "default" in schema ? (schema as { default?: string }).default : undefined;
         const isRequired =
-          "required" in schema
-            ? Boolean((schema as { required?: boolean }).required)
-            : false;
+          "required" in schema ? Boolean((schema as { required?: boolean }).required) : false;
 
         let displayValue: string;
         let status: string;
@@ -475,13 +425,9 @@ program
       locationLines.push(pc.dim(`Location: ${CONFIG_FILE}`));
       locationLines.push("");
       locationLines.push(
-        pc.yellow(
-          "⚠️  Editing the config file manually is not recommended - use the CLI",
-        ),
+        pc.yellow("⚠️  Editing the config file manually is not recommended - use the CLI"),
       );
-      locationLines.push(
-        pc.yellow("   commands instead to avoid misconfigurations"),
-      );
+      locationLines.push(pc.yellow("   commands instead to avoid misconfigurations"));
 
       note(locationLines.join("\n"), "Config File");
 
@@ -562,9 +508,7 @@ program
       await config.remove(key as ConfigKey);
       success(`Config key '${key}' removed successfully`);
     } else {
-      log.error(
-        `Error: Invalid operation '${type}'. Use 'set', 'get', 'remove', 'list'`,
-      );
+      log.error(`Error: Invalid operation '${type}'. Use 'set', 'get', 'remove', 'list'`);
       process.exit(1);
     }
   });

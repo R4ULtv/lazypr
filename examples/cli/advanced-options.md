@@ -12,6 +12,7 @@ lazypr --no-filter
 ```
 
 This will include:
+
 - Merge commits
 - Dependency updates (npm, yarn, etc.)
 - Formatting-only changes (prettier, eslint, etc.)
@@ -21,15 +22,18 @@ This will include:
 Filtered patterns include:
 
 **Merge commits:**
+
 - `Merge branch 'feature' into main`
 - `Merge pull request #123`
 
 **Dependency updates:**
+
 - `chore: update dependencies`
 - `bump version to 1.2.3`
 - `Update package.json`
 
 **Formatting changes:**
+
 - `style: format code with prettier`
 - `chore: run eslint --fix`
 - `Fix linting issues`
@@ -70,6 +74,7 @@ lazypr --locale de
 ```
 
 Supported locales:
+
 - `en` - English (default)
 - `es` - Spanish
 - `fr` - French
@@ -93,6 +98,7 @@ lazypr --model llama-3.1-8b-instant
 ```
 
 Available Groq models:
+
 - `llama-3.3-70b-versatile` (default)
 - `llama-3.1-70b-versatile`
 - `llama-3.1-8b-instant`

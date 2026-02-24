@@ -81,9 +81,7 @@ function getTemplateName(filename: string): string {
  * @param {string} cwd - Current working directory (repository root)
  * @returns {Promise<PRTemplate[]>} Array of found templates
  */
-export async function findPRTemplates(
-  cwd: string = process.cwd(),
-): Promise<PRTemplate[]> {
+export async function findPRTemplates(cwd: string = process.cwd()): Promise<PRTemplate[]> {
   const templates: PRTemplate[] = [];
   const seenPaths = new Set<string>();
   const seenContents = new Map<string, string>(); // content hash -> path mapping to detect duplicates
@@ -122,9 +120,7 @@ export async function findPRTemplates(
     else if (await isDirectory(fullPath)) {
       try {
         const files = await readdir(fullPath);
-        const markdownFiles = files.filter(
-          (file) => file.endsWith(".md") || file.endsWith(".MD"),
-        );
+        const markdownFiles = files.filter((file) => file.endsWith(".md") || file.endsWith(".MD"));
 
         for (const file of markdownFiles) {
           const templatePath = join(location, file);
@@ -174,16 +170,12 @@ export async function getPRTemplate(
   const templates = await findPRTemplates(cwd);
 
   // Try to find by exact name match (case-insensitive)
-  const byName = templates.find(
-    (t) => t.name.toLowerCase() === nameOrPath.toLowerCase(),
-  );
+  const byName = templates.find((t) => t.name.toLowerCase() === nameOrPath.toLowerCase());
   if (byName) return byName;
 
   // Try to find by path match (normalize path separators)
   const normalizedInput = nameOrPath.replace(/\\/g, "/");
-  const byPath = templates.find(
-    (t) => t.path.replace(/\\/g, "/") === normalizedInput,
-  );
+  const byPath = templates.find((t) => t.path.replace(/\\/g, "/") === normalizedInput);
   if (byPath) return byPath;
 
   // Try to find by partial name match
@@ -200,9 +192,7 @@ export async function getPRTemplate(
  * @param {string} cwd - Current working directory
  * @returns {Promise<boolean>} True if templates exist
  */
-export async function hasPRTemplates(
-  cwd: string = process.cwd(),
-): Promise<boolean> {
+export async function hasPRTemplates(cwd: string = process.cwd()): Promise<boolean> {
   const templates = await findPRTemplates(cwd);
   return templates.length > 0;
 }

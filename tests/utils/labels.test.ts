@@ -124,10 +124,7 @@ describe("parseCustomLabels", () => {
   });
 
   test("should filter out empty entries", () => {
-    expect(parseCustomLabels("feature,,refactor,")).toEqual([
-      "feature",
-      "refactor",
-    ]);
+    expect(parseCustomLabels("feature,,refactor,")).toEqual(["feature", "refactor"]);
   });
 });
 

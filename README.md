@@ -29,6 +29,7 @@ Requires Node.js >= 20. **[See installation guide →](https://lazypr.raulcarini
 ## Quick start ⚡
 
 1. **Set your API key:**
+
    ```bash
    lazypr config set GROQ_API_KEY=<your-key>
    ```
@@ -50,6 +51,7 @@ lazypr config get KEY          # Get configuration
 ```
 
 **Common settings:**
+
 - `PROVIDER` - AI provider (`groq`, `cerebras`, or `openai`)
 - `LOCALE` - Output language (`en`, `es`, `pt`, `fr`, etc.)
 - `MODEL` - AI model to use

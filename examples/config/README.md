@@ -24,15 +24,18 @@ C:\Users\YourUsername\.lazypr
 The simplest setup to get started.
 
 **Contains:**
+
 - API key only
 - Uses all default settings
 
 **Best for:**
+
 - First-time users
 - Quick setup
 - Personal projects
 
 **Setup:**
+
 ```bash
 cp examples/config/minimal.conf ~/.lazypr
 # Edit ~/.lazypr and add your API key
@@ -43,17 +46,20 @@ cp examples/config/minimal.conf ~/.lazypr
 Standardized configuration for team environments.
 
 **Contains:**
+
 - Both Groq and Cerebras API keys
 - Team defaults (branch, locale, filtering)
 - Standard context message
 - Reliability settings (retries, timeout)
 
 **Best for:**
+
 - Team environments
 - Consistent PR standards
 - Shared conventions
 
 **Setup:**
+
 ```bash
 cp examples/config/team.conf ~/.lazypr
 # Edit ~/.lazypr and add your API keys
@@ -65,18 +71,21 @@ cp examples/config/team.conf ~/.lazypr
 Configuration supporting multiple AI providers with easy switching.
 
 **Contains:**
+
 - Multiple provider API keys
 - Provider-specific model settings
 - Usage notes for switching
 - Fallback strategy guidance
 
 **Best for:**
+
 - Production environments
 - High-availability requirements
 - Cost optimization
 - Rate limit management
 
 **Setup:**
+
 ```bash
 cp examples/config/multi-provider.conf ~/.lazypr
 # Edit ~/.lazypr and add your API keys
@@ -110,6 +119,7 @@ code ~/.lazypr
 ```
 
 Config file format:
+
 ```
 KEY=value
 ANOTHER_KEY=another value
@@ -119,37 +129,37 @@ ANOTHER_KEY=another value
 
 ### Required
 
-| Key | Description | Example |
-|-----|-------------|---------|
+| Key                                  | Description             | Example   |
+| ------------------------------------ | ----------------------- | --------- |
 | `GROQ_API_KEY` or `CEREBRAS_API_KEY` | API key for AI provider | `gsk_...` |
 
 ### Provider Settings
 
-| Key | Default | Description | Example |
-|-----|---------|-------------|---------|
-| `PROVIDER` | `groq` | AI provider to use | `groq`, `cerebras` |
-| `MODEL` | `llama-3.3-70b-versatile` | Model to use | `llama-3.1-8b-instant` |
+| Key        | Default                   | Description        | Example                |
+| ---------- | ------------------------- | ------------------ | ---------------------- |
+| `PROVIDER` | `groq`                    | AI provider to use | `groq`, `cerebras`     |
+| `MODEL`    | `llama-3.3-70b-versatile` | Model to use       | `llama-3.1-8b-instant` |
 
 ### Git Settings
 
-| Key | Default | Description | Example |
-|-----|---------|-------------|---------|
+| Key              | Default  | Description           | Example                     |
+| ---------------- | -------- | --------------------- | --------------------------- |
 | `DEFAULT_BRANCH` | `master` | Default target branch | `main`, `develop`, `master` |
 
 ### Generation Settings
 
-| Key | Default | Description | Example |
-|-----|---------|-------------|---------|
-| `LOCALE` | `en` | Language for PR description | `en`, `es`, `fr`, `ja` |
-| `FILTER_COMMITS` | `true` | Filter out noise commits | `true`, `false` |
-| `CONTEXT` | _(empty)_ | Additional context for AI | `Security fix` |
+| Key              | Default   | Description                 | Example                |
+| ---------------- | --------- | --------------------------- | ---------------------- |
+| `LOCALE`         | `en`      | Language for PR description | `en`, `es`, `fr`, `ja` |
+| `FILTER_COMMITS` | `true`    | Filter out noise commits    | `true`, `false`        |
+| `CONTEXT`        | _(empty)_ | Additional context for AI   | `Security fix`         |
 
 ### Advanced Settings
 
-| Key | Default | Description | Example |
-|-----|---------|-------------|---------|
-| `MAX_RETRIES` | `3` | Number of retry attempts | `5` |
-| `TIMEOUT` | `30000` | Timeout in milliseconds | `60000` |
+| Key           | Default | Description              | Example |
+| ------------- | ------- | ------------------------ | ------- |
+| `MAX_RETRIES` | `3`     | Number of retry attempts | `5`     |
+| `TIMEOUT`     | `30000` | Timeout in milliseconds  | `60000` |
 
 ## Configuration Validation
 
@@ -212,27 +222,32 @@ git commit -m "Add lazypr team configuration template"
 ### 2. Document Team Standards
 
 Create a team document explaining:
+
 - Which provider to use (Groq/Cerebras)
 - Default branch naming convention
 - Commit filtering preferences
 - When to use different models
 
 Example `LAZYPR.md`:
+
 ```markdown
 # Team LazyPR Standards
 
 ## Configuration
+
 - Provider: Groq (free tier)
 - Model: llama-3.3-70b-versatile
 - Default branch: main
 - Filtering: Enabled
 
 ## When to Use
+
 - All PRs should have AI-generated descriptions
 - Run `lazypr` before creating PR
 - Update PR description when adding significant commits
 
 ## Setup
+
 1. Copy team config: `cp .github/lazypr/team-config.example ~/.lazypr`
 2. Add your API key: `lazypr config set GROQ_API_KEY "your-key"`
 3. Verify: `lazypr config list`
@@ -241,6 +256,7 @@ Example `LAZYPR.md`:
 ### 3. Use CI/CD for Consistency
 
 Add GitHub Actions to auto-generate PR descriptions:
+
 - See [github-actions examples](../github-actions/)
 - Ensures all PRs have consistent descriptions
 - Reduces manual work
@@ -409,6 +425,7 @@ grep -r "GROQ_API_KEY" ~/.bash_history  # Should return nothing
 ## Getting Help
 
 For configuration issues:
+
 - Check main [README.md](../../README.md)
 - Run `lazypr config --help`
 - See [CLI examples](../cli/)
