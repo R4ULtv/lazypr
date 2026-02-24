@@ -4,6 +4,20 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/) and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## [1.5.1] - 2026-02-24
+
+### Changed
+
+- **LINTING:** Switched from Biome to oxlint and oxfmt for linting and formatting, with updated configuration files.
+- **CODE QUALITY:** Resolved all oxlint warnings across the codebase:
+  - Replaced `Array#sort()` with `Array#toSorted()` to avoid array mutation
+  - Preserved caught errors with `{ cause }` when re-throwing for better debugging
+  - Replaced `new URL()` side-effect validation with `URL.canParse()`
+
+### Fixed
+
+- **TESTS:** Removed environment-dependent ANSI color assertions that failed in non-TTY environments (e.g., CI). Content and logic assertions remain intact.
+
 ## [1.5.0] - 2026-01-31
 
 ### Added
