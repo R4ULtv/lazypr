@@ -7,7 +7,7 @@ import {
 } from "../../utils/labels";
 
 // ANSI escape code pattern for matching any color
-const ANSI_PATTERN = /\x1b\[\d+m/;
+const ANSI_PATTERN = new RegExp(`${String.fromCharCode(27)}\\[\\d+m`);
 
 describe("formatLabels", () => {
   test("should return empty string for empty array", () => {

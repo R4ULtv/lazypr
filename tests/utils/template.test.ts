@@ -62,7 +62,7 @@ describe("PR Template Utils", () => {
 
       const templates = await findPRTemplates(testDir);
       expect(templates).toHaveLength(2);
-      expect(templates.map((t) => t.name).sort()).toEqual(["Bug Fix", "Feature"]);
+      expect(templates.map((t) => t.name).toSorted()).toEqual(["Bug Fix", "Feature"]);
     });
 
     test("should find templates in docs folder", async () => {
@@ -150,7 +150,7 @@ describe("PR Template Utils", () => {
       await writeFile(join(templateDir, "feature_request.md"), "# Feature Request");
 
       const templates = await findPRTemplates(testDir);
-      expect(templates.map((t) => t.name).sort()).toEqual(["Bug Fix Template", "Feature Request"]);
+      expect(templates.map((t) => t.name).toSorted()).toEqual(["Bug Fix Template", "Feature Request"]);
     });
   });
 });

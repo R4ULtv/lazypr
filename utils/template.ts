@@ -53,8 +53,8 @@ async function isDirectory(path: string): Promise<boolean> {
 async function readTemplateFile(path: string): Promise<string> {
   try {
     return await readFile(path, "utf-8");
-  } catch (_error) {
-    throw new Error(`Failed to read template file: ${path}`);
+  } catch (error) {
+    throw new Error(`Failed to read template file: ${path}`, { cause: error });
   }
 }
 
@@ -145,7 +145,7 @@ export async function findPRTemplates(cwd: string = process.cwd()): Promise<PRTe
           seenPaths.add(normalizedPath);
           seenContents.set(contentHash, templatePath);
         }
-      } catch (_error) {}
+      } catch {}
     }
   }
 

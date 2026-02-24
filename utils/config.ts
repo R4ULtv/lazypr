@@ -61,9 +61,7 @@ export const CONFIG_SCHEMA = {
       if (!v?.trim()) return "";
       const url = v.trim();
       // Validate URL format
-      try {
-        new URL(url);
-      } catch {
+      if (!URL.canParse(url)) {
         throw new Error(
           "Invalid OPENAI_BASE_URL format. Must be a valid URL (e.g., http://localhost:11434/v1)",
         );

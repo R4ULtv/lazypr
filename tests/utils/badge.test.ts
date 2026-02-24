@@ -8,7 +8,7 @@ mock.module("@clack/prompts", () => ({
 }));
 
 // ANSI escape code pattern for matching any color/formatting
-const ANSI_PATTERN = /\x1b\[\d+m/;
+const ANSI_PATTERN = new RegExp(`${String.fromCharCode(27)}\\[\\d+m`);
 
 describe("displayConfigBadge", () => {
   test("should display minimal config with only required fields", () => {
