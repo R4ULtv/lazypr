@@ -3,9 +3,9 @@
 import { autocomplete, cancel, confirm, intro, log, note, outro, spinner } from "@clack/prompts";
 import clipboardy from "clipboardy";
 import { Command } from "commander";
-import pc from "picocolors";
 import { displayConfigBadge } from "./utils/badge";
 import { CONFIG_FILE, CONFIG_SCHEMA, type ConfigKey, config } from "./utils/config";
+import { colorize } from "./utils/colors";
 import {
   getAllBranches,
   getCurrentBranch,
@@ -156,7 +156,7 @@ const createPullRequest = async (
   },
 ): Promise<void> => {
   try {
-    intro(pc.bgWhite(pc.black(" lazypr ")));
+    intro(colorize(["bgWhite", "black"], " lazypr "));
     let targetBranch = target || (await config.get("DEFAULT_BRANCH"));
 
     // Validate options
@@ -225,7 +225,10 @@ const createPullRequest = async (
     log.info(
       `You want to merge ${commitCount} commit${
         commitCount === 1 ? "" : "s"
-      } into ${pc.bold(pc.underline(targetBranch))} from ${pc.bold(pc.underline(currentBranch))}`,
+      } into ${colorize(["bold", "underline"], targetBranch)} from ${colorize(
+        ["bold", "underline"],
+        currentBranch,
+      )}`,
     );
 
     // Handle template selection
@@ -398,23 +401,23 @@ program
                 ? `${"*".repeat(currentValue.length - 4)}${currentValue.slice(-4)}`
                 : "****";
             displayValue = masked;
-            status = pc.green("✓");
+            status = colorize("green", "✓");
           } else {
             displayValue = currentValue;
-            status = pc.green("✓");
+            status = colorize("green", "✓");
           }
         } else if (defaultValue !== undefined) {
-          displayValue = `${defaultValue} ${pc.dim("(default)")}`;
-          status = pc.yellow("○");
+          displayValue = `${defaultValue} ${colorize("dim", "(default)")}`;
+          status = colorize("yellow", "○");
         } else if (isRequired) {
-          displayValue = pc.red("NOT SET (required)");
-          status = pc.red("✗");
+          displayValue = colorize("red", "NOT SET (required)");
+          status = colorize("red", "✗");
         } else {
-          displayValue = pc.dim("not set");
-          status = pc.dim("○");
+          displayValue = colorize("dim", "not set");
+          status = colorize("dim", "○");
         }
 
-        lines.push(`${status} ${pc.bold(key)}: ${displayValue}`);
+        lines.push(`${status} ${colorize("bold", key)}: ${displayValue}`);
       }
 
       // Display configuration settings in first note
@@ -422,12 +425,12 @@ program
 
       // Display file location and warning in second note
       const locationLines: string[] = [];
-      locationLines.push(pc.dim(`Location: ${CONFIG_FILE}`));
+      locationLines.push(colorize("dim", `Location: ${CONFIG_FILE}`));
       locationLines.push("");
       locationLines.push(
-        pc.yellow("⚠️  Editing the config file manually is not recommended - use the CLI"),
+        colorize("yellow", "⚠️  Editing the config file manually is not recommended - use the CLI"),
       );
-      locationLines.push(pc.yellow("   commands instead to avoid misconfigurations"));
+      locationLines.push(colorize("yellow", "   commands instead to avoid misconfigurations"));
 
       note(locationLines.join("\n"), "Config File");
 

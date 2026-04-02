@@ -1,5 +1,5 @@
 import { note } from "@clack/prompts";
-import pc from "picocolors";
+import { colorize } from "./colors";
 
 interface BadgeConfig {
   provider: string;
@@ -19,10 +19,10 @@ function formatBadgeItem(label: string, value: string | boolean): string {
   const statusIcon = "✓";
 
   if (typeof value === "boolean") {
-    return `${pc.green(statusIcon)} ${pc.bold(label)}`;
+    return `${colorize("green", statusIcon)} ${colorize("bold", label)}`;
   }
 
-  return `${pc.green(statusIcon)} ${pc.bold(label)}${pc.dim(":")} ${value}`;
+  return `${colorize("green", statusIcon)} ${colorize("bold", label)}${colorize("dim", ":")} ${value}`;
 }
 
 /**
@@ -62,6 +62,6 @@ export function displayConfigBadge(config: BadgeConfig): void {
     items.push(formatBadgeItem("GH CLI", config.ghCli));
   }
 
-  const badge = items.join(pc.dim(" | "));
+  const badge = items.join(colorize("dim", " | "));
   note(badge, "Configuration");
 }

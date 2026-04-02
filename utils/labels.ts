@@ -1,28 +1,28 @@
-import pc from "picocolors";
+import { colorize } from "./colors";
 
 type ColorFn = (text: string) => string;
 
-// Label color formatters using picocolors
+// Label color formatters for terminal output
 const LABEL_FORMATTERS: Record<string, ColorFn> = {
-  enhancement: (text) => pc.bgGreen(pc.black(text)),
-  bug: (text) => pc.bgRed(pc.black(text)),
-  documentation: (text) => pc.bgBlue(pc.black(text)),
+  enhancement: (text) => colorize(["bgGreen", "black"], text),
+  bug: (text) => colorize(["bgRed", "black"], text),
+  documentation: (text) => colorize(["bgBlue", "black"], text),
 };
 
 // Extended color palette for custom labels
 const CUSTOM_LABEL_FORMATTERS: ColorFn[] = [
-  (text) => pc.bgCyan(pc.black(text)),
-  (text) => pc.bgMagenta(pc.black(text)),
-  (text) => pc.bgYellow(pc.black(text)),
-  (text) => pc.inverse(text), // White on gray equivalent
-  (text) => pc.bgGreen(pc.black(text)),
-  (text) => pc.bgYellow(pc.black(text)),
-  (text) => pc.bgBlue(pc.black(text)),
-  (text) => pc.bgMagenta(pc.black(text)),
-  (text) => pc.bgCyan(pc.black(text)),
+  (text) => colorize(["bgCyan", "black"], text),
+  (text) => colorize(["bgMagenta", "black"], text),
+  (text) => colorize(["bgYellow", "black"], text),
+  (text) => colorize("inverse", text), // White on gray equivalent
+  (text) => colorize(["bgGreen", "black"], text),
+  (text) => colorize(["bgYellow", "black"], text),
+  (text) => colorize(["bgBlue", "black"], text),
+  (text) => colorize(["bgMagenta", "black"], text),
+  (text) => colorize(["bgCyan", "black"], text),
 ];
 
-const DEFAULT_FORMATTER: ColorFn = (text) => pc.bgWhite(pc.black(text));
+const DEFAULT_FORMATTER: ColorFn = (text) => colorize(["bgWhite", "black"], text);
 
 export const DEFAULT_LABELS = ["enhancement", "bug", "documentation"] as const;
 
