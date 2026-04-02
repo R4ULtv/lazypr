@@ -4,6 +4,18 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/) and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## [1.5.2] - 2026-04-02
+
+### Changed
+
+- **TERMINAL COLORING:** Migrated terminal styling from `picocolors` to Node.js `styleText` via `node:util`.
+- **RUNTIME REQUIREMENT:** Updated the documented runtime requirement to Node.js 21+, since `styleText` is stable starting in Node 21.
+- **LINTING:** Enabled oxlint type-aware/type-check analysis and tightened source typings to satisfy the new checks.
+
+### Fixed
+
+- **TYPE SAFETY:** Resolved type-aware lint issues across the CLI source, including config parsing, provider/config key narrowing, git parsing helpers, and prompt formatting.
+
 ## [1.5.1] - 2026-02-24
 
 ### Changed
