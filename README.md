@@ -24,7 +24,7 @@ Generate clean, consistent PRs from commits - powered by AI and your git history
 npm install -g lazypr
 ```
 
-Requires Node.js >= 20. **[See installation guide →](https://lazypr.raulcarini.dev/docs/installation)**
+Requires Node.js >= 21. **[See installation guide →](https://lazypr.raulcarini.dev/docs/installation)**
 
 ## Quick start ⚡
 
@@ -96,7 +96,7 @@ bun test         # Run tests
 bun run build    # Build for production
 ```
 
-Uses Bun for development, Node.js >= 20 for runtime.
+Uses Bun for development, Node.js >= 21 for runtime.
 
 ## Contributing 🤝
 

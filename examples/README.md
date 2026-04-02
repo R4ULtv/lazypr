@@ -161,7 +161,7 @@ lazypr --gh               # Get gh pr create command
 
 ## Prerequisites
 
-- Node.js >= 20
+- Node.js >= 21
 - Git repository
 - API key for Groq or Cerebras
 
