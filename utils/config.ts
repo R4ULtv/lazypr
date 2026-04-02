@@ -17,6 +17,26 @@ type ConfigSchemaValue = {
   validate: (v: string) => string;
 };
 
+function isErrnoException(error: unknown): error is NodeJS.ErrnoException {
+  return error instanceof Error && "code" in error;
+}
+
+function getErrorMessage(error: unknown): string {
+  return error instanceof Error ? error.message : "Unknown error";
+}
+
+function parseConfigEntry(line: string): [string, string] | null {
+  const [key, ...rest] = line.split("=");
+  const normalizedKey = key?.trim() ?? "";
+  const normalizedValue = rest.join("=").trim();
+
+  if (!normalizedKey) {
+    return null;
+  }
+
+  return [normalizedKey, normalizedValue];
+}
+
 export const CONFIG_SCHEMA = {
   PROVIDER: {
     default: "groq",
@@ -178,6 +198,21 @@ export const CONFIG_SCHEMA = {
 } as const satisfies Record<string, ConfigSchemaValue>;
 
 export type ConfigKey = keyof typeof CONFIG_SCHEMA;
+export const CONFIG_KEYS = [
+  "PROVIDER",
+  "GROQ_API_KEY",
+  "CEREBRAS_API_KEY",
+  "OPENAI_API_KEY",
+  "OPENAI_BASE_URL",
+  "LOCALE",
+  "MAX_RETRIES",
+  "TIMEOUT",
+  "DEFAULT_BRANCH",
+  "MODEL",
+  "FILTER_COMMITS",
+  "CONTEXT",
+  "CUSTOM_LABELS",
+] as const satisfies readonly ConfigKey[];
 
 class Config {
   private cache = new Map<string, string>();
@@ -195,17 +230,14 @@ class Config {
         this.cache = new Map(
           content
             .split("\n")
-            .map((line) => line.trim())
-            .filter((line) => line && !line.startsWith("#"))
-            .map((line) => {
-              const [key, ...rest] = line.split("=");
-              return [key?.trim(), rest.join("=")?.trim()] as [string, string];
-            })
-            .filter(([key, value]) => key && value !== undefined),
+            .map((line: string) => line.trim())
+            .filter((line: string) => line.length > 0 && !line.startsWith("#"))
+            .map(parseConfigEntry)
+            .filter((entry): entry is [string, string] => entry !== null),
         );
         this.loaded = true;
       } catch (err) {
-        if ((err as NodeJS.ErrnoException).code !== "ENOENT") throw err;
+        if (!isErrnoException(err) || err.code !== "ENOENT") throw err;
         // File doesn't exist, start with empty cache
         this.loaded = true;
       } finally {
@@ -264,7 +296,7 @@ class Config {
 
     const result: Partial<Record<ConfigKey, string>> = {};
 
-    for (const key of Object.keys(CONFIG_SCHEMA) as ConfigKey[]) {
+    for (const key of CONFIG_KEYS) {
       try {
         result[key] = await this.get(key);
       } catch {
@@ -279,11 +311,11 @@ class Config {
   async validate(): Promise<{ valid: boolean; errors: string[] }> {
     const errors: string[] = [];
 
-    for (const key of Object.keys(CONFIG_SCHEMA) as ConfigKey[]) {
+    for (const key of CONFIG_KEYS) {
       try {
         await this.get(key);
       } catch (err) {
-        errors.push(`${key}: ${(err as Error).message}`);
+        errors.push(`${key}: ${getErrorMessage(err)}`);
       }
     }
 

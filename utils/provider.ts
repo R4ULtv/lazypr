@@ -4,7 +4,7 @@ import { createOpenAI } from "@ai-sdk/openai";
 import type { LanguageModel } from "ai";
 import { generateText, Output } from "ai";
 import * as z from "zod/v4";
-import { config } from "./config";
+import { type ConfigKey, config } from "./config";
 import type { GitCommit } from "./git";
 import { DEFAULT_LABELS, getAvailableLabels } from "./labels";
 import {
@@ -21,9 +21,13 @@ export type ProviderType = "groq" | "cerebras" | "openai";
 // Provider configuration interface
 interface ProviderConfig {
   name: ProviderType;
-  apiKeyConfigKey: string;
+  apiKeyConfigKey: ConfigKey;
   apiKeyOptional?: boolean;
   createModel: (apiKey: string, model: string, baseURL?: string) => LanguageModel;
+}
+
+function isProviderType(value: string): value is ProviderType {
+  return value === "groq" || value === "cerebras" || value === "openai";
 }
 
 // Provider registry
@@ -60,14 +64,12 @@ const providers: Record<ProviderType, ProviderConfig> = {
 
 // Get the current provider configuration
 async function getProviderConfig(): Promise<ProviderConfig> {
-  const providerName = (await config.get("PROVIDER")) as ProviderType;
-  const providerConfig = providers[providerName];
-
-  if (!providerConfig) {
+  const providerName = await config.get("PROVIDER");
+  if (!isProviderType(providerName)) {
     throw new Error(`Unknown provider: ${providerName}`);
   }
 
-  return providerConfig;
+  return providers[providerName];
 }
 
 // Provider API key URLs
@@ -80,9 +82,7 @@ const apiKeyLinks: Record<ProviderType, string> = {
 // Validate that the required API key is set for the current provider
 export async function validateProviderApiKey(): Promise<void> {
   const providerConfig = await getProviderConfig();
-  const apiKey = await config.get(
-    providerConfig.apiKeyConfigKey as Parameters<typeof config.get>[0],
-  );
+  const apiKey = await config.get(providerConfig.apiKeyConfigKey);
 
   // Skip API key validation if provider allows optional keys (e.g., OpenAI for local providers)
   if (providerConfig.apiKeyOptional) {
@@ -110,9 +110,12 @@ function buildLabelsSchema(availableLabels: string[]) {
     return z.array(z.enum([...DEFAULT_LABELS]));
   }
 
-  // Zod enum requires at least one value
-  const [first, ...rest] = availableLabels;
-  return z.array(z.enum([first, ...rest] as [string, ...string[]]));
+  return z.array(z.string()).refine(
+    (labels) => labels.every((label) => availableLabels.includes(label)),
+    {
+      message: `Labels must be one of: ${availableLabels.join(", ")}`,
+    },
+  );
 }
 
 export async function generatePullRequest(
@@ -123,9 +126,7 @@ export async function generatePullRequest(
   contextOverride?: string,
 ) {
   const providerConfig = await getProviderConfig();
-  const apiKey = await config.get(
-    providerConfig.apiKeyConfigKey as Parameters<typeof config.get>[0],
-  );
+  const apiKey = await config.get(providerConfig.apiKeyConfigKey);
 
   // Only require API key if provider doesn't allow optional keys
   if (!apiKey && !providerConfig.apiKeyOptional) {

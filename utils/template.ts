@@ -120,7 +120,9 @@ export async function findPRTemplates(cwd: string = process.cwd()): Promise<PRTe
     else if (await isDirectory(fullPath)) {
       try {
         const files = await readdir(fullPath);
-        const markdownFiles = files.filter((file) => file.endsWith(".md") || file.endsWith(".MD"));
+        const markdownFiles = files.filter(
+          (file: string) => file.endsWith(".md") || file.endsWith(".MD"),
+        );
 
         for (const file of markdownFiles) {
           const templatePath = join(location, file);

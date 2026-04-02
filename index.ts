@@ -4,7 +4,7 @@ import { autocomplete, cancel, confirm, intro, log, note, outro, spinner } from 
 import clipboardy from "clipboardy";
 import { Command } from "commander";
 import { displayConfigBadge } from "./utils/badge";
-import { CONFIG_FILE, CONFIG_SCHEMA, type ConfigKey, config } from "./utils/config";
+import { CONFIG_FILE, CONFIG_KEYS, CONFIG_SCHEMA, type ConfigKey, config } from "./utils/config";
 import { colorize } from "./utils/colors";
 import {
   getAllBranches,
@@ -20,10 +20,13 @@ import { findPRTemplates, getPRTemplate } from "./utils/template";
 
 const program = new Command();
 
+const isConfigKey = (value: string): value is ConfigKey => value in CONFIG_SCHEMA;
+
 // Simple error handler
 const exitWithError = (message: string): never => {
   cancel(message);
   process.exit(0);
+  throw new Error(message);
 };
 
 // Simple success message
@@ -64,11 +67,9 @@ const selectTargetBranch = async (
     placeholder: "Type to filter...",
   });
 
-  if (typeof selectedBranch === "symbol") {
-    exitWithError("Branch selection cancelled");
-  }
-
-  return selectedBranch as string;
+  return typeof selectedBranch === "string"
+    ? selectedBranch
+    : exitWithError("Branch selection cancelled");
 };
 
 // Select PR template interactively or by name
@@ -382,7 +383,7 @@ program
       const lines: string[] = [];
 
       // Display each config key with its value or default
-      for (const key of Object.keys(CONFIG_SCHEMA) as ConfigKey[]) {
+      for (const key of CONFIG_KEYS) {
         const schema = CONFIG_SCHEMA[key];
         const currentValue = allConfig[key];
         const defaultValue =
@@ -456,7 +457,7 @@ program
       }
 
       const trimmedKey = key.trim();
-      if (!(trimmedKey in CONFIG_SCHEMA)) {
+      if (!isConfigKey(trimmedKey)) {
         log.error(
           `Error: Unknown config key '${trimmedKey}'.\nRun 'lazypr config list' to see all available keys.`,
         );
@@ -464,9 +465,9 @@ program
       }
       log.info(`Setting config: ${trimmedKey} = ${value}`);
       try {
-        await config.set(trimmedKey as ConfigKey, value);
+        await config.set(trimmedKey, value);
       } catch (error) {
-        log.error(`error: ${(error as Error).message}`);
+        log.error(`error: ${error instanceof Error ? error.message : "Unknown error"}`);
         process.exit(1);
       }
     } else if (type === "get") {
@@ -478,13 +479,13 @@ program
         process.exit(1);
       }
 
-      if (!(key in CONFIG_SCHEMA)) {
+      if (!isConfigKey(key)) {
         log.error(
           `Error: Unknown config key '${key}'.\nRun 'lazypr config list' to see all available keys.`,
         );
         process.exit(1);
       }
-      const value = await config.get(key as ConfigKey).catch(() => undefined);
+      const value = await config.get(key).catch(() => undefined);
 
       if (value !== undefined) {
         log.warn(`${key} = ${value}`);
@@ -500,7 +501,7 @@ program
         process.exit(1);
       }
 
-      if (!(key in CONFIG_SCHEMA)) {
+      if (!isConfigKey(key)) {
         log.error(
           `Error: Unknown config key '${key}'. Valid keys: ${Object.keys(CONFIG_SCHEMA).join(", ")}`,
         );
@@ -508,7 +509,7 @@ program
       }
 
       log.info(`Removing config: ${key}`);
-      await config.remove(key as ConfigKey);
+      await config.remove(key);
       success(`Config key '${key}' removed successfully`);
     } else {
       log.error(`Error: Invalid operation '${type}'. Use 'set', 'get', 'remove', 'list'`);

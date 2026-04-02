@@ -4,6 +4,23 @@ import { config } from "./config";
 
 const execFileAsync = promisify(execFile);
 
+function getErrorStderr(error: unknown): string {
+  if (
+    typeof error === "object" &&
+    error !== null &&
+    "stderr" in error &&
+    typeof error.stderr === "string"
+  ) {
+    return error.stderr;
+  }
+
+  return "";
+}
+
+function getErrorMessage(error: unknown): string {
+  return error instanceof Error ? error.message : "";
+}
+
 /**
  * Interface representing a git commit with basic information.
  */
@@ -92,8 +109,8 @@ export function filterCommits(commits: GitCommit[]): GitCommit[] {
  * Helper function to handle git errors with user-friendly messages
  */
 function handleGitError(error: unknown, context: string, branch?: string): never {
-  const stderr = (error as { stderr?: string }).stderr || "";
-  const message = (error as Error).message || "";
+  const stderr = getErrorStderr(error);
+  const message = getErrorMessage(error);
 
   if (stderr.includes("not a git repository") || message.includes("ENOENT")) {
     throw new Error("Not a git repository. Run 'git init' to initialize a new repository.");
@@ -138,10 +155,10 @@ export async function isGitRepository(): Promise<boolean> {
 export async function getAllBranches(): Promise<string[]> {
   try {
     const { stdout } = await execFileAsync("git", ["branch", "-a"]);
-    const branches = stdout
+    const branches: string[] = stdout
       .split("\n")
-      .map((branch) => branch.trim().replace(/^\*\s*/, ""))
-      .filter((branch) => branch.length > 0 && !branch.includes("->")); // Filter out empty lines and symbolic refs like 'HEAD ->'
+      .map((branch: string) => branch.trim().replace(/^\*\s*/, ""))
+      .filter((branch: string) => branch.length > 0 && !branch.includes("->")); // Filter out empty lines and symbolic refs like 'HEAD ->'
 
     // Using a Set to ensure all branch names are unique before returning as an array.
     return [...new Set(branches)];
@@ -193,7 +210,7 @@ export async function getPullRequestCommits(
     const commits: GitCommit[] = stdout
       .trim()
       .split("\n")
-      .map((line) => {
+      .map((line: string): GitCommit => {
         const [hash, shortHash, author, date, message] = line.split("|");
         return {
           hash: hash || "",
@@ -203,7 +220,7 @@ export async function getPullRequestCommits(
           message: message || "",
         };
       })
-      .filter((commit) => commit.hash.length > 0); // Filter out any malformed entries
+      .filter((commit: GitCommit) => commit.hash.length > 0); // Filter out any malformed entries
 
     // Apply smart filtering if enabled in config and not overridden
     if (noFilter) {

@@ -67,7 +67,7 @@ export const buildPrompt = (
 
 **Locale:** ${locale}
 **Target Branch:** ${currentBranch}${context ? `\n**Additional Guidance:** ${context}` : ""}
-**Available Labels:** ${availableLabels}
+**Available Labels:** ${availableLabels.join(", ")}
 
 **Commit History (most recent last):**
 \`\`\`
