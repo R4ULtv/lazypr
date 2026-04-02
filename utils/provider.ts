@@ -110,12 +110,11 @@ function buildLabelsSchema(availableLabels: string[]) {
     return z.array(z.enum([...DEFAULT_LABELS]));
   }
 
-  return z.array(z.string()).refine(
-    (labels) => labels.every((label) => availableLabels.includes(label)),
-    {
+  return z
+    .array(z.string())
+    .refine((labels) => labels.every((label) => availableLabels.includes(label)), {
       message: `Labels must be one of: ${availableLabels.join(", ")}`,
-    },
-  );
+    });
 }
 
 export async function generatePullRequest(
