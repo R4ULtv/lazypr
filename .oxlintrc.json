@@ -5,6 +5,10 @@
     "suspicious": "warn",
     "nursery": "off"
   },
+  "options": {
+    "typeAware": true,
+    "typeCheck": true
+  },
   "rules": {},
-  "ignorePatterns": ["dist"]
+  "ignorePatterns": ["dist", "tests"]
 }
