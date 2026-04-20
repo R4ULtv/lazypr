@@ -10,6 +10,8 @@ Go to your repository **Settings** → **Secrets and variables** → **Actions**
 
 Add: `GROQ_API_KEY` with your API key from [console.groq.com](https://console.groq.com/keys)
 
+You can also use `GOOGLE_GENERATIVE_AI_API_KEY` from [Google AI Studio](https://aistudio.google.com/app/apikey) or `CEREBRAS_API_KEY` from [Cerebras](https://cloud.cerebras.ai/).
+
 ### 2. Choose a Workflow
 
 Copy one of the workflow files below to `.github/workflows/` in your repository.
@@ -103,6 +105,20 @@ Change `--provider` flag:
 env:
   CEREBRAS_API_KEY: ${{ secrets.CEREBRAS_API_KEY }}
 run: lazypr --provider cerebras
+```
+
+Or with Google Gemini:
+
+```yaml
+env:
+  GOOGLE_GENERATIVE_AI_API_KEY: ${{ secrets.GOOGLE_GENERATIVE_AI_API_KEY }}
+run: |
+  cat <<EOF > ~/.lazypr
+  GOOGLE_GENERATIVE_AI_API_KEY=${GOOGLE_GENERATIVE_AI_API_KEY}
+  PROVIDER=google
+  MODEL=gemini-2.5-flash
+  EOF
+  lazypr
 ```
 
 ### Include All Commits (No Filtering)

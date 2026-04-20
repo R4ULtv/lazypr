@@ -114,6 +114,17 @@ lazypr --provider cerebras --model llama-3.3-70b
 lazypr --provider cerebras --model llama-3.1-8b
 ```
 
+### Google Gemini Models
+
+```bash
+# Switch to Google Gemini with a fast model
+lazypr config set PROVIDER=google
+lazypr config set MODEL=gemini-2.5-flash
+
+# Use a higher-capability Gemini model
+lazypr config set MODEL=gemini-2.5-pro
+```
+
 ## Combining Options
 
 ### Production-Ready PR with Context
@@ -153,6 +164,8 @@ Save your preferences:
 ```bash
 # Set default provider
 lazypr config set PROVIDER cerebras
+# Or switch to Google Gemini
+lazypr config set PROVIDER=google
 
 # Set default model
 lazypr config set MODEL llama-3.1-8b-instant
@@ -258,6 +271,9 @@ LazyPR automatically ignores the frontmatter and only processes the template con
 ```bash
 # Use fastest model and provider
 lazypr --provider cerebras --model llama-3.1-8b-instant
+# Or configure Gemini Flash
+lazypr config set PROVIDER=google
+lazypr config set MODEL=gemini-2.5-flash
 
 # Reduce timeout (fail faster)
 lazypr config set TIMEOUT 15000
@@ -329,7 +345,6 @@ Override config with environment variables:
 ```bash
 # Override provider
 LAZYPR_PROVIDER=cerebras lazypr
-
 # Override model
 LAZYPR_MODEL=llama-3.1-8b-instant lazypr
 
@@ -338,6 +353,7 @@ LAZYPR_PROVIDER=cerebras \
 LAZYPR_MODEL=llama-3.1-8b-instant \
 LAZYPR_LOCALE=es \
 lazypr
+
 ```
 
 ## Best Practices
@@ -361,6 +377,10 @@ lazypr --no-filter --template bugfix
 ```bash
 # Fast generation with clear context
 lazypr --provider cerebras --context "Critical security fix - expedite review"
+# Or with Gemini after updating config
+lazypr config set PROVIDER=google
+lazypr config set MODEL=gemini-2.5-flash
+lazypr --context "Critical security fix - expedite review"
 ```
 
 ### For Releases

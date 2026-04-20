@@ -47,7 +47,7 @@ Standardized configuration for team environments.
 
 **Contains:**
 
-- Both Groq and Cerebras API keys
+- Groq, Cerebras, and Google API keys
 - Team defaults (branch, locale, filtering)
 - Standard context message
 - Reliability settings (retries, timeout)
@@ -131,13 +131,13 @@ ANOTHER_KEY=another value
 
 | Key                                  | Description             | Example   |
 | ------------------------------------ | ----------------------- | --------- |
-| `GROQ_API_KEY` or `CEREBRAS_API_KEY` | API key for AI provider | `gsk_...` |
+| `GROQ_API_KEY`, `CEREBRAS_API_KEY`, or `GOOGLE_GENERATIVE_AI_API_KEY` | API key for AI provider | `gsk_...` |
 
 ### Provider Settings
 
 | Key        | Default                   | Description        | Example                |
 | ---------- | ------------------------- | ------------------ | ---------------------- |
-| `PROVIDER` | `groq`                    | AI provider to use | `groq`, `cerebras`     |
+| `PROVIDER` | `groq`                    | AI provider to use | `groq`, `cerebras`, `google`, `openai` |
 | `MODEL`    | `llama-3.3-70b-versatile` | Model to use       | `llama-3.1-8b-instant` |
 
 ### Git Settings
@@ -172,12 +172,12 @@ lazypr config set PROVIDER groq
 
 # Invalid
 lazypr config set PROVIDER invalid
-# ✗ Error: PROVIDER must be one of: groq, cerebras
+# ✗ Error: PROVIDER must be one of: groq, cerebras, google, openai
 ```
 
 ### Validation Rules
 
-- `PROVIDER`: Must be `groq` or `cerebras`
+- `PROVIDER`: Must be `groq`, `cerebras`, `google`, or `openai`
 - `MODEL`: Any string (provider-specific validation)
 - `DEFAULT_BRANCH`: Any string
 - `LOCALE`: Any string (2-letter codes recommended)
@@ -223,7 +223,7 @@ git commit -m "Add lazypr team configuration template"
 
 Create a team document explaining:
 
-- Which provider to use (Groq/Cerebras)
+- Which provider to use (Groq/Cerebras/Google/OpenAI-compatible)
 - Default branch naming convention
 - Commit filtering preferences
 - When to use different models

@@ -24,6 +24,8 @@ lazypr --template feature
 
 # Different AI provider
 lazypr --provider cerebras
+# Or switch to Google Gemini in config
+lazypr config set PROVIDER=google
 
 # Add context
 lazypr --context "Security fix - review carefully"
@@ -113,6 +115,7 @@ Sign up for a free API key:
 
 - **Groq:** [console.groq.com](https://console.groq.com/keys)
 - **Cerebras:** [cloud.cerebras.ai](https://cloud.cerebras.ai)
+- **Google Gemini:** [aistudio.google.com/app/apikey](https://aistudio.google.com/app/apikey)
 
 ### 3. Configure
 
@@ -163,7 +166,7 @@ lazypr --gh               # Get gh pr create command
 
 - Node.js >= 21
 - Git repository
-- API key for Groq or Cerebras
+- API key for Groq, Cerebras, Google Gemini, or OpenAI-compatible providers
 
 ## Need help?
 

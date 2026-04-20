@@ -46,6 +46,16 @@ export CEREBRAS_API_KEY="your-api-key"
 lazypr --provider cerebras
 ```
 
+### Using Google Gemini
+
+```bash
+# Set Google Gemini in config
+lazypr config set GOOGLE_GENERATIVE_AI_API_KEY=your-api-key
+lazypr config set PROVIDER=google
+lazypr config set MODEL=gemini-2.5-flash
+lazypr
+```
+
 ## Using PR Templates
 
 If you have PR templates in your repository:
@@ -219,5 +229,6 @@ lazypr config set GROQ_API_KEY "your-key-here"
 If you hit rate limits, try:
 
 - Using a different provider: `lazypr --provider cerebras`
+- Using Google Gemini: `lazypr config set PROVIDER=google`
 - Waiting a few minutes
 - Checking your API quota
