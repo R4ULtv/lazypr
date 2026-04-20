@@ -1,4 +1,5 @@
 import { createCerebras } from "@ai-sdk/cerebras";
+import { createGoogleGenerativeAI } from "@ai-sdk/google";
 import { createGroq } from "@ai-sdk/groq";
 import { createOpenAI } from "@ai-sdk/openai";
 import type { LanguageModel } from "ai";
@@ -16,7 +17,7 @@ import {
 } from "./prompts";
 
 // Provider types
-export type ProviderType = "groq" | "cerebras" | "openai";
+export type ProviderType = "groq" | "cerebras" | "google" | "openai";
 
 // Provider configuration interface
 interface ProviderConfig {
@@ -27,7 +28,7 @@ interface ProviderConfig {
 }
 
 function isProviderType(value: string): value is ProviderType {
-  return value === "groq" || value === "cerebras" || value === "openai";
+  return value === "groq" || value === "cerebras" || value === "google" || value === "openai";
 }
 
 // Provider registry
@@ -46,6 +47,14 @@ const providers: Record<ProviderType, ProviderConfig> = {
     createModel: (apiKey: string, model: string) => {
       const cerebras = createCerebras({ apiKey });
       return cerebras(model);
+    },
+  },
+  google: {
+    name: "google",
+    apiKeyConfigKey: "GOOGLE_GENERATIVE_AI_API_KEY",
+    createModel: (apiKey: string, model: string) => {
+      const google = createGoogleGenerativeAI({ apiKey });
+      return google(model);
     },
   },
   openai: {
@@ -76,6 +85,7 @@ async function getProviderConfig(): Promise<ProviderConfig> {
 const apiKeyLinks: Record<ProviderType, string> = {
   groq: "https://console.groq.com/keys",
   cerebras: "https://cloud.cerebras.ai/",
+  google: "https://aistudio.google.com/app/apikey",
   openai: "https://platform.openai.com/api-keys",
 };
 

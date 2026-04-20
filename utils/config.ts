@@ -42,7 +42,7 @@ export const CONFIG_SCHEMA = {
     default: "groq",
     validate: (v: string) => {
       const provider = v?.trim().toLowerCase() || "groq";
-      const allowed = ["groq", "cerebras", "openai"];
+      const allowed = ["groq", "cerebras", "google", "openai"];
       if (!allowed.includes(provider)) {
         throw new Error(`PROVIDER must be one of: ${allowed.join(", ")}`);
       }
@@ -64,6 +64,13 @@ export const CONFIG_SCHEMA = {
       if (!v?.trim()) return "";
       const pattern = new RegExp(`^[A-Za-z0-9._-]{${MIN_API_KEY_LENGTH},}$`);
       if (!pattern.test(v.trim())) throw new Error("Invalid CEREBRAS_API_KEY format");
+      return v.trim();
+    },
+  },
+  GOOGLE_GENERATIVE_AI_API_KEY: {
+    required: false,
+    validate: (v: string) => {
+      if (!v?.trim()) return "";
       return v.trim();
     },
   },
@@ -202,6 +209,7 @@ export const CONFIG_KEYS = [
   "PROVIDER",
   "GROQ_API_KEY",
   "CEREBRAS_API_KEY",
+  "GOOGLE_GENERATIVE_AI_API_KEY",
   "OPENAI_API_KEY",
   "OPENAI_BASE_URL",
   "LOCALE",
