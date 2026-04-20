@@ -11,7 +11,7 @@ Generate clean, consistent PRs from commits - powered by AI and your git history
 
 ## Features ✨
 
-- **Multi-provider AI:** [Groq, Cerebras, and OpenAI-compatible APIs](https://lazypr.raulcarini.dev/docs/config/providers)
+- **Multi-provider AI:** [Groq, Cerebras, Google Gemini, and OpenAI-compatible APIs](https://lazypr.raulcarini.dev/docs/config/providers)
 - **Smart commit filtering:** [Excludes noise commits](https://lazypr.raulcarini.dev/docs/advanced/commit-filtering)
 - **PR template support:** [Use your existing templates](https://lazypr.raulcarini.dev/docs/usage/templates)
 - **GitHub CLI integration:** [Generate `gh pr create` commands](https://lazypr.raulcarini.dev/docs/usage/github-integration)
@@ -52,7 +52,8 @@ lazypr config get KEY          # Get configuration
 
 **Common settings:**
 
-- `PROVIDER` - AI provider (`groq`, `cerebras`, or `openai`)
+- `PROVIDER` - AI provider (`groq`, `cerebras`, `google`, or `openai`)
+- `GOOGLE_GENERATIVE_AI_API_KEY` - API key for Google Gemini
 - `LOCALE` - Output language (`en`, `es`, `pt`, `fr`, etc.)
 - `MODEL` - AI model to use
 - `FILTER_COMMITS` - Smart commit filtering
