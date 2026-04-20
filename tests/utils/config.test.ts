@@ -103,6 +103,28 @@ describe("CONFIG_SCHEMA", () => {
     });
   });
 
+  describe("GOOGLE_GENERATIVE_AI_API_KEY validation", () => {
+    test("should accept any non-empty API key", () => {
+      const result = CONFIG_SCHEMA.GOOGLE_GENERATIVE_AI_API_KEY.validate("AIzaSyTestKey123");
+      expect(result).toBe("AIzaSyTestKey123");
+    });
+
+    test("should return empty string for empty API key", () => {
+      const result = CONFIG_SCHEMA.GOOGLE_GENERATIVE_AI_API_KEY.validate("");
+      expect(result).toBe("");
+    });
+
+    test("should return empty string for whitespace-only API key", () => {
+      const result = CONFIG_SCHEMA.GOOGLE_GENERATIVE_AI_API_KEY.validate("   ");
+      expect(result).toBe("");
+    });
+
+    test("should trim whitespace from API key", () => {
+      const result = CONFIG_SCHEMA.GOOGLE_GENERATIVE_AI_API_KEY.validate("  AIzaSyTestKey123  ");
+      expect(result).toBe("AIzaSyTestKey123");
+    });
+  });
+
   describe("OPENAI_API_KEY validation", () => {
     test("should accept any non-empty API key", () => {
       const result = CONFIG_SCHEMA.OPENAI_API_KEY.validate("sk-any-key-format");
@@ -174,6 +196,11 @@ describe("CONFIG_SCHEMA", () => {
       expect(result).toBe("openai");
     });
 
+    test("should accept 'google' as valid provider", () => {
+      const result = CONFIG_SCHEMA.PROVIDER.validate("google");
+      expect(result).toBe("google");
+    });
+
     test("should default to 'groq' for empty value", () => {
       const result = CONFIG_SCHEMA.PROVIDER.validate("");
       expect(result).toBe("groq");
@@ -182,6 +209,7 @@ describe("CONFIG_SCHEMA", () => {
     test("should normalize provider to lowercase", () => {
       expect(CONFIG_SCHEMA.PROVIDER.validate("GROQ")).toBe("groq");
       expect(CONFIG_SCHEMA.PROVIDER.validate("CEREBRAS")).toBe("cerebras");
+      expect(CONFIG_SCHEMA.PROVIDER.validate("GOOGLE")).toBe("google");
       expect(CONFIG_SCHEMA.PROVIDER.validate("OPENAI")).toBe("openai");
     });
 

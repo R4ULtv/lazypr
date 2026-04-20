@@ -4,7 +4,11 @@ import { homedir } from "node:os";
 import { join } from "node:path";
 import { config } from "../../utils/config";
 import type { GitCommit } from "../../utils/git";
-import { generatePullRequest } from "../../utils/provider";
+import {
+  generatePullRequest,
+  getProviderApiKeyConfigKey,
+  validateProviderApiKey,
+} from "../../utils/provider";
 
 const ORIGINAL_CONFIG_FILE = join(homedir(), ".lazypr");
 
@@ -162,6 +166,27 @@ describe("generatePullRequest - Schema Validation", () => {
 });
 
 describe("generatePullRequest - Configuration Integration", () => {
+  test("should use GOOGLE_GENERATIVE_AI_API_KEY for google provider", async () => {
+    await writeFile(
+      ORIGINAL_CONFIG_FILE,
+      "PROVIDER=google\nGOOGLE_GENERATIVE_AI_API_KEY=AIzaSyTestKey123\nMODEL=gemini-2.5-flash\n",
+      "utf8",
+    );
+
+    const apiKeyConfigKey = await getProviderApiKeyConfigKey();
+    expect(apiKeyConfigKey).toBe("GOOGLE_GENERATIVE_AI_API_KEY");
+
+    await expect(validateProviderApiKey()).resolves.toBeUndefined();
+  });
+
+  test("should throw error when GOOGLE_GENERATIVE_AI_API_KEY is missing for google provider", async () => {
+    await writeFile(ORIGINAL_CONFIG_FILE, "PROVIDER=google\nMODEL=gemini-2.5-flash\n", "utf8");
+
+    await expect(validateProviderApiKey()).rejects.toThrow(
+      "GOOGLE_GENERATIVE_AI_API_KEY is required for provider 'google'.",
+    );
+  });
+
   test("should use GROQ_API_KEY from config", async () => {
     const testApiKey = "gsk_integrationtest1234567890abc";
     await writeFile(
