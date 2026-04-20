@@ -4,6 +4,18 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/) and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## [1.5.3] - 2026-04-20
+
+### Added
+
+- **GOOGLE PROVIDER:** Added Google Gemini as a supported AI provider through the AI SDK provider registry.
+- **GOOGLE CONFIGURATION:** Added `GOOGLE_GENERATIVE_AI_API_KEY` for Google provider authentication.
+
+### Changed
+
+- **DOCUMENTATION:** Updated README, config examples, CLI examples, and GitHub Actions examples to include Google provider setup and usage guidance.
+- **TEST COVERAGE:** Added configuration and provider tests covering Google provider validation and API key handling.
+
 ## [1.5.2] - 2026-04-02
 
 ### Changed
