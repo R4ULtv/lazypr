@@ -39,21 +39,21 @@
     "format": "oxfmt"
   },
   "dependencies": {
-    "@ai-sdk/cerebras": "^2.0.45",
-    "@ai-sdk/google": "^3.0.64",
-    "@ai-sdk/groq": "^3.0.35",
-    "@ai-sdk/openai": "^3.0.53",
-    "@clack/prompts": "^1.2.0",
-    "ai": "^6.0.168",
+    "@ai-sdk/cerebras": "^2.0.51",
+    "@ai-sdk/google": "^3.0.73",
+    "@ai-sdk/groq": "^3.0.39",
+    "@ai-sdk/openai": "^3.0.63",
+    "@clack/prompts": "^1.4.0",
+    "ai": "^6.0.182",
     "clipboardy": "^5.3.1",
     "commander": "^14.0.3",
-    "zod": "^4.3.6"
+    "zod": "^4.4.3"
   },
   "devDependencies": {
-    "@types/bun": "^1.3.12",
-    "oxfmt": "^0.45.0",
-    "oxlint": "^1.60.0",
-    "oxlint-tsgolint": "^0.21.0"
+    "@types/bun": "^1.3.14",
+    "oxfmt": "^0.49.0",
+    "oxlint": "^1.64.0",
+    "oxlint-tsgolint": "^0.22.1"
   },
   "engines": {
     "node": ">=21.0.0"
