@@ -4,6 +4,20 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/) and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## [1.5.4] - 2026-05-15
+
+### Changed
+
+- **TEST ISOLATION:** Moved config-related tests onto temporary config files so they no longer read from or overwrite a user's real `~/.lazypr` configuration.
+- **TEST RELIABILITY:** Updated provider tests to fail fast during expected error-path coverage instead of waiting on external AI requests, and aligned title-length assertions with the current 100-character limit.
+- **CODE QUALITY:** Resolved remaining oxlint warnings and added shell utility coverage for escaped branch names and labels.
+
+### Fixed
+
+- **CLI EXIT CODES:** Error paths now exit with status code `1` so scripts and CI correctly detect failures.
+- **BRANCH NAME HANDLING:** Preserved `DEFAULT_BRANCH` casing instead of lowercasing case-sensitive git branch names.
+- **GH CLI COMMAND SAFETY:** Escaped target branch names and labels when generating `gh pr create` commands.
+
 ## [1.5.3] - 2026-04-20
 
 ### Added
