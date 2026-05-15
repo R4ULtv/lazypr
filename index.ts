@@ -25,7 +25,7 @@ const isConfigKey = (value: string): value is ConfigKey => value in CONFIG_SCHEM
 // Simple error handler
 const exitWithError = (message: string): never => {
   cancel(message);
-  process.exit(0);
+  process.exit(1);
   throw new Error(message);
 };
 
@@ -35,15 +35,15 @@ const success = (message: string): void => {
 };
 
 // Validate config option value
-const validateOption = <K extends "LOCALE" | "CONTEXT">(
+const validateOption = (
   value: string | undefined,
-  key: K,
+  key: "LOCALE" | "CONTEXT",
 ): string | undefined => {
   if (!value) return undefined;
   try {
     return CONFIG_SCHEMA[key].validate(value);
   } catch (error) {
-    exitWithError(
+    return exitWithError(
       `Invalid ${key.toLowerCase()}: ${error instanceof Error ? error.message : "Unknown error"}`,
     );
   }
