@@ -129,16 +129,16 @@ ANOTHER_KEY=another value
 
 ### Required
 
-| Key                                  | Description             | Example   |
-| ------------------------------------ | ----------------------- | --------- |
+| Key                                                                   | Description             | Example   |
+| --------------------------------------------------------------------- | ----------------------- | --------- |
 | `GROQ_API_KEY`, `CEREBRAS_API_KEY`, or `GOOGLE_GENERATIVE_AI_API_KEY` | API key for AI provider | `gsk_...` |
 
 ### Provider Settings
 
-| Key        | Default                   | Description        | Example                |
-| ---------- | ------------------------- | ------------------ | ---------------------- |
+| Key        | Default                   | Description        | Example                                |
+| ---------- | ------------------------- | ------------------ | -------------------------------------- |
 | `PROVIDER` | `groq`                    | AI provider to use | `groq`, `cerebras`, `google`, `openai` |
-| `MODEL`    | `llama-3.3-70b-versatile` | Model to use       | `llama-3.1-8b-instant` |
+| `MODEL`    | `llama-3.3-70b-versatile` | Model to use       | `llama-3.1-8b-instant`                 |
 
 ### Git Settings
 
