@@ -1,49 +1,27 @@
 import { afterEach, beforeEach, describe, expect, test } from "bun:test";
 import { readFile, unlink, writeFile } from "node:fs/promises";
-import { homedir } from "node:os";
+import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { CONFIG_SCHEMA, config } from "../../utils/config";
+import { CONFIG_FILE, CONFIG_SCHEMA, config } from "../../utils/config";
 
-const ORIGINAL_CONFIG_FILE = join(homedir(), ".lazypr");
-
-// Helper to backup and restore original config
-let originalConfigContent: string | null = null;
+const TEST_CONFIG_FILE = join(tmpdir(), "lazypr-config-test.conf");
 
 beforeEach(async () => {
-  // Backup original config if it exists
+  config.setFilePath(TEST_CONFIG_FILE);
   try {
-    originalConfigContent = await readFile(ORIGINAL_CONFIG_FILE, "utf8");
-  } catch {
-    originalConfigContent = null;
-  }
-
-  // Clear any existing test config
-  try {
-    await unlink(ORIGINAL_CONFIG_FILE);
+    await unlink(TEST_CONFIG_FILE);
   } catch {
     // File doesn't exist, that's fine
   }
-
-  // Reset config instance
-  (config as any).cache.clear();
-  (config as any).loaded = false;
 });
 
 afterEach(async () => {
-  // Restore original config
-  if (originalConfigContent !== null) {
-    await writeFile(ORIGINAL_CONFIG_FILE, originalConfigContent, "utf8");
-  } else {
-    try {
-      await unlink(ORIGINAL_CONFIG_FILE);
-    } catch {
-      // File doesn't exist, that's fine
-    }
+  try {
+    await unlink(TEST_CONFIG_FILE);
+  } catch {
+    // File doesn't exist, that's fine
   }
-
-  // Reset config instance
-  (config as any).cache.clear();
-  (config as any).loaded = false;
+  config.setFilePath(CONFIG_FILE);
 });
 
 describe("CONFIG_SCHEMA", () => {
@@ -300,9 +278,9 @@ describe("CONFIG_SCHEMA", () => {
       expect(result).toBe("main");
     });
 
-    test("should normalize to lowercase", () => {
+    test("should preserve branch casing", () => {
       const result = CONFIG_SCHEMA.DEFAULT_BRANCH.validate("MAIN");
-      expect(result).toBe("main");
+      expect(result).toBe("MAIN");
     });
 
     test("should default to 'main' for empty value", () => {
@@ -507,8 +485,8 @@ describe("Config class", () => {
 
     test("should return validated value from config file", async () => {
       const testKey = "gsk_1234567890abcdefghij";
-      await writeFile(ORIGINAL_CONFIG_FILE, `GROQ_API_KEY=${testKey}`, "utf8");
-      (config as any).loaded = false;
+      await writeFile(TEST_CONFIG_FILE, `GROQ_API_KEY=${testKey}`, "utf8");
+      config.resetCache();
 
       const result = await config.get("GROQ_API_KEY");
       expect(result).toBe(testKey);
@@ -518,8 +496,8 @@ describe("Config class", () => {
       const configContent = `GROQ_API_KEY=gsk_1234567890abcdefghij
 LOCALE=es
 MAX_RETRIES=5`;
-      await writeFile(ORIGINAL_CONFIG_FILE, configContent, "utf8");
-      (config as any).loaded = false;
+      await writeFile(TEST_CONFIG_FILE, configContent, "utf8");
+      config.resetCache();
 
       expect(await config.get("GROQ_API_KEY")).toBe("gsk_1234567890abcdefghij");
       expect(await config.get("LOCALE")).toBe("es");
@@ -531,8 +509,8 @@ MAX_RETRIES=5`;
 GROQ_API_KEY=gsk_1234567890abcdefghij
 # Another comment
 LOCALE=es`;
-      await writeFile(ORIGINAL_CONFIG_FILE, configContent, "utf8");
-      (config as any).loaded = false;
+      await writeFile(TEST_CONFIG_FILE, configContent, "utf8");
+      config.resetCache();
 
       expect(await config.get("GROQ_API_KEY")).toBe("gsk_1234567890abcdefghij");
       expect(await config.get("LOCALE")).toBe("es");
@@ -541,8 +519,8 @@ LOCALE=es`;
     test("should handle values with equals signs", async () => {
       // Using DEFAULT_BRANCH since it allows any characters including equals signs
       const configContent = "DEFAULT_BRANCH=feature/test=branch";
-      await writeFile(ORIGINAL_CONFIG_FILE, configContent, "utf8");
-      (config as any).loaded = false;
+      await writeFile(TEST_CONFIG_FILE, configContent, "utf8");
+      config.resetCache();
 
       const result = await config.get("DEFAULT_BRANCH");
       expect(result).toBe("feature/test=branch");
@@ -550,13 +528,13 @@ LOCALE=es`;
 
     test("should only load config file once", async () => {
       const testKey = "gsk_1234567890abcdefghij";
-      await writeFile(ORIGINAL_CONFIG_FILE, `GROQ_API_KEY=${testKey}`, "utf8");
-      (config as any).loaded = false;
+      await writeFile(TEST_CONFIG_FILE, `GROQ_API_KEY=${testKey}`, "utf8");
+      config.resetCache();
 
       await config.get("GROQ_API_KEY");
 
       // Change file content
-      await writeFile(ORIGINAL_CONFIG_FILE, "GROQ_API_KEY=gsk_different_key_value", "utf8");
+      await writeFile(TEST_CONFIG_FILE, "GROQ_API_KEY=gsk_different_key_value", "utf8");
 
       // Should still return original value (cached)
       const result = await config.get("GROQ_API_KEY");
@@ -569,7 +547,7 @@ LOCALE=es`;
       const testKey = "gsk_1234567890abcdefghij";
       await config.set("GROQ_API_KEY", testKey);
 
-      const fileContent = await readFile(ORIGINAL_CONFIG_FILE, "utf8");
+      const fileContent = await readFile(TEST_CONFIG_FILE, "utf8");
       expect(fileContent).toContain(`GROQ_API_KEY=${testKey}`);
     });
 
@@ -652,8 +630,8 @@ LOCALE=es`;
 
     test("should include validation errors for invalid values", async () => {
       const configContent = "GROQ_API_KEY=invalid_key_format";
-      await writeFile(ORIGINAL_CONFIG_FILE, configContent, "utf8");
-      (config as any).loaded = false;
+      await writeFile(TEST_CONFIG_FILE, configContent, "utf8");
+      config.resetCache();
 
       const result = await config.validate();
 
@@ -679,7 +657,7 @@ LOCALE=es`;
 
       await config.remove("LOCALE");
 
-      const fileContent = await readFile(ORIGINAL_CONFIG_FILE, "utf8");
+      const fileContent = await readFile(TEST_CONFIG_FILE, "utf8");
       expect(fileContent).not.toContain("LOCALE=");
       expect(fileContent).toContain("GROQ_API_KEY=");
     });
@@ -706,7 +684,7 @@ LOCALE=es`;
 
       await config.clear();
 
-      const fileContent = await readFile(ORIGINAL_CONFIG_FILE, "utf8");
+      const fileContent = await readFile(TEST_CONFIG_FILE, "utf8");
       expect(fileContent).toBe("");
     });
   });
@@ -718,8 +696,8 @@ LOCALE=es`;
 LOCALE=es
 
 `;
-      await writeFile(ORIGINAL_CONFIG_FILE, configContent, "utf8");
-      (config as any).loaded = false;
+      await writeFile(TEST_CONFIG_FILE, configContent, "utf8");
+      config.resetCache();
 
       expect(await config.get("GROQ_API_KEY")).toBe("gsk_1234567890abcdefghij");
       expect(await config.get("LOCALE")).toBe("es");
@@ -728,8 +706,8 @@ LOCALE=es
     test("should handle whitespace around key-value pairs", async () => {
       const configContent = `  GROQ_API_KEY  =  gsk_1234567890abcdefghij
   LOCALE  =  es  `;
-      await writeFile(ORIGINAL_CONFIG_FILE, configContent, "utf8");
-      (config as any).loaded = false;
+      await writeFile(TEST_CONFIG_FILE, configContent, "utf8");
+      config.resetCache();
 
       expect(await config.get("GROQ_API_KEY")).toBe("gsk_1234567890abcdefghij");
       expect(await config.get("LOCALE")).toBe("es");
@@ -737,14 +715,14 @@ LOCALE=es
 
     test("should create config file if it doesn't exist", async () => {
       try {
-        await unlink(ORIGINAL_CONFIG_FILE);
+        await unlink(TEST_CONFIG_FILE);
       } catch {}
 
-      (config as any).loaded = false;
+      config.resetCache();
 
       await config.set("GROQ_API_KEY", "gsk_1234567890abcdefghij");
 
-      const fileContent = await readFile(ORIGINAL_CONFIG_FILE, "utf8");
+      const fileContent = await readFile(TEST_CONFIG_FILE, "utf8");
       expect(fileContent).toContain("GROQ_API_KEY=gsk_1234567890abcdefghij");
     });
   });

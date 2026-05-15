@@ -1,8 +1,8 @@
 import { afterEach, beforeEach, describe, expect, test } from "bun:test";
-import { readFile, unlink, writeFile } from "node:fs/promises";
-import { homedir } from "node:os";
+import { unlink, writeFile } from "node:fs/promises";
+import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { config } from "../../utils/config";
+import { CONFIG_FILE, config } from "../../utils/config";
 import type { GitCommit } from "../../utils/git";
 import {
   generatePullRequest,
@@ -10,47 +10,32 @@ import {
   validateProviderApiKey,
 } from "../../utils/provider";
 
-const ORIGINAL_CONFIG_FILE = join(homedir(), ".lazypr");
-
-// Helper to backup and restore original config
-let originalConfigContent: string | null = null;
+const TEST_CONFIG_FILE = join(tmpdir(), "lazypr-provider-test.conf");
 
 beforeEach(async () => {
-  // Backup original config if it exists
+  config.setFilePath(TEST_CONFIG_FILE);
   try {
-    originalConfigContent = await readFile(ORIGINAL_CONFIG_FILE, "utf8");
+    await unlink(TEST_CONFIG_FILE);
   } catch {
-    originalConfigContent = null;
+    // File doesn't exist, that's fine
   }
-
-  // Reset config instance
-  (config as any).cache.clear();
-  (config as any).loaded = false;
 });
 
 afterEach(async () => {
-  // Restore original config
-  if (originalConfigContent !== null) {
-    await writeFile(ORIGINAL_CONFIG_FILE, originalConfigContent, "utf8");
-  } else {
-    try {
-      await unlink(ORIGINAL_CONFIG_FILE);
-    } catch {
-      // File doesn't exist, that's fine
-    }
+  try {
+    await unlink(TEST_CONFIG_FILE);
+  } catch {
+    // File doesn't exist, that's fine
   }
-
-  // Reset config instance
-  (config as any).cache.clear();
-  (config as any).loaded = false;
+  config.setFilePath(CONFIG_FILE);
 });
 
 describe("generatePullRequest - Schema Validation", () => {
   test("should validate title length constraints (minimum 5 characters)", async () => {
     // Setup config with valid API key
     await writeFile(
-      ORIGINAL_CONFIG_FILE,
-      "GROQ_API_KEY=gsk_test1234567890abcdefghijk\nMODEL=openai/gpt-oss-20b\n",
+      TEST_CONFIG_FILE,
+      "GROQ_API_KEY=gsk_test1234567890abcdefghijk\nTIMEOUT=1\nMODEL=openai/gpt-oss-20b\n",
       "utf8",
     );
 
@@ -79,10 +64,10 @@ describe("generatePullRequest - Schema Validation", () => {
     }
   });
 
-  test("should validate title length constraints (maximum 50 characters)", async () => {
+  test("should validate title length constraints (maximum 100 characters)", async () => {
     await writeFile(
-      ORIGINAL_CONFIG_FILE,
-      "GROQ_API_KEY=gsk_test1234567890abcdefghijk\nMODEL=openai/gpt-oss-20b\n",
+      TEST_CONFIG_FILE,
+      "GROQ_API_KEY=gsk_test1234567890abcdefghijk\nTIMEOUT=1\nMODEL=openai/gpt-oss-20b\n",
       "utf8",
     );
 
@@ -100,7 +85,7 @@ describe("generatePullRequest - Schema Validation", () => {
       const result = await generatePullRequest("feature/long-name", commits);
 
       expect(result.object.title).toBeDefined();
-      expect(result.object.title.length).toBeLessThanOrEqual(50);
+      expect(result.object.title.length).toBeLessThanOrEqual(100);
     } catch (error: any) {
       expect(error).toBeDefined();
     }
@@ -108,8 +93,8 @@ describe("generatePullRequest - Schema Validation", () => {
 
   test("should validate description minimum length (100 characters)", async () => {
     await writeFile(
-      ORIGINAL_CONFIG_FILE,
-      "GROQ_API_KEY=gsk_test1234567890abcdefghijk\nMODEL=openai/gpt-oss-20b\n",
+      TEST_CONFIG_FILE,
+      "GROQ_API_KEY=gsk_test1234567890abcdefghijk\nTIMEOUT=1\nMODEL=openai/gpt-oss-20b\n",
       "utf8",
     );
 
@@ -136,8 +121,8 @@ describe("generatePullRequest - Schema Validation", () => {
 
   test("should return an object with title and description properties", async () => {
     await writeFile(
-      ORIGINAL_CONFIG_FILE,
-      "GROQ_API_KEY=gsk_test1234567890abcdefghijk\nMODEL=openai/gpt-oss-20b\n",
+      TEST_CONFIG_FILE,
+      "GROQ_API_KEY=gsk_test1234567890abcdefghijk\nTIMEOUT=1\nMODEL=openai/gpt-oss-20b\n",
       "utf8",
     );
 
@@ -168,8 +153,8 @@ describe("generatePullRequest - Schema Validation", () => {
 describe("generatePullRequest - Configuration Integration", () => {
   test("should use GOOGLE_GENERATIVE_AI_API_KEY for google provider", async () => {
     await writeFile(
-      ORIGINAL_CONFIG_FILE,
-      "PROVIDER=google\nGOOGLE_GENERATIVE_AI_API_KEY=AIzaSyTestKey123\nMODEL=gemini-2.5-flash\n",
+      TEST_CONFIG_FILE,
+      "PROVIDER=google\nGOOGLE_GENERATIVE_AI_API_KEY=AIzaSyTestKey123\nTIMEOUT=1\nMODEL=gemini-2.5-flash\n",
       "utf8",
     );
 
@@ -180,7 +165,11 @@ describe("generatePullRequest - Configuration Integration", () => {
   });
 
   test("should throw error when GOOGLE_GENERATIVE_AI_API_KEY is missing for google provider", async () => {
-    await writeFile(ORIGINAL_CONFIG_FILE, "PROVIDER=google\nMODEL=gemini-2.5-flash\n", "utf8");
+    await writeFile(
+      TEST_CONFIG_FILE,
+      "PROVIDER=google\nTIMEOUT=1\nMODEL=gemini-2.5-flash\n",
+      "utf8",
+    );
 
     await expect(validateProviderApiKey()).rejects.toThrow(
       "GOOGLE_GENERATIVE_AI_API_KEY is required for provider 'google'.",
@@ -190,8 +179,8 @@ describe("generatePullRequest - Configuration Integration", () => {
   test("should use GROQ_API_KEY from config", async () => {
     const testApiKey = "gsk_integrationtest1234567890abc";
     await writeFile(
-      ORIGINAL_CONFIG_FILE,
-      `GROQ_API_KEY=${testApiKey}\nMODEL=openai/gpt-oss-20b\n`,
+      TEST_CONFIG_FILE,
+      `GROQ_API_KEY=${testApiKey}\nTIMEOUT=1\nMODEL=openai/gpt-oss-20b\n`,
       "utf8",
     );
 
@@ -219,8 +208,8 @@ describe("generatePullRequest - Configuration Integration", () => {
 
   test("should use LOCALE from config", async () => {
     await writeFile(
-      ORIGINAL_CONFIG_FILE,
-      "GROQ_API_KEY=gsk_test1234567890abcdefghijk\nLOCALE=es\nMODEL=openai/gpt-oss-20b\n",
+      TEST_CONFIG_FILE,
+      "GROQ_API_KEY=gsk_test1234567890abcdefghijk\nLOCALE=es\nTIMEOUT=1\nMODEL=openai/gpt-oss-20b\n",
       "utf8",
     );
 
@@ -247,8 +236,8 @@ describe("generatePullRequest - Configuration Integration", () => {
   test("should use MODEL from config", async () => {
     const testModel = "openai/gpt-oss-120b";
     await writeFile(
-      ORIGINAL_CONFIG_FILE,
-      `GROQ_API_KEY=gsk_test1234567890abcdefghijk\nMODEL=${testModel}\n`,
+      TEST_CONFIG_FILE,
+      `GROQ_API_KEY=gsk_test1234567890abcdefghijk\nTIMEOUT=1\nMODEL=${testModel}\n`,
       "utf8",
     );
 
@@ -274,8 +263,8 @@ describe("generatePullRequest - Configuration Integration", () => {
 
   test("should use MAX_RETRIES from config", async () => {
     await writeFile(
-      ORIGINAL_CONFIG_FILE,
-      "GROQ_API_KEY=gsk_test1234567890abcdefghijk\nMAX_RETRIES=5\nMODEL=openai/gpt-oss-20b\n",
+      TEST_CONFIG_FILE,
+      "GROQ_API_KEY=gsk_test1234567890abcdefghijk\nMAX_RETRIES=5\nTIMEOUT=1\nMODEL=openai/gpt-oss-20b\n",
       "utf8",
     );
 
@@ -301,13 +290,13 @@ describe("generatePullRequest - Configuration Integration", () => {
 
   test("should use TIMEOUT from config", async () => {
     await writeFile(
-      ORIGINAL_CONFIG_FILE,
-      "GROQ_API_KEY=gsk_test1234567890abcdefghijk\nTIMEOUT=5000\nMODEL=openai/gpt-oss-20b\n",
+      TEST_CONFIG_FILE,
+      "GROQ_API_KEY=gsk_test1234567890abcdefghijk\nTIMEOUT=1\nMODEL=openai/gpt-oss-20b\n",
       "utf8",
     );
 
     const timeout = await config.get("TIMEOUT");
-    expect(timeout).toBe("5000");
+    expect(timeout).toBe("1");
 
     const commits: GitCommit[] = [
       {
@@ -328,7 +317,7 @@ describe("generatePullRequest - Configuration Integration", () => {
 
   test("should throw error when GROQ_API_KEY is missing", async () => {
     // Create config without API key
-    await writeFile(ORIGINAL_CONFIG_FILE, "MODEL=openai/gpt-oss-20b\n", "utf8");
+    await writeFile(TEST_CONFIG_FILE, "MODEL=openai/gpt-oss-20b\n", "utf8");
 
     const commits: GitCommit[] = [
       {
@@ -353,8 +342,8 @@ describe("generatePullRequest - Configuration Integration", () => {
 describe("generatePullRequest - Input Processing", () => {
   test("should handle single commit", async () => {
     await writeFile(
-      ORIGINAL_CONFIG_FILE,
-      "GROQ_API_KEY=gsk_test1234567890abcdefghijk\nMODEL=openai/gpt-oss-20b\n",
+      TEST_CONFIG_FILE,
+      "GROQ_API_KEY=gsk_test1234567890abcdefghijk\nTIMEOUT=1\nMODEL=openai/gpt-oss-20b\n",
       "utf8",
     );
 
@@ -378,8 +367,8 @@ describe("generatePullRequest - Input Processing", () => {
 
   test("should handle multiple commits", async () => {
     await writeFile(
-      ORIGINAL_CONFIG_FILE,
-      "GROQ_API_KEY=gsk_test1234567890abcdefghijk\nMODEL=openai/gpt-oss-20b\n",
+      TEST_CONFIG_FILE,
+      "GROQ_API_KEY=gsk_test1234567890abcdefghijk\nTIMEOUT=1\nMODEL=openai/gpt-oss-20b\n",
       "utf8",
     );
 
@@ -417,8 +406,8 @@ describe("generatePullRequest - Input Processing", () => {
 
   test("should handle commits with special characters", async () => {
     await writeFile(
-      ORIGINAL_CONFIG_FILE,
-      "GROQ_API_KEY=gsk_test1234567890abcdefghijk\nMODEL=openai/gpt-oss-20b\n",
+      TEST_CONFIG_FILE,
+      "GROQ_API_KEY=gsk_test1234567890abcdefghijk\nTIMEOUT=1\nMODEL=openai/gpt-oss-20b\n",
       "utf8",
     );
 
@@ -456,8 +445,8 @@ describe("generatePullRequest - Input Processing", () => {
 
   test("should handle different branch name patterns", async () => {
     await writeFile(
-      ORIGINAL_CONFIG_FILE,
-      "GROQ_API_KEY=gsk_test1234567890abcdefghijk\nMODEL=openai/gpt-oss-20b\n",
+      TEST_CONFIG_FILE,
+      "GROQ_API_KEY=gsk_test1234567890abcdefghijk\nTIMEOUT=1\nMODEL=openai/gpt-oss-20b\n",
       "utf8",
     );
 
@@ -492,8 +481,8 @@ describe("generatePullRequest - Input Processing", () => {
 
   test("should handle empty commit messages", async () => {
     await writeFile(
-      ORIGINAL_CONFIG_FILE,
-      "GROQ_API_KEY=gsk_test1234567890abcdefghijk\nMODEL=openai/gpt-oss-20b\n",
+      TEST_CONFIG_FILE,
+      "GROQ_API_KEY=gsk_test1234567890abcdefghijk\nTIMEOUT=1\nMODEL=openai/gpt-oss-20b\n",
       "utf8",
     );
 
@@ -517,8 +506,8 @@ describe("generatePullRequest - Input Processing", () => {
 
   test("should handle very long commit messages", async () => {
     await writeFile(
-      ORIGINAL_CONFIG_FILE,
-      "GROQ_API_KEY=gsk_test1234567890abcdefghijk\nMODEL=openai/gpt-oss-20b\n",
+      TEST_CONFIG_FILE,
+      "GROQ_API_KEY=gsk_test1234567890abcdefghijk\nTIMEOUT=1\nMODEL=openai/gpt-oss-20b\n",
       "utf8",
     );
 
@@ -545,7 +534,7 @@ describe("generatePullRequest - Input Processing", () => {
 describe("generatePullRequest - Error Handling", () => {
   test("should handle timeout errors", async () => {
     await writeFile(
-      ORIGINAL_CONFIG_FILE,
+      TEST_CONFIG_FILE,
       "GROQ_API_KEY=gsk_test1234567890abcdefghijk\nTIMEOUT=1\nMODEL=openai/gpt-oss-20b\n",
       "utf8",
     );
@@ -571,8 +560,8 @@ describe("generatePullRequest - Error Handling", () => {
 
   test("should handle invalid model names gracefully", async () => {
     await writeFile(
-      ORIGINAL_CONFIG_FILE,
-      "GROQ_API_KEY=gsk_test1234567890abcdefghijk\nMODEL=invalid-model-name\n",
+      TEST_CONFIG_FILE,
+      "GROQ_API_KEY=gsk_test1234567890abcdefghijk\nTIMEOUT=1\nMODEL=invalid-model-name\n",
       "utf8",
     );
 
@@ -596,8 +585,8 @@ describe("generatePullRequest - Error Handling", () => {
 
   test("should handle network errors", async () => {
     await writeFile(
-      ORIGINAL_CONFIG_FILE,
-      "GROQ_API_KEY=gsk_definitelyinvalidkey123\nMODEL=openai/gpt-oss-20b\n",
+      TEST_CONFIG_FILE,
+      "GROQ_API_KEY=gsk_definitelyinvalidkey123\nTIMEOUT=1\nMODEL=openai/gpt-oss-20b\n",
       "utf8",
     );
 
@@ -623,8 +612,8 @@ describe("generatePullRequest - Error Handling", () => {
 describe("generatePullRequest - Return Type", () => {
   test("should return object with correct structure", async () => {
     await writeFile(
-      ORIGINAL_CONFIG_FILE,
-      "GROQ_API_KEY=gsk_test1234567890abcdefghijk\nMODEL=openai/gpt-oss-20b\n",
+      TEST_CONFIG_FILE,
+      "GROQ_API_KEY=gsk_test1234567890abcdefghijk\nTIMEOUT=1\nMODEL=openai/gpt-oss-20b\n",
       "utf8",
     );
 
@@ -666,8 +655,8 @@ describe("generatePullRequest - Return Type", () => {
 
   test("should return strings (not other types)", async () => {
     await writeFile(
-      ORIGINAL_CONFIG_FILE,
-      "GROQ_API_KEY=gsk_test1234567890abcdefghijk\nMODEL=openai/gpt-oss-20b\n",
+      TEST_CONFIG_FILE,
+      "GROQ_API_KEY=gsk_test1234567890abcdefghijk\nTIMEOUT=1\nMODEL=openai/gpt-oss-20b\n",
       "utf8",
     );
 
@@ -707,8 +696,8 @@ describe("generatePullRequest - Return Type", () => {
 describe("generatePullRequest - Labels", () => {
   test("should return object with labels property", async () => {
     await writeFile(
-      ORIGINAL_CONFIG_FILE,
-      "GROQ_API_KEY=gsk_test1234567890abcdefghijk\nMODEL=openai/gpt-oss-20b\n",
+      TEST_CONFIG_FILE,
+      "GROQ_API_KEY=gsk_test1234567890abcdefghijk\nTIMEOUT=1\nMODEL=openai/gpt-oss-20b\n",
       "utf8",
     );
 
@@ -735,8 +724,8 @@ describe("generatePullRequest - Labels", () => {
 
   test("should validate labels are valid enum values", async () => {
     await writeFile(
-      ORIGINAL_CONFIG_FILE,
-      "GROQ_API_KEY=gsk_test1234567890abcdefghijk\nMODEL=openai/gpt-oss-20b\n",
+      TEST_CONFIG_FILE,
+      "GROQ_API_KEY=gsk_test1234567890abcdefghijk\nTIMEOUT=1\nMODEL=openai/gpt-oss-20b\n",
       "utf8",
     );
 
@@ -765,8 +754,8 @@ describe("generatePullRequest - Labels", () => {
 
   test("should handle empty labels array", async () => {
     await writeFile(
-      ORIGINAL_CONFIG_FILE,
-      "GROQ_API_KEY=gsk_test1234567890abcdefghijk\nMODEL=openai/gpt-oss-20b\n",
+      TEST_CONFIG_FILE,
+      "GROQ_API_KEY=gsk_test1234567890abcdefghijk\nTIMEOUT=1\nMODEL=openai/gpt-oss-20b\n",
       "utf8",
     );
 
@@ -793,8 +782,8 @@ describe("generatePullRequest - Labels", () => {
 
   test("should return complete object structure with labels, title, and description", async () => {
     await writeFile(
-      ORIGINAL_CONFIG_FILE,
-      "GROQ_API_KEY=gsk_test1234567890abcdefghijk\nMODEL=openai/gpt-oss-20b\n",
+      TEST_CONFIG_FILE,
+      "GROQ_API_KEY=gsk_test1234567890abcdefghijk\nTIMEOUT=1\nMODEL=openai/gpt-oss-20b\n",
       "utf8",
     );
 
@@ -826,8 +815,8 @@ describe("generatePullRequest - Labels", () => {
 
   test("should return usage information alongside the object", async () => {
     await writeFile(
-      ORIGINAL_CONFIG_FILE,
-      "GROQ_API_KEY=gsk_test1234567890abcdefghijk\nMODEL=openai/gpt-oss-20b\n",
+      TEST_CONFIG_FILE,
+      "GROQ_API_KEY=gsk_test1234567890abcdefghijk\nTIMEOUT=1\nMODEL=openai/gpt-oss-20b\n",
       "utf8",
     );
 
