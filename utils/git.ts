@@ -144,7 +144,7 @@ export async function isGitRepository(): Promise<boolean> {
     await execFileAsync("git", ["rev-parse", "--is-inside-work-tree"]);
     return true;
   } catch (error) {
-    handleGitError(error, "checking git repository");
+    return handleGitError(error, "checking git repository");
   }
 }
 
@@ -163,7 +163,7 @@ export async function getAllBranches(): Promise<string[]> {
     // Using a Set to ensure all branch names are unique before returning as an array.
     return [...new Set(branches)];
   } catch (error) {
-    handleGitError(error, "fetching branches");
+    return handleGitError(error, "fetching branches");
   }
 }
 
@@ -176,7 +176,7 @@ export async function getCurrentBranch(): Promise<string> {
     const { stdout } = await execFileAsync("git", ["branch", "--show-current"]);
     return stdout.trim();
   } catch (error) {
-    handleGitError(error, "getting current branch");
+    return handleGitError(error, "getting current branch");
   }
 }
 
@@ -229,6 +229,6 @@ export async function getPullRequestCommits(
     const shouldFilter = (await config.get("FILTER_COMMITS")) === "true";
     return shouldFilter ? filterCommits(commits) : commits;
   } catch (error) {
-    handleGitError(error, "fetching PR commits", targetBranch);
+    return handleGitError(error, "fetching PR commits", targetBranch);
   }
 }
