@@ -141,7 +141,7 @@ export const CONFIG_SCHEMA = {
   DEFAULT_BRANCH: {
     default: "main",
     validate: (v: string) => {
-      const branch = v?.trim().toLowerCase() || "main";
+      const branch = v?.trim() || "main";
       return branch;
     },
   },
@@ -222,10 +222,24 @@ export const CONFIG_KEYS = [
   "CUSTOM_LABELS",
 ] as const satisfies readonly ConfigKey[];
 
-class Config {
+export class Config {
   private cache = new Map<string, string>();
   private loaded = false;
   private loadPromise: Promise<void> | null = null;
+
+  constructor(private filePath: string = CONFIG_FILE) {}
+
+  // Useful for tests and embedders that need an isolated config file.
+  setFilePath(filePath: string): void {
+    this.filePath = filePath;
+    this.resetCache();
+  }
+
+  resetCache(): void {
+    this.cache.clear();
+    this.loaded = false;
+    this.loadPromise = null;
+  }
 
   // Load and parse config file
   private async load(): Promise<void> {
@@ -234,7 +248,7 @@ class Config {
 
     this.loadPromise = (async () => {
       try {
-        const content = await readFile(CONFIG_FILE, "utf8");
+        const content = await readFile(this.filePath, "utf8");
         this.cache = new Map(
           content
             .split("\n")
@@ -262,11 +276,11 @@ class Config {
       .map(([key, value]) => `${key}=${value}`)
       .join("\n");
 
-    await writeFile(CONFIG_FILE, content, "utf8");
+    await writeFile(this.filePath, content, "utf8");
   }
 
   // Get a config value with validation and defaults
-  async get<K extends ConfigKey>(key: K): Promise<string> {
+  async get(key: ConfigKey): Promise<string> {
     await this.load();
 
     const schema = CONFIG_SCHEMA[key];
@@ -288,7 +302,7 @@ class Config {
   }
 
   // Set a config value with validation
-  async set<K extends ConfigKey>(key: K, value: string): Promise<void> {
+  async set(key: ConfigKey, value: string): Promise<void> {
     await this.load();
 
     const schema = CONFIG_SCHEMA[key];
