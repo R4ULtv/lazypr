@@ -410,8 +410,7 @@ const renderConfigList = async (): Promise<void> => {
   for (const key of CONFIG_KEYS) {
     const schema = CONFIG_SCHEMA[key];
     const currentValue = allConfig[key];
-    const defaultValue =
-      "default" in schema ? (schema as { default?: string }).default : undefined;
+    const defaultValue = "default" in schema ? (schema as { default?: string }).default : undefined;
     const isRequired =
       "required" in schema ? Boolean((schema as { required?: boolean }).required) : false;
 
@@ -566,10 +565,7 @@ const interactiveApiKeyEntry = async (): Promise<void> => {
   const apiKeyLink = getApiKeyLink(provider);
   const apiKeyConfigKey = getApiKeyConfigKey(provider);
 
-  note(
-    `Get your ${provider} API key at:\n${apiKeyLink}`,
-    "API Key",
-  );
+  note(`Get your ${provider} API key at:\n${apiKeyLink}`, "API Key");
 
   // Retry loop on validation failure
   while (true) {
@@ -603,7 +599,15 @@ const interactiveApiKeyEntry = async (): Promise<void> => {
 
 // Interactive general settings editor (Step 6)
 const interactiveGeneralSettings = async (): Promise<void> => {
-  type SettingChoice = "LOCALE" | "FILTER_COMMITS" | "DEFAULT_BRANCH" | "CONTEXT" | "CUSTOM_LABELS" | "MAX_RETRIES" | "TIMEOUT" | "back";
+  type SettingChoice =
+    | "LOCALE"
+    | "FILTER_COMMITS"
+    | "DEFAULT_BRANCH"
+    | "CONTEXT"
+    | "CUSTOM_LABELS"
+    | "MAX_RETRIES"
+    | "TIMEOUT"
+    | "back";
 
   const settingChoice = await select<SettingChoice>({
     message: "Which setting do you want to edit?",
@@ -643,7 +647,13 @@ const interactiveGeneralSettings = async (): Promise<void> => {
       await config.set("FILTER_COMMITS", enabled ? "true" : "false");
       log.success(`FILTER_COMMITS set to: ${enabled ? "true" : "false"}`);
     }
-  } else if (settingChoice === "DEFAULT_BRANCH" || settingChoice === "CONTEXT" || settingChoice === "CUSTOM_LABELS" || settingChoice === "MAX_RETRIES" || settingChoice === "TIMEOUT") {
+  } else if (
+    settingChoice === "DEFAULT_BRANCH" ||
+    settingChoice === "CONTEXT" ||
+    settingChoice === "CUSTOM_LABELS" ||
+    settingChoice === "MAX_RETRIES" ||
+    settingChoice === "TIMEOUT"
+  ) {
     const currentVal = await config.get(settingChoice);
     while (true) {
       const newVal = await text({
@@ -662,9 +672,7 @@ const interactiveGeneralSettings = async (): Promise<void> => {
         log.success(`${settingChoice} set to: ${newVal}`);
         break;
       } catch (error) {
-        log.error(
-          `Invalid value: ${error instanceof Error ? error.message : "Unknown error"}`,
-        );
+        log.error(`Invalid value: ${error instanceof Error ? error.message : "Unknown error"}`);
       }
     }
   }
@@ -680,10 +688,22 @@ const runInteractiveConfig = async (): Promise<void> => {
     const action = await select<MenuChoice>({
       message: "What would you like to configure?",
       options: [
-        { value: "provider_model", label: "Provider & model", hint: "pick AI provider and model together" },
+        {
+          value: "provider_model",
+          label: "Provider & model",
+          hint: "pick AI provider and model together",
+        },
         { value: "api_key", label: "API key", hint: "enter masked API key for a provider" },
-        { value: "general_settings", label: "General settings", hint: "locale, branch, context, filters, labels, retries, timeout" },
-        { value: "view_config", label: "View current config", hint: "show all settings (secrets masked)" },
+        {
+          value: "general_settings",
+          label: "General settings",
+          hint: "locale, branch, context, filters, labels, retries, timeout",
+        },
+        {
+          value: "view_config",
+          label: "View current config",
+          hint: "show all settings (secrets masked)",
+        },
         { value: "exit", label: "Exit / Done" },
       ],
     });
@@ -709,7 +729,10 @@ const runInteractiveConfig = async (): Promise<void> => {
 program
   .command("config")
   .description("Manage the config file, see the .lazypr file")
-  .argument("[type]", "Type of config operation (set, get, remove, list). Omit to open interactive menu.")
+  .argument(
+    "[type]",
+    "Type of config operation (set, get, remove, list). Omit to open interactive menu.",
+  )
   .argument(
     "[keyValue]",
     "For 'set': KEY=VALUE pair. For 'get' or 'remove': just the KEY. Not needed for 'list'",

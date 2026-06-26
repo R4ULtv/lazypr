@@ -194,7 +194,21 @@ export function getApiKeyLink(provider: ProviderType): string {
 // Extracted here to avoid duplicating the list across interactive flow code.
 // ---------------------------------------------------------------------------
 
-export const LOCALE_OPTIONS = ["en", "es", "pt", "fr", "de", "it", "ja", "ko", "zh", "ru", "nl", "pl", "tr"] as const;
+export const LOCALE_OPTIONS = [
+  "en",
+  "es",
+  "pt",
+  "fr",
+  "de",
+  "it",
+  "ja",
+  "ko",
+  "zh",
+  "ru",
+  "nl",
+  "pl",
+  "tr",
+] as const;
 
 // ---------------------------------------------------------------------------
 // isProviderType guard — re-exported for use in the interactive flow.
