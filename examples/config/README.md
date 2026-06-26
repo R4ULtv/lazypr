@@ -93,14 +93,28 @@ cp examples/config/multi-provider.conf ~/.lazypr
 
 ## Configuration Management
 
-### Using the CLI
+### Interactive flow (recommended for setup)
+
+```bash
+# Open the interactive config menu
+lazypr config
+```
+
+The interactive menu lets you configure everything without touching the command line directly:
+
+- **Provider & model** — pick both with a single combined selector; a "Custom / local model…" escape hatch keeps free-form model IDs supported
+- **API key** — entered with masked input so secrets never appear in terminal output or shell history
+- **General settings** — locale, default branch, context, commit filtering, custom labels, retries, timeout
+- **View current config** — shows all settings with secrets masked
+
+### Scriptable commands (CI and dotfiles)
 
 ```bash
 # View all configuration
 lazypr config list
 
 # Set a value
-lazypr config set PROVIDER cerebras
+lazypr config set PROVIDER=cerebras
 
 # Get a specific value
 lazypr config get PROVIDER
@@ -108,6 +122,8 @@ lazypr config get PROVIDER
 # Remove a value (revert to default)
 lazypr config remove PROVIDER
 ```
+
+> **Note:** `lazypr config set` shows API keys in shell history. Use the interactive flow (`lazypr config`) for masked key entry.
 
 ### Manually Editing
 

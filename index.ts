@@ -1,6 +1,19 @@
 #!/usr/bin/env node
 
-import { autocomplete, cancel, confirm, intro, log, note, outro, spinner } from "@clack/prompts";
+import {
+  autocomplete,
+  cancel,
+  confirm,
+  intro,
+  isCancel,
+  log,
+  note,
+  outro,
+  password,
+  select,
+  spinner,
+  text,
+} from "@clack/prompts";
 import { writeText } from "tinyclip";
 import { Command } from "commander";
 import { displayConfigBadge } from "./utils/badge";
@@ -14,6 +27,16 @@ import {
 } from "./utils/git";
 import { pkg } from "./utils/info";
 import { formatLabels } from "./utils/labels";
+import {
+  CUSTOM_MODEL_SENTINEL,
+  LOCALE_OPTIONS,
+  MODEL_COMBOS,
+  applyProviderModel,
+  getApiKeyConfigKey,
+  getApiKeyLink,
+  isProviderType,
+  validateConfigValue,
+} from "./utils/models";
 import { generatePullRequest, validateProviderApiKey } from "./utils/provider";
 import { buildGhPrCommand } from "./utils/shell";
 import { findPRTemplates, getPRTemplate } from "./utils/template";
@@ -375,65 +398,331 @@ program
   )
   .action(createPullRequest);
 
+// ---------------------------------------------------------------------------
+// Interactive config flow helpers
+// ---------------------------------------------------------------------------
+
+// Render config list output (shared between interactive "view" and `config list`)
+const renderConfigList = async (): Promise<void> => {
+  const allConfig = await config.getAll();
+  const lines: string[] = [];
+
+  for (const key of CONFIG_KEYS) {
+    const schema = CONFIG_SCHEMA[key];
+    const currentValue = allConfig[key];
+    const defaultValue =
+      "default" in schema ? (schema as { default?: string }).default : undefined;
+    const isRequired =
+      "required" in schema ? Boolean((schema as { required?: boolean }).required) : false;
+
+    let displayValue: string;
+    let status: string;
+
+    if (currentValue !== undefined && currentValue !== "") {
+      displayValue = maskConfigValue(key, currentValue);
+      status = colorize("green", "✓");
+    } else if (defaultValue !== undefined) {
+      displayValue = `${defaultValue} ${colorize("dim", "(default)")}`;
+      status = colorize("yellow", "○");
+    } else if (isRequired) {
+      displayValue = colorize("red", "NOT SET (required)");
+      status = colorize("red", "✗");
+    } else {
+      displayValue = colorize("dim", "not set");
+      status = colorize("dim", "○");
+    }
+
+    lines.push(`${status} ${colorize("bold", key)}: ${displayValue}`);
+  }
+
+  note(lines.join("\n"), "Configuration Settings");
+
+  const locationLines: string[] = [];
+  locationLines.push(colorize("dim", `Location: ${CONFIG_FILE}`));
+  locationLines.push("");
+  locationLines.push(
+    colorize("yellow", "⚠️  Editing the config file manually is not recommended - use the CLI"),
+  );
+  locationLines.push(colorize("yellow", "   commands instead to avoid misconfigurations"));
+  note(locationLines.join("\n"), "Config File");
+};
+
+// Interactive provider+model picker (Step 5)
+const interactiveProviderModelPicker = async (): Promise<void> => {
+  const comboOptions = MODEL_COMBOS.map((combo) => ({
+    value: `${combo.provider}::${combo.model}`,
+    label: combo.label,
+    hint: combo.hint,
+  }));
+
+  const selected = await select({
+    message: "Select a provider and model:",
+    options: comboOptions,
+  });
+
+  if (isCancel(selected)) {
+    cancel("Cancelled");
+    process.exit(0);
+  }
+
+  const [providerPart, modelPart] = selected.split("::");
+  const providerStr = providerPart ?? "";
+  let model: string = modelPart ?? "";
+
+  // Validate provider is a known ProviderType using the type guard
+  if (!isProviderType(providerStr)) {
+    return exitWithError(`Unknown provider: ${providerStr}`);
+  }
+  const provider = providerStr;
+
+  // Custom model escape hatch
+  if (model === CUSTOM_MODEL_SENTINEL) {
+    const customModel = await text({
+      message: `Enter a custom model id for ${provider}:`,
+      placeholder: "e.g. llama-3.1-8b-instant",
+      validate: (v) => {
+        const result = validateConfigValue("MODEL", v);
+        return result.valid ? undefined : result.error;
+      },
+    });
+
+    if (isCancel(customModel)) {
+      cancel("Cancelled");
+      process.exit(0);
+    }
+
+    model = customModel;
+  }
+
+  // If provider is openai, optionally ask for a base URL
+  if (provider === "openai") {
+    const currentBaseUrl = await config.get("OPENAI_BASE_URL");
+    const baseUrlPrompt = await text({
+      message: "Enter OpenAI-compatible base URL (leave empty to keep current):",
+      placeholder: "e.g. http://localhost:11434/v1",
+      initialValue: currentBaseUrl,
+      validate: (v) => {
+        if (!v || !v.trim()) return undefined; // empty is fine (optional)
+        const result = validateConfigValue("OPENAI_BASE_URL", v);
+        return result.valid ? undefined : result.error;
+      },
+    });
+
+    if (isCancel(baseUrlPrompt)) {
+      cancel("Cancelled");
+      process.exit(0);
+    }
+
+    const baseUrl = baseUrlPrompt.trim();
+    if (baseUrl) {
+      await config.set("OPENAI_BASE_URL", baseUrl);
+      log.success(`Base URL set to: ${baseUrl}`);
+    }
+  }
+
+  const normalized = await applyProviderModel({ provider, model });
+  log.success(`Provider set to: ${normalized.provider}`);
+  log.success(`Model set to: ${normalized.model}`);
+};
+
+// Interactive masked API-key entry (Step 6)
+const interactiveApiKeyEntry = async (): Promise<void> => {
+  // Determine which provider is active (let user pick if they want)
+  const currentProvider = await config.get("PROVIDER");
+  const providerChoices = [
+    { value: "groq", label: "Groq", hint: currentProvider === "groq" ? "current" : undefined },
+    {
+      value: "cerebras",
+      label: "Cerebras",
+      hint: currentProvider === "cerebras" ? "current" : undefined,
+    },
+    {
+      value: "google",
+      label: "Google",
+      hint: currentProvider === "google" ? "current" : undefined,
+    },
+    {
+      value: "openai",
+      label: "OpenAI / local",
+      hint: currentProvider === "openai" ? "current" : undefined,
+    },
+  ];
+
+  const chosenProvider = await select({
+    message: "Which provider's API key do you want to set?",
+    options: providerChoices,
+    initialValue: currentProvider,
+  });
+
+  if (isCancel(chosenProvider)) {
+    cancel("Cancelled");
+    process.exit(0);
+  }
+
+  if (!isProviderType(chosenProvider)) {
+    return exitWithError(`Unknown provider: ${chosenProvider}`);
+  }
+  const provider = chosenProvider;
+  const apiKeyLink = getApiKeyLink(provider);
+  const apiKeyConfigKey = getApiKeyConfigKey(provider);
+
+  note(
+    `Get your ${provider} API key at:\n${apiKeyLink}`,
+    "API Key",
+  );
+
+  // Retry loop on validation failure
+  while (true) {
+    const apiKey = await password({
+      message: `Enter your ${provider} API key (leave empty to skip):`,
+    });
+
+    if (isCancel(apiKey)) {
+      cancel("Cancelled");
+      process.exit(0);
+    }
+
+    const keyValue = apiKey.trim();
+
+    if (!keyValue) {
+      log.info("Skipped — API key unchanged");
+      return;
+    }
+
+    try {
+      await config.set(apiKeyConfigKey, keyValue);
+      log.success(`API key saved: ${maskConfigValue(apiKeyConfigKey, keyValue)}`);
+      return;
+    } catch (error) {
+      log.error(
+        `Invalid API key: ${error instanceof Error ? error.message : "Unknown error"}. Please try again or leave empty to skip.`,
+      );
+    }
+  }
+};
+
+// Interactive general settings editor (Step 6)
+const interactiveGeneralSettings = async (): Promise<void> => {
+  type SettingChoice = "LOCALE" | "FILTER_COMMITS" | "DEFAULT_BRANCH" | "CONTEXT" | "CUSTOM_LABELS" | "MAX_RETRIES" | "TIMEOUT" | "back";
+
+  const settingChoice = await select<SettingChoice>({
+    message: "Which setting do you want to edit?",
+    options: [
+      { value: "LOCALE", label: "Locale", hint: "output language" },
+      { value: "FILTER_COMMITS", label: "Smart commit filter", hint: "filter noise commits" },
+      { value: "DEFAULT_BRANCH", label: "Default branch", hint: "default target branch" },
+      { value: "CONTEXT", label: "Context", hint: "AI generation guidance" },
+      { value: "CUSTOM_LABELS", label: "Custom labels", hint: "comma-separated label names" },
+      { value: "MAX_RETRIES", label: "Max retries", hint: "AI retry attempts" },
+      { value: "TIMEOUT", label: "Timeout (ms)", hint: "request timeout" },
+      { value: "back", label: "Back to main menu" },
+    ],
+  });
+
+  if (isCancel(settingChoice) || settingChoice === "back") {
+    return;
+  }
+
+  if (settingChoice === "LOCALE") {
+    const locale = await select({
+      message: "Select locale:",
+      options: LOCALE_OPTIONS.map((l) => ({ value: l, label: l })),
+      initialValue: await config.get("LOCALE"),
+    });
+    if (!isCancel(locale)) {
+      await config.set("LOCALE", locale);
+      log.success(`LOCALE set to: ${locale}`);
+    }
+  } else if (settingChoice === "FILTER_COMMITS") {
+    const current = await config.get("FILTER_COMMITS");
+    const enabled = await confirm({
+      message: "Enable smart commit filtering?",
+      initialValue: current === "true",
+    });
+    if (!isCancel(enabled)) {
+      await config.set("FILTER_COMMITS", enabled ? "true" : "false");
+      log.success(`FILTER_COMMITS set to: ${enabled ? "true" : "false"}`);
+    }
+  } else if (settingChoice === "DEFAULT_BRANCH" || settingChoice === "CONTEXT" || settingChoice === "CUSTOM_LABELS" || settingChoice === "MAX_RETRIES" || settingChoice === "TIMEOUT") {
+    const currentVal = await config.get(settingChoice);
+    while (true) {
+      const newVal = await text({
+        message: `Enter value for ${settingChoice}:`,
+        initialValue: currentVal,
+        validate: (v) => {
+          const result = validateConfigValue(settingChoice, v);
+          return result.valid ? undefined : result.error;
+        },
+      });
+      if (isCancel(newVal)) {
+        break;
+      }
+      try {
+        await config.set(settingChoice, newVal);
+        log.success(`${settingChoice} set to: ${newVal}`);
+        break;
+      } catch (error) {
+        log.error(
+          `Invalid value: ${error instanceof Error ? error.message : "Unknown error"}`,
+        );
+      }
+    }
+  }
+};
+
+// Main interactive config flow (Step 4)
+const runInteractiveConfig = async (): Promise<void> => {
+  intro(colorize(["bgWhite", "black"], " lazypr config "));
+
+  type MenuChoice = "provider_model" | "api_key" | "general_settings" | "view_config" | "exit";
+
+  while (true) {
+    const action = await select<MenuChoice>({
+      message: "What would you like to configure?",
+      options: [
+        { value: "provider_model", label: "Provider & model", hint: "pick AI provider and model together" },
+        { value: "api_key", label: "API key", hint: "enter masked API key for a provider" },
+        { value: "general_settings", label: "General settings", hint: "locale, branch, context, filters, labels, retries, timeout" },
+        { value: "view_config", label: "View current config", hint: "show all settings (secrets masked)" },
+        { value: "exit", label: "Exit / Done" },
+      ],
+    });
+
+    if (isCancel(action) || action === "exit") {
+      break;
+    }
+
+    if (action === "provider_model") {
+      await interactiveProviderModelPicker();
+    } else if (action === "api_key") {
+      await interactiveApiKeyEntry();
+    } else if (action === "general_settings") {
+      await interactiveGeneralSettings();
+    } else if (action === "view_config") {
+      await renderConfigList();
+    }
+  }
+
+  outro("Configuration saved. Run 'lazypr config list' to review all settings.");
+};
+
 program
   .command("config")
   .description("Manage the config file, see the .lazypr file")
-  .argument("<type>", "Type of config operation (set, get, remove, list)")
+  .argument("[type]", "Type of config operation (set, get, remove, list). Omit to open interactive menu.")
   .argument(
     "[keyValue]",
     "For 'set': KEY=VALUE pair. For 'get' or 'remove': just the KEY. Not needed for 'list'",
   )
   .action(async (type, keyValue) => {
+    // No type provided — launch interactive config flow
+    if (!type) {
+      await runInteractiveConfig();
+      return;
+    }
+
     if (type === "list") {
-      // Get all current config
-      const allConfig = await config.getAll();
-
-      // Build the output lines
-      const lines: string[] = [];
-
-      // Display each config key with its value or default
-      for (const key of CONFIG_KEYS) {
-        const schema = CONFIG_SCHEMA[key];
-        const currentValue = allConfig[key];
-        const defaultValue =
-          "default" in schema ? (schema as { default?: string }).default : undefined;
-        const isRequired =
-          "required" in schema ? Boolean((schema as { required?: boolean }).required) : false;
-
-        let displayValue: string;
-        let status: string;
-
-        if (currentValue !== undefined && currentValue !== "") {
-          displayValue = maskConfigValue(key, currentValue);
-          status = colorize("green", "✓");
-        } else if (defaultValue !== undefined) {
-          displayValue = `${defaultValue} ${colorize("dim", "(default)")}`;
-          status = colorize("yellow", "○");
-        } else if (isRequired) {
-          displayValue = colorize("red", "NOT SET (required)");
-          status = colorize("red", "✗");
-        } else {
-          displayValue = colorize("dim", "not set");
-          status = colorize("dim", "○");
-        }
-
-        lines.push(`${status} ${colorize("bold", key)}: ${displayValue}`);
-      }
-
-      // Display configuration settings in first note
-      note(lines.join("\n"), "Configuration Settings");
-
-      // Display file location and warning in second note
-      const locationLines: string[] = [];
-      locationLines.push(colorize("dim", `Location: ${CONFIG_FILE}`));
-      locationLines.push("");
-      locationLines.push(
-        colorize("yellow", "⚠️  Editing the config file manually is not recommended - use the CLI"),
-      );
-      locationLines.push(colorize("yellow", "   commands instead to avoid misconfigurations"));
-
-      note(locationLines.join("\n"), "Config File");
-
+      await renderConfigList();
       return;
     } else if (type === "set") {
       // Check if the keyValue contains '='

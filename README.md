@@ -28,7 +28,15 @@ Requires Node.js >= 22. **[See installation guide →](https://lazypr.raulcarini
 
 ## Quick start ⚡
 
-1. **Set your API key:**
+1. **Configure interactively (recommended for first-time setup):**
+
+   ```bash
+   lazypr config
+   ```
+
+   This opens a guided menu where you can pick provider + model together and enter your API key with masked input (never echoed to terminal or shell history).
+
+   **Or use scriptable commands for CI/dotfiles:**
 
    ```bash
    lazypr config set GROQ_API_KEY=<your-key>
@@ -45,20 +53,58 @@ Requires Node.js >= 22. **[See installation guide →](https://lazypr.raulcarini
 
 ## Configuration ⚙️
 
+lazypr supports two configuration flows that work alongside each other:
+
+### Interactive (recommended for setup)
+
+```bash
+lazypr config          # opens a Clack-powered interactive menu
+```
+
+The interactive menu lets you:
+
+- **Pick provider + model together** with a combined selector (Groq, Cerebras, Google, OpenAI, or custom/local)
+- **Enter API keys with masked input** — keys are never echoed to the terminal or shell history
+- Configure locale, default branch, context, commit filtering, custom labels, retries, and timeout
+- View the current config with secrets masked
+
+### Scriptable (CI and dotfiles)
+
 ```bash
 lazypr config set KEY=VALUE    # Set configuration
 lazypr config get KEY          # Get configuration
+lazypr config remove KEY       # Remove configuration key
+lazypr config list             # Show all settings
+```
+
+**Examples:**
+
+```bash
+# Set API keys (key is visible in shell history — use interactive flow to avoid this)
+lazypr config set GROQ_API_KEY=<key>
+
+# Switch provider and model
+lazypr config set PROVIDER=google
+lazypr config set MODEL=gemini-2.5-flash
+
+# Use a local/custom model with OpenAI-compatible API
+lazypr config set PROVIDER=openai
+lazypr config set OPENAI_BASE_URL=http://localhost:11434/v1
+lazypr config set MODEL=llama3.2
+
+# View config
+lazypr config list
 ```
 
 **Common settings:**
 
 - `PROVIDER` - AI provider (`groq`, `cerebras`, `google`, or `openai`)
-- `GOOGLE_GENERATIVE_AI_API_KEY` - API key for Google Gemini
+- `GROQ_API_KEY` / `CEREBRAS_API_KEY` / `GOOGLE_GENERATIVE_AI_API_KEY` / `OPENAI_API_KEY` - API keys
 - `LOCALE` - Output language (`en`, `es`, `pt`, `fr`, etc.)
-- `MODEL` - AI model to use
-- `FILTER_COMMITS` - Smart commit filtering
+- `MODEL` - AI model to use (any non-empty string; custom/local model IDs supported)
+- `FILTER_COMMITS` - Smart commit filtering (`true` or `false`)
 - `CONTEXT` - Custom guidance for AI generation
-- `OPENAI_BASE_URL` - Custom endpoint for OpenAI-compatible APIs
+- `OPENAI_BASE_URL` - Custom endpoint for OpenAI-compatible APIs (Ollama, LM Studio, etc.)
 
 **[View all settings →](https://lazypr.raulcarini.dev/docs/config/settings)** | **[Configuration examples →](https://lazypr.raulcarini.dev/docs/examples/configuration)**
 
