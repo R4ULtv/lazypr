@@ -4,6 +4,28 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/) and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## [1.6.0] - 2026-06-26
+
+### Added
+
+- **INTERACTIVE CONFIG UI:** The `config` command now offers a guided, interactive flow built on `@clack/prompts` for picking a provider + model, entering API keys with masked input, and editing general settings (including locale).
+- **PROVIDER/MODEL CATALOG:** Added a curated `MODEL_COMBOS` catalog (`utils/models.ts`) listing supported provider/model combinations that work with structured output, plus a custom "enter any model id" escape hatch per provider.
+- **LOCALE PICKER:** Added a `LOCALE_OPTIONS` selector so users can choose the PR output language interactively instead of typing the value by hand.
+- **TYPECHECK GATE:** Added a `tsc --noEmit` typecheck script and a corresponding CI step.
+
+### Changed
+
+- **DEFAULT MODEL:** Switched the default `MODEL` to `openai/gpt-oss-20b` (fast and cheap on Groq).
+- **AI SDK v7:** Upgraded `ai` to v7.0.2 and provider packages (`@ai-sdk/groq` v4, `@ai-sdk/cerebras` v3, `@ai-sdk/google` v4, `@ai-sdk/openai` v4), replacing the deprecated `system` option with `instructions`.
+- **RUNTIME REQUIREMENT:** Now requires Node.js 22+ and upgraded `commander` to v15.
+- **CLIPBOARD:** Replaced `clipboardy` with the lighter `tinyclip`.
+- **DOCUMENTATION:** Updated README, CLI, and config examples to reflect the new default model and provider/model references (Gemini 3.5, GPT-OSS).
+
+### Fixed
+
+- **SECRET MASKING:** `config set` and `config get` now mask API key values in output, and config files are written with `0o600` permissions to restrict filesystem access.
+- **SHELL-SAFE GH COMMANDS:** `buildGhPrCommand` now uses POSIX single-quote escaping so `$`, backticks, newlines, and embedded quotes in branch names and labels are emitted safely.
+
 ## [1.5.4] - 2026-05-15
 
 ### Changed
