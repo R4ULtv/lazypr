@@ -52,7 +52,7 @@ lazypr --provider cerebras
 # Set Google Gemini in config
 lazypr config set GOOGLE_GENERATIVE_AI_API_KEY=your-api-key
 lazypr config set PROVIDER=google
-lazypr config set MODEL=gemini-2.5-flash
+lazypr config set MODEL=gemini-3.5-flash
 lazypr
 ```
 

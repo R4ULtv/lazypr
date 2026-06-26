@@ -116,7 +116,7 @@ run: |
   cat <<EOF > ~/.lazypr
   GOOGLE_GENERATIVE_AI_API_KEY=${GOOGLE_GENERATIVE_AI_API_KEY}
   PROVIDER=google
-  MODEL=gemini-2.5-flash
+  MODEL=gemini-3.5-flash
   EOF
   lazypr
 ```

@@ -85,7 +85,7 @@ lazypr config set GROQ_API_KEY=<key>
 
 # Switch provider and model
 lazypr config set PROVIDER=google
-lazypr config set MODEL=gemini-2.5-flash
+lazypr config set MODEL=gemini-3.5-flash
 
 # Use a local/custom model with OpenAI-compatible API
 lazypr config set PROVIDER=openai

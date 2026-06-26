@@ -91,27 +91,27 @@ Supported locales:
 
 ```bash
 # Use a different Groq model
-lazypr --model llama-3.3-70b-versatile
+lazypr --model openai/gpt-oss-120b
 
 # Smaller, faster model
-lazypr --model llama-3.1-8b-instant
+lazypr --model openai/gpt-oss-20b
 ```
 
-Available Groq models:
+Available Groq models (all support structured output):
 
-- `llama-3.3-70b-versatile` (default)
-- `llama-3.1-70b-versatile`
-- `llama-3.1-8b-instant`
-- `mixtral-8x7b-32768`
+- `openai/gpt-oss-20b` (default)
+- `openai/gpt-oss-120b`
+- `openai/gpt-oss-safeguard-20b`
+- `meta-llama/llama-4-scout-17b-16e-instruct`
 
 ### Cerebras Models
 
 ```bash
 # Use Cerebras with specific model
-lazypr --provider cerebras --model llama-3.3-70b
+lazypr --provider cerebras --model gpt-oss-120b
 
-# Fast inference model
-lazypr --provider cerebras --model llama-3.1-8b
+# High-quality model
+lazypr --provider cerebras --model zai-glm-4.7
 ```
 
 ### Google Gemini Models
@@ -119,10 +119,10 @@ lazypr --provider cerebras --model llama-3.1-8b
 ```bash
 # Switch to Google Gemini with a fast model
 lazypr config set PROVIDER=google
-lazypr config set MODEL=gemini-2.5-flash
+lazypr config set MODEL=gemini-3.5-flash
 
 # Use a higher-capability Gemini model
-lazypr config set MODEL=gemini-2.5-pro
+lazypr config set MODEL=gemini-3.1-pro-preview
 ```
 
 ## Combining Options
@@ -144,7 +144,7 @@ lazypr \
   develop \
   --no-filter \
   --provider cerebras \
-  --model llama-3.1-8b-instant
+  --model gpt-oss-120b
 ```
 
 ### Detailed PR with All Commits
@@ -168,7 +168,7 @@ lazypr config set PROVIDER cerebras
 lazypr config set PROVIDER=google
 
 # Set default model
-lazypr config set MODEL llama-3.1-8b-instant
+lazypr config set MODEL openai/gpt-oss-20b
 
 # Set default locale
 lazypr config set LOCALE es
@@ -270,10 +270,10 @@ LazyPR automatically ignores the frontmatter and only processes the template con
 
 ```bash
 # Use fastest model and provider
-lazypr --provider cerebras --model llama-3.1-8b-instant
+lazypr --provider cerebras --model gpt-oss-120b
 # Or configure Gemini Flash
 lazypr config set PROVIDER=google
-lazypr config set MODEL=gemini-2.5-flash
+lazypr config set MODEL=gemini-3.5-flash
 
 # Reduce timeout (fail faster)
 lazypr config set TIMEOUT 15000
@@ -346,11 +346,11 @@ Override config with environment variables:
 # Override provider
 LAZYPR_PROVIDER=cerebras lazypr
 # Override model
-LAZYPR_MODEL=llama-3.1-8b-instant lazypr
+LAZYPR_MODEL=gpt-oss-120b lazypr
 
 # Override multiple settings
 LAZYPR_PROVIDER=cerebras \
-LAZYPR_MODEL=llama-3.1-8b-instant \
+LAZYPR_MODEL=gpt-oss-120b \
 LAZYPR_LOCALE=es \
 lazypr
 
@@ -379,7 +379,7 @@ lazypr --no-filter --template bugfix
 lazypr --provider cerebras --context "Critical security fix - expedite review"
 # Or with Gemini after updating config
 lazypr config set PROVIDER=google
-lazypr config set MODEL=gemini-2.5-flash
+lazypr config set MODEL=gemini-3.5-flash
 lazypr --context "Critical security fix - expedite review"
 ```
 

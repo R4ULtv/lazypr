@@ -151,10 +151,10 @@ ANOTHER_KEY=another value
 
 ### Provider Settings
 
-| Key        | Default                   | Description        | Example                                |
-| ---------- | ------------------------- | ------------------ | -------------------------------------- |
-| `PROVIDER` | `groq`                    | AI provider to use | `groq`, `cerebras`, `google`, `openai` |
-| `MODEL`    | `llama-3.3-70b-versatile` | Model to use       | `llama-3.1-8b-instant`                 |
+| Key        | Default              | Description        | Example                                |
+| ---------- | -------------------- | ------------------ | -------------------------------------- |
+| `PROVIDER` | `groq`               | AI provider to use | `groq`, `cerebras`, `google`, `openai` |
+| `MODEL`    | `openai/gpt-oss-20b` | Model to use       | `openai/gpt-oss-120b`                  |
 
 ### Git Settings
 
@@ -211,7 +211,7 @@ You can override config values with environment variables:
 GROQ_API_KEY=xxx lazypr
 
 # Override multiple values
-PROVIDER=cerebras MODEL=llama-3.1-8b-instant lazypr
+PROVIDER=cerebras MODEL=gpt-oss-120b lazypr
 ```
 
 Environment variables take precedence over config file values.
@@ -252,7 +252,7 @@ Example `LAZYPR.md`:
 ## Configuration
 
 - Provider: Groq (free tier)
-- Model: llama-3.3-70b-versatile
+- Model: openai/gpt-oss-20b
 - Default branch: main
 - Filtering: Enabled
 
@@ -362,7 +362,7 @@ Use environment variables in your project:
 # .env file in your project
 GROQ_API_KEY=project-specific-key
 PROVIDER=cerebras
-MODEL=llama-3.1-8b-instant
+MODEL=gpt-oss-120b
 
 # Load and run
 source .env && lazypr
@@ -394,7 +394,7 @@ read -p "Enter your Groq API key: " api_key
 cat > ~/.lazypr << EOF
 GROQ_API_KEY=$api_key
 PROVIDER=groq
-MODEL=llama-3.3-70b-versatile
+MODEL=openai/gpt-oss-20b
 DEFAULT_BRANCH=main
 FILTER_COMMITS=true
 EOF
