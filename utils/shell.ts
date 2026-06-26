@@ -1,14 +1,17 @@
 /**
- * Escape shell special characters for $'...' syntax
+ * Escape a string so it can be safely wrapped in POSIX single quotes.
+ *
+ * POSIX single-quoted strings are entirely literal — no character has special
+ * meaning, including $, `, \, and newlines. The only character that cannot
+ * appear inside a single-quoted string is the single quote itself.
+ *
+ * To embed a literal single quote, we close the current quoted segment,
+ * output an escaped quote outside any quoting (\'), then reopen single
+ * quoting: e.g. bug'fix → bug'\''fix.
+ *
+ * buildGhPrCommand wraps every escaped value with '...' in the final command.
  */
-export const escapeShellArg = (str: string): string => {
-  return str
-    .replace(/\\/g, "\\\\") // Escape backslashes first
-    .replace(/'/g, "\\'") // Escape single quotes for $'...' syntax
-    .replace(/`/g, "\\`") // Escape backticks
-    .replace(/\$/g, "\\$") // Escape dollar signs
-    .replace(/\n/g, "\\n"); // Keep newlines as \n for $'...' syntax
-};
+export const escapeShellArg = (str: string): string => str.replace(/'/g, `'\\''`);
 
 interface PullRequestData {
   title: string;
@@ -17,7 +20,11 @@ interface PullRequestData {
 }
 
 /**
- * Build a gh pr create command with properly escaped arguments
+ * Build a gh pr create command with shell-safe POSIX single-quoted arguments.
+ *
+ * Every argument is wrapped in plain single quotes after applying
+ * escapeShellArg. Single-quoted POSIX strings are fully literal, so $, `,
+ * \, and newlines require no escaping.
  */
 export const buildGhPrCommand = (targetBranch: string, pullRequest: PullRequestData): string => {
   const escapedTargetBranch = escapeShellArg(targetBranch);
@@ -27,9 +34,10 @@ export const buildGhPrCommand = (targetBranch: string, pullRequest: PullRequestD
   // Build labels part of the command
   const labelsArg =
     pullRequest.labels && pullRequest.labels.length > 0
-      ? pullRequest.labels.map((label) => `-l $'${escapeShellArg(label)}'`).join(" ")
+      ? pullRequest.labels.map((label) => `-l '${escapeShellArg(label)}'`).join(" ")
       : "";
 
-  // Use $'...' syntax for the body to properly interpret \n as newlines
-  return `gh pr create -B $'${escapedTargetBranch}' ${labelsArg} -t $'${escapedTitle}' -b $'${escapedDescription}'`;
+  const labelsPart = labelsArg ? ` ${labelsArg}` : "";
+
+  return `gh pr create -B '${escapedTargetBranch}'${labelsPart} -t '${escapedTitle}' -b '${escapedDescription}'`;
 };
