@@ -161,11 +161,7 @@ afterEach(async () => {
 
 describe("generatePullRequest - Return Shape", () => {
   test("should return object with correct structure", async () => {
-    await writeFile(
-      TEST_CONFIG_FILE,
-      `GROQ_API_KEY=${GROQ_TEST_KEY}\n`,
-      "utf8",
-    );
+    await writeFile(TEST_CONFIG_FILE, `GROQ_API_KEY=${GROQ_TEST_KEY}\n`, "utf8");
 
     const result = await generatePullRequest("feature/test", SAMPLE_COMMITS);
 
@@ -177,11 +173,7 @@ describe("generatePullRequest - Return Shape", () => {
   });
 
   test("should return title as non-empty string satisfying min length", async () => {
-    await writeFile(
-      TEST_CONFIG_FILE,
-      `GROQ_API_KEY=${GROQ_TEST_KEY}\n`,
-      "utf8",
-    );
+    await writeFile(TEST_CONFIG_FILE, `GROQ_API_KEY=${GROQ_TEST_KEY}\n`, "utf8");
 
     const result = await generatePullRequest("feature/test", SAMPLE_COMMITS);
 
@@ -191,11 +183,7 @@ describe("generatePullRequest - Return Shape", () => {
   });
 
   test("should return description satisfying minimum length", async () => {
-    await writeFile(
-      TEST_CONFIG_FILE,
-      `GROQ_API_KEY=${GROQ_TEST_KEY}\n`,
-      "utf8",
-    );
+    await writeFile(TEST_CONFIG_FILE, `GROQ_API_KEY=${GROQ_TEST_KEY}\n`, "utf8");
 
     const result = await generatePullRequest("feature/test", SAMPLE_COMMITS);
 
@@ -204,11 +192,7 @@ describe("generatePullRequest - Return Shape", () => {
   });
 
   test("should return labels as an array", async () => {
-    await writeFile(
-      TEST_CONFIG_FILE,
-      `GROQ_API_KEY=${GROQ_TEST_KEY}\n`,
-      "utf8",
-    );
+    await writeFile(TEST_CONFIG_FILE, `GROQ_API_KEY=${GROQ_TEST_KEY}\n`, "utf8");
 
     const result = await generatePullRequest("feature/test", SAMPLE_COMMITS);
 
@@ -216,11 +200,7 @@ describe("generatePullRequest - Return Shape", () => {
   });
 
   test("should return usage with token counts", async () => {
-    await writeFile(
-      TEST_CONFIG_FILE,
-      `GROQ_API_KEY=${GROQ_TEST_KEY}\n`,
-      "utf8",
-    );
+    await writeFile(TEST_CONFIG_FILE, `GROQ_API_KEY=${GROQ_TEST_KEY}\n`, "utf8");
 
     const result = await generatePullRequest("feature/test", SAMPLE_COMMITS);
 
@@ -230,11 +210,7 @@ describe("generatePullRequest - Return Shape", () => {
   });
 
   test("should return finishReason", async () => {
-    await writeFile(
-      TEST_CONFIG_FILE,
-      `GROQ_API_KEY=${GROQ_TEST_KEY}\n`,
-      "utf8",
-    );
+    await writeFile(TEST_CONFIG_FILE, `GROQ_API_KEY=${GROQ_TEST_KEY}\n`, "utf8");
 
     const result = await generatePullRequest("feature/test", SAMPLE_COMMITS);
 
@@ -248,11 +224,7 @@ describe("generatePullRequest - Return Shape", () => {
 
 describe("generatePullRequest - Provider Selection", () => {
   test("groq provider uses GROQ_API_KEY and calls groq factory", async () => {
-    await writeFile(
-      TEST_CONFIG_FILE,
-      `PROVIDER=groq\nGROQ_API_KEY=${GROQ_TEST_KEY}\n`,
-      "utf8",
-    );
+    await writeFile(TEST_CONFIG_FILE, `PROVIDER=groq\nGROQ_API_KEY=${GROQ_TEST_KEY}\n`, "utf8");
 
     await generatePullRequest("feature/test", SAMPLE_COMMITS);
 
@@ -403,11 +375,7 @@ describe("generatePullRequest - Model Config", () => {
 
 describe("generatePullRequest - generateText Options", () => {
   test("MAX_RETRIES from config is passed to generateText as a number", async () => {
-    await writeFile(
-      TEST_CONFIG_FILE,
-      `GROQ_API_KEY=${GROQ_TEST_KEY}\nMAX_RETRIES=5\n`,
-      "utf8",
-    );
+    await writeFile(TEST_CONFIG_FILE, `GROQ_API_KEY=${GROQ_TEST_KEY}\nMAX_RETRIES=5\n`, "utf8");
 
     await generatePullRequest("feature/test", SAMPLE_COMMITS);
 
@@ -416,11 +384,7 @@ describe("generatePullRequest - generateText Options", () => {
   });
 
   test("TIMEOUT config creates an AbortSignal passed to generateText", async () => {
-    await writeFile(
-      TEST_CONFIG_FILE,
-      `GROQ_API_KEY=${GROQ_TEST_KEY}\nTIMEOUT=30000\n`,
-      "utf8",
-    );
+    await writeFile(TEST_CONFIG_FILE, `GROQ_API_KEY=${GROQ_TEST_KEY}\nTIMEOUT=30000\n`, "utf8");
 
     await generatePullRequest("feature/test", SAMPLE_COMMITS);
 
@@ -430,11 +394,7 @@ describe("generatePullRequest - generateText Options", () => {
   });
 
   test("system prompt is passed to generateText as instructions", async () => {
-    await writeFile(
-      TEST_CONFIG_FILE,
-      `GROQ_API_KEY=${GROQ_TEST_KEY}\n`,
-      "utf8",
-    );
+    await writeFile(TEST_CONFIG_FILE, `GROQ_API_KEY=${GROQ_TEST_KEY}\n`, "utf8");
 
     await generatePullRequest("feature/test", SAMPLE_COMMITS);
 
@@ -447,11 +407,7 @@ describe("generatePullRequest - generateText Options", () => {
   });
 
   test("user prompt is passed to generateText", async () => {
-    await writeFile(
-      TEST_CONFIG_FILE,
-      `GROQ_API_KEY=${GROQ_TEST_KEY}\n`,
-      "utf8",
-    );
+    await writeFile(TEST_CONFIG_FILE, `GROQ_API_KEY=${GROQ_TEST_KEY}\n`, "utf8");
 
     await generatePullRequest("feature/test", SAMPLE_COMMITS);
 
@@ -486,11 +442,7 @@ describe("generatePullRequest - Prompt Content", () => {
   });
 
   test("LOCALE from config appears in the prompt", async () => {
-    await writeFile(
-      TEST_CONFIG_FILE,
-      `GROQ_API_KEY=${GROQ_TEST_KEY}\nLOCALE=es\n`,
-      "utf8",
-    );
+    await writeFile(TEST_CONFIG_FILE, `GROQ_API_KEY=${GROQ_TEST_KEY}\nLOCALE=es\n`, "utf8");
 
     await generatePullRequest("feature/test", SAMPLE_COMMITS);
 
@@ -499,11 +451,7 @@ describe("generatePullRequest - Prompt Content", () => {
   });
 
   test("locale override parameter takes precedence over config LOCALE", async () => {
-    await writeFile(
-      TEST_CONFIG_FILE,
-      `GROQ_API_KEY=${GROQ_TEST_KEY}\nLOCALE=en\n`,
-      "utf8",
-    );
+    await writeFile(TEST_CONFIG_FILE, `GROQ_API_KEY=${GROQ_TEST_KEY}\nLOCALE=en\n`, "utf8");
 
     await generatePullRequest("feature/test", SAMPLE_COMMITS, undefined, "fr");
 
@@ -544,11 +492,7 @@ describe("generatePullRequest - Prompt Content", () => {
   });
 
   test("available labels appear in the prompt", async () => {
-    await writeFile(
-      TEST_CONFIG_FILE,
-      `GROQ_API_KEY=${GROQ_TEST_KEY}\n`,
-      "utf8",
-    );
+    await writeFile(TEST_CONFIG_FILE, `GROQ_API_KEY=${GROQ_TEST_KEY}\n`, "utf8");
 
     await generatePullRequest("feature/test", SAMPLE_COMMITS);
 
@@ -626,11 +570,7 @@ describe("getProviderApiKeyConfigKey", () => {
 
 describe("validateProviderApiKey", () => {
   test("resolves when GROQ_API_KEY is set", async () => {
-    await writeFile(
-      TEST_CONFIG_FILE,
-      `PROVIDER=groq\nGROQ_API_KEY=${GROQ_TEST_KEY}\n`,
-      "utf8",
-    );
+    await writeFile(TEST_CONFIG_FILE, `PROVIDER=groq\nGROQ_API_KEY=${GROQ_TEST_KEY}\n`, "utf8");
     await expect(validateProviderApiKey()).resolves.toBeUndefined();
   });
 
