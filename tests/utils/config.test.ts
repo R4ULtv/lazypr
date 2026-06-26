@@ -589,7 +589,7 @@ LOCALE=es`;
       expect(allConfig.MAX_RETRIES).toBe("2");
       expect(allConfig.TIMEOUT).toBe("10000");
       expect(allConfig.DEFAULT_BRANCH).toBe("main");
-      expect(allConfig.MODEL).toBe("llama-3.3-70b");
+      expect(allConfig.MODEL).toBe("openai/gpt-oss-20b");
     });
 
     test("should return empty string for GROQ_API_KEY when missing", async () => {

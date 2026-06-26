@@ -27,17 +27,30 @@ export const CUSTOM_MODEL_SENTINEL = "__custom__";
 
 export const MODEL_COMBOS: ModelCombo[] = [
   // --- Groq ---
+  // Only models that support structured output (generateObject) are listed.
   {
     provider: "groq",
-    model: "llama-3.3-70b",
-    label: "Groq — Llama 3.3 70B",
-    hint: "default, fast",
+    model: "openai/gpt-oss-20b",
+    label: "Groq — GPT-OSS 20B",
+    hint: "default, fast & cheap",
   },
   {
     provider: "groq",
-    model: "llama-3.1-8b-instant",
-    label: "Groq — Llama 3.1 8B Instant",
-    hint: "very fast, lower quality",
+    model: "openai/gpt-oss-120b",
+    label: "Groq — GPT-OSS 120B",
+    hint: "highest quality",
+  },
+  {
+    provider: "groq",
+    model: "openai/gpt-oss-safeguard-20b",
+    label: "Groq — Safety GPT-OSS 20B",
+    hint: "safety-tuned",
+  },
+  {
+    provider: "groq",
+    model: "meta-llama/llama-4-scout-17b-16e-instruct",
+    label: "Groq — Llama 4 Scout 17B",
+    hint: "multimodal",
   },
   {
     provider: "groq",
@@ -48,17 +61,18 @@ export const MODEL_COMBOS: ModelCombo[] = [
   },
 
   // --- Cerebras ---
+  // Only models that support structured output (generateObject) are listed.
   {
     provider: "cerebras",
-    model: "llama3.3-70b",
-    label: "Cerebras — Llama 3.3 70B",
+    model: "gpt-oss-120b",
+    label: "Cerebras — GPT-OSS 120B",
     hint: "fast inference",
   },
   {
     provider: "cerebras",
-    model: "llama3.1-8b",
-    label: "Cerebras — Llama 3.1 8B",
-    hint: "very fast",
+    model: "zai-glm-4.7",
+    label: "Cerebras — GLM 4.7",
+    hint: "high quality",
   },
   {
     provider: "cerebras",
@@ -71,14 +85,14 @@ export const MODEL_COMBOS: ModelCombo[] = [
   // --- Google ---
   {
     provider: "google",
-    model: "gemini-2.5-flash",
-    label: "Google — Gemini 2.5 Flash",
+    model: "gemini-3.5-flash",
+    label: "Google — Gemini 3.5 Flash",
     hint: "fast, recommended",
   },
   {
     provider: "google",
-    model: "gemini-2.5-pro",
-    label: "Google — Gemini 2.5 Pro",
+    model: "gemini-3.1-pro-preview",
+    label: "Google — Gemini 3.1 Pro (preview)",
     hint: "highest quality",
   },
   {
@@ -92,15 +106,21 @@ export const MODEL_COMBOS: ModelCombo[] = [
   // --- OpenAI / OpenAI-compatible ---
   {
     provider: "openai",
-    model: "gpt-4o",
-    label: "OpenAI — GPT-4o",
-    hint: "flagship",
+    model: "gpt-5.4-nano-2026-03-17",
+    label: "OpenAI — GPT-5.4 Nano",
+    hint: "fastest, cheapest",
   },
   {
     provider: "openai",
-    model: "gpt-4o-mini",
-    label: "OpenAI — GPT-4o Mini",
-    hint: "faster, cheaper",
+    model: "gpt-5.4-mini-2026-03-17",
+    label: "OpenAI — GPT-5.4 Mini",
+    hint: "balanced",
+  },
+  {
+    provider: "openai",
+    model: "gpt-5.5-2026-04-23",
+    label: "OpenAI — GPT-5.5",
+    hint: "flagship, highest quality",
   },
   {
     provider: "openai",

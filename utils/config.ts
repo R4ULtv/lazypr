@@ -146,7 +146,7 @@ export const CONFIG_SCHEMA = {
     },
   },
   MODEL: {
-    default: "llama-3.3-70b",
+    default: "openai/gpt-oss-20b",
     validate: (v: string) => {
       const model = v?.trim();
       if (!model) throw new Error("MODEL cannot be empty");
