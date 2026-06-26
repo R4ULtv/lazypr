@@ -398,7 +398,7 @@ describe("generatePullRequest - Model Config", () => {
 });
 
 // ---------------------------------------------------------------------------
-// generateText call options (maxRetries, abortSignal, system, prompt)
+// generateText call options (maxRetries, abortSignal, instructions, prompt)
 // ---------------------------------------------------------------------------
 
 describe("generatePullRequest - generateText Options", () => {
@@ -429,7 +429,7 @@ describe("generatePullRequest - generateText Options", () => {
     expect(lastGenerateTextArgs.abortSignal).toBeInstanceOf(AbortSignal);
   });
 
-  test("system prompt is passed to generateText", async () => {
+  test("system prompt is passed to generateText as instructions", async () => {
     await writeFile(
       TEST_CONFIG_FILE,
       `GROQ_API_KEY=${GROQ_TEST_KEY}\n`,
@@ -438,11 +438,12 @@ describe("generatePullRequest - generateText Options", () => {
 
     await generatePullRequest("feature/test", SAMPLE_COMMITS);
 
-    expect(typeof lastGenerateTextArgs.system).toBe("string");
-    const system = lastGenerateTextArgs.system as string;
-    expect(system.length).toBeGreaterThan(0);
+    // AI SDK v7 renamed the `system` option to `instructions`.
+    expect(typeof lastGenerateTextArgs.instructions).toBe("string");
+    const instructions = lastGenerateTextArgs.instructions as string;
+    expect(instructions.length).toBeGreaterThan(0);
     // System prompt instructs the model to output JSON.
-    expect(system).toContain("JSON");
+    expect(instructions).toContain("JSON");
   });
 
   test("user prompt is passed to generateText", async () => {

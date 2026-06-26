@@ -40,12 +40,12 @@
     "format": "oxfmt"
   },
   "dependencies": {
-    "@ai-sdk/cerebras": "^2.0.58",
-    "@ai-sdk/google": "^3.0.84",
-    "@ai-sdk/groq": "^3.0.43",
-    "@ai-sdk/openai": "^3.0.75",
+    "@ai-sdk/cerebras": "^3.0.0",
+    "@ai-sdk/google": "^4.0.0",
+    "@ai-sdk/groq": "^4.0.0",
+    "@ai-sdk/openai": "^4.0.0",
     "@clack/prompts": "^1.6.0",
-    "ai": "^6.0.211",
+    "ai": "^7",
     "clipboardy": "^5.3.1",
     "commander": "^15.0.0",
     "zod": "^4.4.3"

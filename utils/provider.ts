@@ -169,7 +169,7 @@ export async function generatePullRequest(
     output: Output.object({ schema: pullRequestSchema }),
     maxRetries: Number.parseInt(await config.get("MAX_RETRIES"), 10),
     abortSignal: AbortSignal.timeout(Number.parseInt(await config.get("TIMEOUT"), 10)),
-    system: getSystemPrompt(),
+    instructions: getSystemPrompt(),
     prompt: buildPrompt(locale, currentBranch, context, availableLabels, commitsString, template),
   });
   return { object: output, usage, finishReason };
