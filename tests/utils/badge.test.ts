@@ -7,6 +7,12 @@ mock.module("@clack/prompts", () => ({
   note: mockNote,
 }));
 
+function getFirstNoteCall(): unknown[] {
+  const firstCall = mockNote.mock.calls[0];
+  expect(firstCall).toBeDefined();
+  return firstCall ?? [];
+}
+
 describe("displayConfigBadge", () => {
   test("should display minimal config with only required fields", () => {
     mockNote.mockClear();
@@ -21,7 +27,7 @@ describe("displayConfigBadge", () => {
     });
 
     expect(mockNote).toHaveBeenCalledTimes(1);
-    const [badge, title] = mockNote.mock.calls[0];
+    const [badge, title] = getFirstNoteCall();
 
     // Should always show model and locale
     expect(badge).toContain("groq/llama-3.3-70b");
@@ -44,7 +50,7 @@ describe("displayConfigBadge", () => {
     });
 
     expect(mockNote).toHaveBeenCalledTimes(1);
-    const [badge] = mockNote.mock.calls[0];
+    const [badge] = getFirstNoteCall();
 
     // Should show all enabled features
     expect(badge).toContain("cerebras/llama3.1-8b");
@@ -68,7 +74,7 @@ describe("displayConfigBadge", () => {
       model: "llama-3.3-70b",
     });
 
-    const [badge] = mockNote.mock.calls[0];
+    const [badge] = getFirstNoteCall();
     expect(badge).toContain("ES");
     expect(badge).not.toContain("es");
   });
@@ -85,7 +91,7 @@ describe("displayConfigBadge", () => {
       model: "custom-model-v1",
     });
 
-    const [badge] = mockNote.mock.calls[0];
+    const [badge] = getFirstNoteCall();
     expect(badge).toContain("groq/custom-model-v1");
   });
 
@@ -102,7 +108,7 @@ describe("displayConfigBadge", () => {
       model: "llama-3.3-70b",
     });
 
-    let [badge] = mockNote.mock.calls[0];
+    let [badge] = getFirstNoteCall();
     expect(badge).not.toContain("Smart Filter");
 
     mockNote.mockClear();
@@ -117,7 +123,7 @@ describe("displayConfigBadge", () => {
       model: "llama-3.3-70b",
     });
 
-    [badge] = mockNote.mock.calls[0];
+    [badge] = getFirstNoteCall();
     expect(badge).toContain("Smart Filter");
   });
 
@@ -134,7 +140,7 @@ describe("displayConfigBadge", () => {
       model: "llama-3.3-70b",
     });
 
-    let [badge] = mockNote.mock.calls[0];
+    let [badge] = getFirstNoteCall();
     expect(badge).not.toContain("Template");
 
     mockNote.mockClear();
@@ -150,7 +156,7 @@ describe("displayConfigBadge", () => {
       model: "llama-3.3-70b",
     });
 
-    [badge] = mockNote.mock.calls[0];
+    [badge] = getFirstNoteCall();
     expect(badge).toContain("Template");
     expect(badge).toContain("custom_template.md");
   });
@@ -168,7 +174,7 @@ describe("displayConfigBadge", () => {
       model: "llama-3.3-70b",
     });
 
-    let [badge] = mockNote.mock.calls[0];
+    let [badge] = getFirstNoteCall();
     expect(badge).not.toContain("User Context");
 
     mockNote.mockClear();
@@ -184,7 +190,7 @@ describe("displayConfigBadge", () => {
       model: "llama-3.3-70b",
     });
 
-    [badge] = mockNote.mock.calls[0];
+    [badge] = getFirstNoteCall();
     expect(badge).toContain("User Context");
   });
 
@@ -201,7 +207,7 @@ describe("displayConfigBadge", () => {
       model: "llama-3.3-70b",
     });
 
-    let [badge] = mockNote.mock.calls[0];
+    let [badge] = getFirstNoteCall();
     expect(badge).not.toContain("Usage Stats");
 
     mockNote.mockClear();
@@ -216,7 +222,7 @@ describe("displayConfigBadge", () => {
       model: "llama-3.3-70b",
     });
 
-    [badge] = mockNote.mock.calls[0];
+    [badge] = getFirstNoteCall();
     expect(badge).toContain("Usage Stats");
   });
 
@@ -233,7 +239,7 @@ describe("displayConfigBadge", () => {
       model: "llama-3.3-70b",
     });
 
-    let [badge] = mockNote.mock.calls[0];
+    let [badge] = getFirstNoteCall();
     expect(badge).not.toContain("GH CLI");
 
     mockNote.mockClear();
@@ -248,7 +254,7 @@ describe("displayConfigBadge", () => {
       model: "llama-3.3-70b",
     });
 
-    [badge] = mockNote.mock.calls[0];
+    [badge] = getFirstNoteCall();
     expect(badge).toContain("GH CLI");
   });
 
@@ -264,7 +270,7 @@ describe("displayConfigBadge", () => {
       model: "llama-3.3-70b",
     });
 
-    const [badge] = mockNote.mock.calls[0];
+    const [badge] = getFirstNoteCall();
     expect(badge).toContain("✓");
   });
 
@@ -281,7 +287,7 @@ describe("displayConfigBadge", () => {
       model: "llama-3.3-70b",
     });
 
-    const [badge] = mockNote.mock.calls[0];
+    const [badge] = getFirstNoteCall();
 
     // Should contain pipe separator
     expect(badge).toContain("|");
@@ -300,7 +306,7 @@ describe("displayConfigBadge", () => {
       model: "llama-3.3-70b",
     });
 
-    let [badge] = mockNote.mock.calls[0];
+    let [badge] = getFirstNoteCall();
     expect(badge).toContain("groq/");
 
     mockNote.mockClear();
@@ -315,7 +321,7 @@ describe("displayConfigBadge", () => {
       model: "llama3.1-8b",
     });
 
-    [badge] = mockNote.mock.calls[0];
+    [badge] = getFirstNoteCall();
     expect(badge).toContain("cerebras/");
   });
 
@@ -334,7 +340,7 @@ describe("displayConfigBadge", () => {
         model: "llama-3.3-70b",
       });
 
-      const [badge] = mockNote.mock.calls[0];
+      const [badge] = getFirstNoteCall();
       expect(badge).toContain(locale.toUpperCase());
     });
   });
@@ -354,7 +360,7 @@ describe("displayConfigBadge", () => {
       model: "llama-3.3-70b",
     });
 
-    const [badge] = mockNote.mock.calls[0];
+    const [badge] = getFirstNoteCall();
     expect(badge).toContain(longTemplate);
   });
 
@@ -372,7 +378,7 @@ describe("displayConfigBadge", () => {
       model: longModel,
     });
 
-    const [badge] = mockNote.mock.calls[0];
+    const [badge] = getFirstNoteCall();
     expect(badge).toContain(`groq/${longModel}`);
   });
 
@@ -388,7 +394,7 @@ describe("displayConfigBadge", () => {
       model: "llama-3.3-70b",
     });
 
-    const [, title] = mockNote.mock.calls[0];
+    const [, title] = getFirstNoteCall();
     expect(title).toBe("Configuration");
   });
 
@@ -406,7 +412,7 @@ describe("displayConfigBadge", () => {
       context: "Feature implementation",
     });
 
-    const [badge] = mockNote.mock.calls[0];
+    const [badge] = getFirstNoteCall();
 
     // Verify all items are present
     expect(badge).toContain("cerebras/llama3.1-70b");
@@ -439,14 +445,14 @@ describe("displayConfigBadge - Integration", () => {
 
     expect(mockNote).toHaveBeenCalledTimes(1);
 
-    const [badge, title] = mockNote.mock.calls[0];
+    const [badge, title] = getFirstNoteCall();
 
     // Should be valid strings
     expect(typeof badge).toBe("string");
     expect(typeof title).toBe("string");
 
     // Badge should not be empty
-    expect(badge.length).toBeGreaterThan(0);
+    expect((badge as string).length).toBeGreaterThan(0);
 
     // Should contain essential components
     expect(badge).toContain("groq");
@@ -466,7 +472,7 @@ describe("displayConfigBadge - Integration", () => {
       model: "llama3.1-8b",
     });
 
-    const [badge] = mockNote.mock.calls[0];
+    const [badge] = getFirstNoteCall();
 
     // Should follow the pattern: ✓ Label: Value | ✓ Label | ...
     expect(badge).toMatch(/✓.*cerebras\/llama3\.1-8b/);
