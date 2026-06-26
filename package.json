@@ -31,7 +31,7 @@
   "type": "module",
   "module": "index.ts",
   "scripts": {
-    "build": "bun build index.ts --outdir dist --target node --format esm --minify --external clipboardy",
+    "build": "bun build index.ts --outdir dist --target node --format esm --minify",
     "postbuild": "echo '#!/usr/bin/env node\nimport(\"./index.js\");' > dist/lzp.js",
     "dev": "bun run index.ts",
     "start": "node dist/index.js",
@@ -46,8 +46,8 @@
     "@ai-sdk/openai": "^4.0.0",
     "@clack/prompts": "^1.6.0",
     "ai": "^7.0.2",
-    "clipboardy": "^5.3.1",
     "commander": "^15.0.0",
+    "tinyclip": "^0.1.15",
     "zod": "^4.4.3"
   },
   "devDependencies": {

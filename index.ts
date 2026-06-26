@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 import { autocomplete, cancel, confirm, intro, log, note, outro, spinner } from "@clack/prompts";
-import clipboardy from "clipboardy";
+import { writeText } from "tinyclip";
 import { Command } from "commander";
 import { displayConfigBadge } from "./utils/badge";
 import { CONFIG_FILE, CONFIG_KEYS, CONFIG_SCHEMA, type ConfigKey, config } from "./utils/config";
@@ -146,7 +146,7 @@ const selectTemplate = async (
 // Copy to clipboard
 const copyToClipboard = async (content: string): Promise<void> => {
   try {
-    await clipboardy.write(content);
+    await writeText(content);
     success("Copied to clipboard!");
   } catch {
     log.warn("Failed to copy to clipboard. You can manually copy the content above.");
