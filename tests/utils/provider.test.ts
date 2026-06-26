@@ -1,7 +1,95 @@
-import { afterEach, beforeEach, describe, expect, test } from "bun:test";
+import { afterEach, beforeEach, describe, expect, mock, test } from "bun:test";
 import { unlink, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
+
+// ---------------------------------------------------------------------------
+// Mock AI SDK and provider packages BEFORE importing the module under test.
+// Bun's module system requires mock.module to be called before import for the
+// hoisted mock to take effect.
+// ---------------------------------------------------------------------------
+
+// Capture the last options passed to generateText so tests can assert them.
+let lastGenerateTextArgs: Record<string, unknown> = {};
+
+// Track which model strings the provider factories were called with.
+let lastGroqModelArg = "";
+let lastCerebrasModelArg = "";
+let lastGoogleModelArg = "";
+let lastOpenAIModelArg = "";
+let lastGroqApiKeyArg = "";
+let lastCerebrasApiKeyArg = "";
+let lastGoogleApiKeyArg = "";
+let lastOpenAIApiKeyArg = "";
+let lastOpenAIBaseURLArg: string | undefined = undefined;
+
+// Marker objects returned by mocked factories — the real LanguageModel type
+// is not needed because generateText is also mocked.
+const MOCK_MODEL_MARKER = { __mockModel: true };
+
+mock.module("ai", () => {
+  return {
+    generateText: mock(async (opts: Record<string, unknown>) => {
+      lastGenerateTextArgs = opts;
+      return {
+        output: {
+          title: "Add mocked provider output",
+          description:
+            "This mocked description is intentionally longer than one hundred characters so it satisfies the schema constraints used by provider generation tests.",
+          labels: ["enhancement"],
+        },
+        usage: { inputTokens: 1, outputTokens: 2, totalTokens: 3 },
+        finishReason: "stop",
+      };
+    }),
+    Output: {
+      object: (opts: unknown) => ({ __outputSchema: opts }),
+    },
+  };
+});
+
+mock.module("@ai-sdk/groq", () => ({
+  createGroq: (opts: { apiKey: string }) => {
+    lastGroqApiKeyArg = opts.apiKey;
+    return (model: string) => {
+      lastGroqModelArg = model;
+      return MOCK_MODEL_MARKER;
+    };
+  },
+}));
+
+mock.module("@ai-sdk/cerebras", () => ({
+  createCerebras: (opts: { apiKey: string }) => {
+    lastCerebrasApiKeyArg = opts.apiKey;
+    return (model: string) => {
+      lastCerebrasModelArg = model;
+      return MOCK_MODEL_MARKER;
+    };
+  },
+}));
+
+mock.module("@ai-sdk/google", () => ({
+  createGoogleGenerativeAI: (opts: { apiKey: string }) => {
+    lastGoogleApiKeyArg = opts.apiKey;
+    return (model: string) => {
+      lastGoogleModelArg = model;
+      return MOCK_MODEL_MARKER;
+    };
+  },
+}));
+
+mock.module("@ai-sdk/openai", () => ({
+  createOpenAI: (opts: { apiKey: string; baseURL?: string }) => {
+    lastOpenAIApiKeyArg = opts.apiKey;
+    lastOpenAIBaseURLArg = opts.baseURL;
+    return (model: string) => {
+      lastOpenAIModelArg = model;
+      return MOCK_MODEL_MARKER;
+    };
+  },
+}));
+
+// Now import the module under test (after mocks are registered).
 import { CONFIG_FILE, config } from "../../utils/config";
 import type { GitCommit } from "../../utils/git";
 import {
@@ -12,12 +100,49 @@ import {
 
 const TEST_CONFIG_FILE = join(tmpdir(), "lazypr-provider-test.conf");
 
+// Synthetic API keys that satisfy config format validation (≥20 alphanumeric/._- chars).
+const GROQ_TEST_KEY = "gsk_test1234567890abcdefghijklmnop";
+const CEREBRAS_TEST_KEY = "csk_test1234567890abcdefghijklmnop";
+const GOOGLE_TEST_KEY = "AIzaSyTestKey1234567890abcdef";
+const OPENAI_TEST_KEY = "sk_test1234567890abcdefghijklmnop";
+
+const SAMPLE_COMMITS: GitCommit[] = [
+  {
+    hash: "abc123",
+    shortHash: "abc123",
+    author: "Test User",
+    date: "2024-01-01",
+    message: "feat: add initial implementation",
+  },
+  {
+    hash: "def456",
+    shortHash: "def456",
+    author: "Test User",
+    date: "2024-01-02",
+    message: "fix: address edge case in authentication",
+  },
+];
+
+function resetTrackedArgs() {
+  lastGenerateTextArgs = {};
+  lastGroqModelArg = "";
+  lastCerebrasModelArg = "";
+  lastGoogleModelArg = "";
+  lastOpenAIModelArg = "";
+  lastGroqApiKeyArg = "";
+  lastCerebrasApiKeyArg = "";
+  lastGoogleApiKeyArg = "";
+  lastOpenAIApiKeyArg = "";
+  lastOpenAIBaseURLArg = undefined;
+}
+
 beforeEach(async () => {
   config.setFilePath(TEST_CONFIG_FILE);
+  resetTrackedArgs();
   try {
     await unlink(TEST_CONFIG_FILE);
   } catch {
-    // File doesn't exist, that's fine
+    // File doesn't exist — that's fine.
   }
 });
 
@@ -25,824 +150,599 @@ afterEach(async () => {
   try {
     await unlink(TEST_CONFIG_FILE);
   } catch {
-    // File doesn't exist, that's fine
+    // File doesn't exist — that's fine.
   }
   config.setFilePath(CONFIG_FILE);
 });
 
-describe("generatePullRequest - Schema Validation", () => {
-  test("should validate title length constraints (minimum 5 characters)", async () => {
-    // Setup config with valid API key
+// ---------------------------------------------------------------------------
+// Return shape & schema
+// ---------------------------------------------------------------------------
+
+describe("generatePullRequest - Return Shape", () => {
+  test("should return object with correct structure", async () => {
     await writeFile(
       TEST_CONFIG_FILE,
-      "GROQ_API_KEY=gsk_test1234567890abcdefghijk\nTIMEOUT=1\nMODEL=openai/gpt-oss-20b\n",
+      `GROQ_API_KEY=${GROQ_TEST_KEY}\n`,
       "utf8",
     );
 
-    const commits: GitCommit[] = [
-      {
-        hash: "abc123",
-        shortHash: "abc123",
-        author: "Test User",
-        date: "2024-01-01",
-        message: "Initial commit",
-      },
-    ];
+    const result = await generatePullRequest("feature/test", SAMPLE_COMMITS);
 
-    // This test verifies the schema enforces a minimum of 5 characters
-    // The actual API call would fail if it returns a title < 5 chars
-    try {
-      const result = await generatePullRequest("feature/test", commits);
-
-      // If successful, verify the result meets schema requirements
-      expect(result.object.title).toBeDefined();
-      expect(typeof result.object.title).toBe("string");
-      expect(result.object.title.length).toBeGreaterThanOrEqual(5);
-    } catch (error: any) {
-      // Expected to fail without valid API key or network
-      expect(error).toBeDefined();
-    }
+    expect(typeof result).toBe("object");
+    expect(result).not.toBeNull();
+    expect(result).toHaveProperty("object");
+    expect(result).toHaveProperty("usage");
+    expect(result).toHaveProperty("finishReason");
   });
 
-  test("should validate title length constraints (maximum 100 characters)", async () => {
+  test("should return title as non-empty string satisfying min length", async () => {
     await writeFile(
       TEST_CONFIG_FILE,
-      "GROQ_API_KEY=gsk_test1234567890abcdefghijk\nTIMEOUT=1\nMODEL=openai/gpt-oss-20b\n",
+      `GROQ_API_KEY=${GROQ_TEST_KEY}\n`,
       "utf8",
     );
 
-    const commits: GitCommit[] = [
-      {
-        hash: "def456",
-        shortHash: "def456",
-        author: "Test User",
-        date: "2024-01-01",
-        message: "Add feature",
-      },
-    ];
+    const result = await generatePullRequest("feature/test", SAMPLE_COMMITS);
 
-    try {
-      const result = await generatePullRequest("feature/long-name", commits);
-
-      expect(result.object.title).toBeDefined();
-      expect(result.object.title.length).toBeLessThanOrEqual(100);
-    } catch (error: any) {
-      expect(error).toBeDefined();
-    }
+    expect(typeof result.object.title).toBe("string");
+    expect(result.object.title.length).toBeGreaterThanOrEqual(5);
+    expect(result.object.title.length).toBeLessThanOrEqual(100);
   });
 
-  test("should validate description minimum length (100 characters)", async () => {
+  test("should return description satisfying minimum length", async () => {
     await writeFile(
       TEST_CONFIG_FILE,
-      "GROQ_API_KEY=gsk_test1234567890abcdefghijk\nTIMEOUT=1\nMODEL=openai/gpt-oss-20b\n",
+      `GROQ_API_KEY=${GROQ_TEST_KEY}\n`,
       "utf8",
     );
 
-    const commits: GitCommit[] = [
-      {
-        hash: "ghi789",
-        shortHash: "ghi789",
-        author: "Test User",
-        date: "2024-01-01",
-        message: "Fix bug in authentication",
-      },
-    ];
+    const result = await generatePullRequest("feature/test", SAMPLE_COMMITS);
 
-    try {
-      const result = await generatePullRequest("bugfix/auth", commits);
-
-      expect(result.object.description).toBeDefined();
-      expect(typeof result.object.description).toBe("string");
-      expect(result.object.description.length).toBeGreaterThanOrEqual(100);
-    } catch (error: any) {
-      expect(error).toBeDefined();
-    }
+    expect(typeof result.object.description).toBe("string");
+    expect(result.object.description.length).toBeGreaterThanOrEqual(100);
   });
 
-  test("should return an object with title and description properties", async () => {
+  test("should return labels as an array", async () => {
     await writeFile(
       TEST_CONFIG_FILE,
-      "GROQ_API_KEY=gsk_test1234567890abcdefghijk\nTIMEOUT=1\nMODEL=openai/gpt-oss-20b\n",
+      `GROQ_API_KEY=${GROQ_TEST_KEY}\n`,
       "utf8",
     );
 
-    const commits: GitCommit[] = [
-      {
-        hash: "jkl012",
-        shortHash: "jkl012",
-        author: "Test User",
-        date: "2024-01-01",
-        message: "Update dependencies",
-      },
-    ];
+    const result = await generatePullRequest("feature/test", SAMPLE_COMMITS);
 
-    try {
-      const result = await generatePullRequest("chore/deps", commits);
+    expect(Array.isArray(result.object.labels)).toBe(true);
+  });
 
-      expect(result).toHaveProperty("object");
-      expect(result).toHaveProperty("usage");
-      expect(result.object).toHaveProperty("title");
-      expect(result.object).toHaveProperty("description");
-      expect(result.object).toHaveProperty("labels");
-    } catch (error: any) {
-      expect(error).toBeDefined();
-    }
+  test("should return usage with token counts", async () => {
+    await writeFile(
+      TEST_CONFIG_FILE,
+      `GROQ_API_KEY=${GROQ_TEST_KEY}\n`,
+      "utf8",
+    );
+
+    const result = await generatePullRequest("feature/test", SAMPLE_COMMITS);
+
+    expect(result.usage.inputTokens).toBe(1);
+    expect(result.usage.outputTokens).toBe(2);
+    expect(result.usage.totalTokens).toBe(3);
+  });
+
+  test("should return finishReason", async () => {
+    await writeFile(
+      TEST_CONFIG_FILE,
+      `GROQ_API_KEY=${GROQ_TEST_KEY}\n`,
+      "utf8",
+    );
+
+    const result = await generatePullRequest("feature/test", SAMPLE_COMMITS);
+
+    expect(result.finishReason).toBe("stop");
   });
 });
 
-describe("generatePullRequest - Configuration Integration", () => {
-  test("should use GOOGLE_GENERATIVE_AI_API_KEY for google provider", async () => {
+// ---------------------------------------------------------------------------
+// Provider selection and API key routing
+// ---------------------------------------------------------------------------
+
+describe("generatePullRequest - Provider Selection", () => {
+  test("groq provider uses GROQ_API_KEY and calls groq factory", async () => {
     await writeFile(
       TEST_CONFIG_FILE,
-      "PROVIDER=google\nGOOGLE_GENERATIVE_AI_API_KEY=AIzaSyTestKey123\nTIMEOUT=1\nMODEL=gemini-2.5-flash\n",
+      `PROVIDER=groq\nGROQ_API_KEY=${GROQ_TEST_KEY}\n`,
       "utf8",
     );
 
-    const apiKeyConfigKey = await getProviderApiKeyConfigKey();
-    expect(apiKeyConfigKey).toBe("GOOGLE_GENERATIVE_AI_API_KEY");
+    await generatePullRequest("feature/test", SAMPLE_COMMITS);
 
+    expect(lastGroqApiKeyArg).toBe(GROQ_TEST_KEY);
+  });
+
+  test("cerebras provider uses CEREBRAS_API_KEY and calls cerebras factory", async () => {
+    await writeFile(
+      TEST_CONFIG_FILE,
+      `PROVIDER=cerebras\nCEREBRAS_API_KEY=${CEREBRAS_TEST_KEY}\n`,
+      "utf8",
+    );
+
+    await generatePullRequest("feature/test", SAMPLE_COMMITS);
+
+    expect(lastCerebrasApiKeyArg).toBe(CEREBRAS_TEST_KEY);
+  });
+
+  test("google provider uses GOOGLE_GENERATIVE_AI_API_KEY and calls google factory", async () => {
+    await writeFile(
+      TEST_CONFIG_FILE,
+      `PROVIDER=google\nGOOGLE_GENERATIVE_AI_API_KEY=${GOOGLE_TEST_KEY}\n`,
+      "utf8",
+    );
+
+    await generatePullRequest("feature/test", SAMPLE_COMMITS);
+
+    expect(lastGoogleApiKeyArg).toBe(GOOGLE_TEST_KEY);
+  });
+
+  test("openai provider uses OPENAI_API_KEY and calls openai factory", async () => {
+    await writeFile(
+      TEST_CONFIG_FILE,
+      `PROVIDER=openai\nOPENAI_API_KEY=${OPENAI_TEST_KEY}\n`,
+      "utf8",
+    );
+
+    await generatePullRequest("feature/test", SAMPLE_COMMITS);
+
+    expect(lastOpenAIApiKeyArg).toBe(OPENAI_TEST_KEY);
+  });
+
+  test("openai provider uses custom OPENAI_BASE_URL when configured", async () => {
+    await writeFile(
+      TEST_CONFIG_FILE,
+      `PROVIDER=openai\nOPENAI_API_KEY=${OPENAI_TEST_KEY}\nOPENAI_BASE_URL=http://localhost:11434/v1\n`,
+      "utf8",
+    );
+
+    await generatePullRequest("feature/test", SAMPLE_COMMITS);
+
+    expect(lastOpenAIBaseURLArg).toBe("http://localhost:11434/v1");
+  });
+
+  test("openai provider falls back to dummy-key when no API key is configured", async () => {
+    // OpenAI provider is optional — it should resolve even without a key.
+    await writeFile(TEST_CONFIG_FILE, "PROVIDER=openai\n", "utf8");
+
+    const result = await generatePullRequest("feature/test", SAMPLE_COMMITS);
+
+    // Should succeed (not throw).
+    expect(result.object.title).toBeDefined();
+    // The runtime substitutes "dummy-key" when no key is provided.
+    expect(lastOpenAIApiKeyArg).toBe("dummy-key");
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Model string is forwarded to the provider factory
+// ---------------------------------------------------------------------------
+
+describe("generatePullRequest - Model Config", () => {
+  test("MODEL from config is passed to groq factory", async () => {
+    const testModel = "llama-3.3-70b-versatile";
+    await writeFile(
+      TEST_CONFIG_FILE,
+      `PROVIDER=groq\nGROQ_API_KEY=${GROQ_TEST_KEY}\nMODEL=${testModel}\n`,
+      "utf8",
+    );
+
+    await generatePullRequest("feature/test", SAMPLE_COMMITS);
+
+    expect(lastGroqModelArg).toBe(testModel);
+  });
+
+  test("MODEL from config is passed to cerebras factory", async () => {
+    const testModel = "llama3.1-70b";
+    await writeFile(
+      TEST_CONFIG_FILE,
+      `PROVIDER=cerebras\nCEREBRAS_API_KEY=${CEREBRAS_TEST_KEY}\nMODEL=${testModel}\n`,
+      "utf8",
+    );
+
+    await generatePullRequest("feature/test", SAMPLE_COMMITS);
+
+    expect(lastCerebrasModelArg).toBe(testModel);
+  });
+
+  test("MODEL from config is passed to google factory", async () => {
+    const testModel = "gemini-2.5-flash";
+    await writeFile(
+      TEST_CONFIG_FILE,
+      `PROVIDER=google\nGOOGLE_GENERATIVE_AI_API_KEY=${GOOGLE_TEST_KEY}\nMODEL=${testModel}\n`,
+      "utf8",
+    );
+
+    await generatePullRequest("feature/test", SAMPLE_COMMITS);
+
+    expect(lastGoogleModelArg).toBe(testModel);
+  });
+
+  test("MODEL from config is passed to openai factory", async () => {
+    const testModel = "gpt-4o";
+    await writeFile(
+      TEST_CONFIG_FILE,
+      `PROVIDER=openai\nOPENAI_API_KEY=${OPENAI_TEST_KEY}\nMODEL=${testModel}\n`,
+      "utf8",
+    );
+
+    await generatePullRequest("feature/test", SAMPLE_COMMITS);
+
+    expect(lastOpenAIModelArg).toBe(testModel);
+  });
+
+  test("arbitrary non-empty model names are treated as valid (no allowlist enforced)", async () => {
+    // Any non-empty string should be accepted — different providers and local
+    // OpenAI-compatible servers use custom model names.
+    const arbitraryModel = "my-custom-quantized-model-v3";
+    await writeFile(
+      TEST_CONFIG_FILE,
+      `GROQ_API_KEY=${GROQ_TEST_KEY}\nMODEL=${arbitraryModel}\n`,
+      "utf8",
+    );
+
+    const loadedModel = await config.get("MODEL");
+    expect(loadedModel).toBe(arbitraryModel);
+
+    // generatePullRequest should not reject an arbitrary model string.
+    const result = await generatePullRequest("feature/test", SAMPLE_COMMITS);
+    expect(result.object.title).toBeDefined();
+    expect(lastGroqModelArg).toBe(arbitraryModel);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// generateText call options (maxRetries, abortSignal, system, prompt)
+// ---------------------------------------------------------------------------
+
+describe("generatePullRequest - generateText Options", () => {
+  test("MAX_RETRIES from config is passed to generateText as a number", async () => {
+    await writeFile(
+      TEST_CONFIG_FILE,
+      `GROQ_API_KEY=${GROQ_TEST_KEY}\nMAX_RETRIES=5\n`,
+      "utf8",
+    );
+
+    await generatePullRequest("feature/test", SAMPLE_COMMITS);
+
+    expect(lastGenerateTextArgs.maxRetries).toBe(5);
+    expect(typeof lastGenerateTextArgs.maxRetries).toBe("number");
+  });
+
+  test("TIMEOUT config creates an AbortSignal passed to generateText", async () => {
+    await writeFile(
+      TEST_CONFIG_FILE,
+      `GROQ_API_KEY=${GROQ_TEST_KEY}\nTIMEOUT=30000\n`,
+      "utf8",
+    );
+
+    await generatePullRequest("feature/test", SAMPLE_COMMITS);
+
+    expect(lastGenerateTextArgs.abortSignal).toBeDefined();
+    // AbortSignal.timeout returns an AbortSignal instance.
+    expect(lastGenerateTextArgs.abortSignal).toBeInstanceOf(AbortSignal);
+  });
+
+  test("system prompt is passed to generateText", async () => {
+    await writeFile(
+      TEST_CONFIG_FILE,
+      `GROQ_API_KEY=${GROQ_TEST_KEY}\n`,
+      "utf8",
+    );
+
+    await generatePullRequest("feature/test", SAMPLE_COMMITS);
+
+    expect(typeof lastGenerateTextArgs.system).toBe("string");
+    const system = lastGenerateTextArgs.system as string;
+    expect(system.length).toBeGreaterThan(0);
+    // System prompt instructs the model to output JSON.
+    expect(system).toContain("JSON");
+  });
+
+  test("user prompt is passed to generateText", async () => {
+    await writeFile(
+      TEST_CONFIG_FILE,
+      `GROQ_API_KEY=${GROQ_TEST_KEY}\n`,
+      "utf8",
+    );
+
+    await generatePullRequest("feature/test", SAMPLE_COMMITS);
+
+    expect(typeof lastGenerateTextArgs.prompt).toBe("string");
+    const prompt = lastGenerateTextArgs.prompt as string;
+    expect(prompt.length).toBeGreaterThan(0);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Prompt content — locale, context, commits, branch, labels, template
+// ---------------------------------------------------------------------------
+
+describe("generatePullRequest - Prompt Content", () => {
+  test("branch name appears in the prompt", async () => {
+    await writeFile(TEST_CONFIG_FILE, `GROQ_API_KEY=${GROQ_TEST_KEY}\n`, "utf8");
+
+    await generatePullRequest("feature/my-special-branch", SAMPLE_COMMITS);
+
+    const prompt = lastGenerateTextArgs.prompt as string;
+    expect(prompt).toContain("feature/my-special-branch");
+  });
+
+  test("commit messages appear in the prompt", async () => {
+    await writeFile(TEST_CONFIG_FILE, `GROQ_API_KEY=${GROQ_TEST_KEY}\n`, "utf8");
+
+    await generatePullRequest("feature/test", SAMPLE_COMMITS);
+
+    const prompt = lastGenerateTextArgs.prompt as string;
+    expect(prompt).toContain("feat: add initial implementation");
+    expect(prompt).toContain("fix: address edge case in authentication");
+  });
+
+  test("LOCALE from config appears in the prompt", async () => {
+    await writeFile(
+      TEST_CONFIG_FILE,
+      `GROQ_API_KEY=${GROQ_TEST_KEY}\nLOCALE=es\n`,
+      "utf8",
+    );
+
+    await generatePullRequest("feature/test", SAMPLE_COMMITS);
+
+    const prompt = lastGenerateTextArgs.prompt as string;
+    expect(prompt).toContain("es");
+  });
+
+  test("locale override parameter takes precedence over config LOCALE", async () => {
+    await writeFile(
+      TEST_CONFIG_FILE,
+      `GROQ_API_KEY=${GROQ_TEST_KEY}\nLOCALE=en\n`,
+      "utf8",
+    );
+
+    await generatePullRequest("feature/test", SAMPLE_COMMITS, undefined, "fr");
+
+    const prompt = lastGenerateTextArgs.prompt as string;
+    expect(prompt).toContain("fr");
+  });
+
+  test("CONTEXT from config appears in the prompt", async () => {
+    await writeFile(
+      TEST_CONFIG_FILE,
+      `GROQ_API_KEY=${GROQ_TEST_KEY}\nCONTEXT=Focus on security improvements\n`,
+      "utf8",
+    );
+
+    await generatePullRequest("feature/test", SAMPLE_COMMITS);
+
+    const prompt = lastGenerateTextArgs.prompt as string;
+    expect(prompt).toContain("Focus on security improvements");
+  });
+
+  test("context override parameter takes precedence over config CONTEXT", async () => {
+    await writeFile(
+      TEST_CONFIG_FILE,
+      `GROQ_API_KEY=${GROQ_TEST_KEY}\nCONTEXT=config context\n`,
+      "utf8",
+    );
+
+    await generatePullRequest(
+      "feature/test",
+      SAMPLE_COMMITS,
+      undefined,
+      undefined,
+      "override context",
+    );
+
+    const prompt = lastGenerateTextArgs.prompt as string;
+    expect(prompt).toContain("override context");
+  });
+
+  test("available labels appear in the prompt", async () => {
+    await writeFile(
+      TEST_CONFIG_FILE,
+      `GROQ_API_KEY=${GROQ_TEST_KEY}\n`,
+      "utf8",
+    );
+
+    await generatePullRequest("feature/test", SAMPLE_COMMITS);
+
+    const prompt = lastGenerateTextArgs.prompt as string;
+    // Default labels should be included.
+    expect(prompt).toContain("enhancement");
+    expect(prompt).toContain("bug");
+    expect(prompt).toContain("documentation");
+  });
+
+  test("custom labels from CUSTOM_LABELS config appear in the prompt", async () => {
+    await writeFile(
+      TEST_CONFIG_FILE,
+      `GROQ_API_KEY=${GROQ_TEST_KEY}\nCUSTOM_LABELS=performance,security\n`,
+      "utf8",
+    );
+
+    await generatePullRequest("feature/test", SAMPLE_COMMITS);
+
+    const prompt = lastGenerateTextArgs.prompt as string;
+    expect(prompt).toContain("performance");
+    expect(prompt).toContain("security");
+  });
+
+  test("template content appears in the prompt when provided", async () => {
+    await writeFile(TEST_CONFIG_FILE, `GROQ_API_KEY=${GROQ_TEST_KEY}\n`, "utf8");
+
+    const template = "## Summary\n- Describe your change\n\n## Testing\n- How was this tested?";
+    await generatePullRequest("feature/test", SAMPLE_COMMITS, template);
+
+    const prompt = lastGenerateTextArgs.prompt as string;
+    expect(prompt).toContain("## Summary");
+    expect(prompt).toContain("## Testing");
+  });
+
+  test("no template section in prompt when template is not provided", async () => {
+    await writeFile(TEST_CONFIG_FILE, `GROQ_API_KEY=${GROQ_TEST_KEY}\n`, "utf8");
+
+    await generatePullRequest("feature/test", SAMPLE_COMMITS);
+
+    const prompt = lastGenerateTextArgs.prompt as string;
+    expect(prompt).not.toContain("PR Template to Follow");
+  });
+});
+
+// ---------------------------------------------------------------------------
+// getProviderApiKeyConfigKey
+// ---------------------------------------------------------------------------
+
+describe("getProviderApiKeyConfigKey", () => {
+  test("returns GROQ_API_KEY for groq provider", async () => {
+    await writeFile(TEST_CONFIG_FILE, "PROVIDER=groq\n", "utf8");
+    expect(await getProviderApiKeyConfigKey()).toBe("GROQ_API_KEY");
+  });
+
+  test("returns CEREBRAS_API_KEY for cerebras provider", async () => {
+    await writeFile(TEST_CONFIG_FILE, "PROVIDER=cerebras\n", "utf8");
+    expect(await getProviderApiKeyConfigKey()).toBe("CEREBRAS_API_KEY");
+  });
+
+  test("returns GOOGLE_GENERATIVE_AI_API_KEY for google provider", async () => {
+    await writeFile(TEST_CONFIG_FILE, "PROVIDER=google\n", "utf8");
+    expect(await getProviderApiKeyConfigKey()).toBe("GOOGLE_GENERATIVE_AI_API_KEY");
+  });
+
+  test("returns OPENAI_API_KEY for openai provider", async () => {
+    await writeFile(TEST_CONFIG_FILE, "PROVIDER=openai\n", "utf8");
+    expect(await getProviderApiKeyConfigKey()).toBe("OPENAI_API_KEY");
+  });
+});
+
+// ---------------------------------------------------------------------------
+// validateProviderApiKey — local validation, no network
+// ---------------------------------------------------------------------------
+
+describe("validateProviderApiKey", () => {
+  test("resolves when GROQ_API_KEY is set", async () => {
+    await writeFile(
+      TEST_CONFIG_FILE,
+      `PROVIDER=groq\nGROQ_API_KEY=${GROQ_TEST_KEY}\n`,
+      "utf8",
+    );
     await expect(validateProviderApiKey()).resolves.toBeUndefined();
   });
 
-  test("should throw error when GOOGLE_GENERATIVE_AI_API_KEY is missing for google provider", async () => {
+  test("rejects with friendly message when GROQ_API_KEY is missing for groq provider", async () => {
+    await writeFile(TEST_CONFIG_FILE, "PROVIDER=groq\n", "utf8");
+    await expect(validateProviderApiKey()).rejects.toThrow(
+      "GROQ_API_KEY is required for provider 'groq'.",
+    );
+  });
+
+  test("resolves when CEREBRAS_API_KEY is set", async () => {
     await writeFile(
       TEST_CONFIG_FILE,
-      "PROVIDER=google\nTIMEOUT=1\nMODEL=gemini-2.5-flash\n",
+      `PROVIDER=cerebras\nCEREBRAS_API_KEY=${CEREBRAS_TEST_KEY}\n`,
       "utf8",
     );
+    await expect(validateProviderApiKey()).resolves.toBeUndefined();
+  });
 
+  test("rejects with friendly message when CEREBRAS_API_KEY is missing for cerebras provider", async () => {
+    await writeFile(TEST_CONFIG_FILE, "PROVIDER=cerebras\n", "utf8");
+    await expect(validateProviderApiKey()).rejects.toThrow(
+      "CEREBRAS_API_KEY is required for provider 'cerebras'.",
+    );
+  });
+
+  test("resolves when GOOGLE_GENERATIVE_AI_API_KEY is set", async () => {
+    await writeFile(
+      TEST_CONFIG_FILE,
+      `PROVIDER=google\nGOOGLE_GENERATIVE_AI_API_KEY=${GOOGLE_TEST_KEY}\n`,
+      "utf8",
+    );
+    await expect(validateProviderApiKey()).resolves.toBeUndefined();
+  });
+
+  test("rejects with friendly message when GOOGLE_GENERATIVE_AI_API_KEY is missing for google provider", async () => {
+    await writeFile(TEST_CONFIG_FILE, "PROVIDER=google\n", "utf8");
     await expect(validateProviderApiKey()).rejects.toThrow(
       "GOOGLE_GENERATIVE_AI_API_KEY is required for provider 'google'.",
     );
   });
 
-  test("should use GROQ_API_KEY from config", async () => {
-    const testApiKey = "gsk_integrationtest1234567890abc";
-    await writeFile(
-      TEST_CONFIG_FILE,
-      `GROQ_API_KEY=${testApiKey}\nTIMEOUT=1\nMODEL=openai/gpt-oss-20b\n`,
-      "utf8",
-    );
-
-    const commits: GitCommit[] = [
-      {
-        hash: "mno345",
-        shortHash: "mno345",
-        author: "Test User",
-        date: "2024-01-01",
-        message: "Test commit",
-      },
-    ];
-
-    // Verify config is loaded correctly
-    const loadedApiKey = await config.get("GROQ_API_KEY");
-    expect(loadedApiKey).toBe(testApiKey);
-
-    try {
-      await generatePullRequest("feature/test", commits);
-    } catch (error: any) {
-      // Expected to fail with invalid key, but it should attempt to use the key
-      expect(error).toBeDefined();
-    }
-  });
-
-  test("should use LOCALE from config", async () => {
-    await writeFile(
-      TEST_CONFIG_FILE,
-      "GROQ_API_KEY=gsk_test1234567890abcdefghijk\nLOCALE=es\nTIMEOUT=1\nMODEL=openai/gpt-oss-20b\n",
-      "utf8",
-    );
-
-    const locale = await config.get("LOCALE");
-    expect(locale).toBe("es");
-
-    const commits: GitCommit[] = [
-      {
-        hash: "pqr678",
-        shortHash: "pqr678",
-        author: "Test User",
-        date: "2024-01-01",
-        message: "Add Spanish support",
-      },
-    ];
-
-    try {
-      await generatePullRequest("feature/i18n", commits);
-    } catch (error: any) {
-      expect(error).toBeDefined();
-    }
-  });
-
-  test("should use MODEL from config", async () => {
-    const testModel = "openai/gpt-oss-120b";
-    await writeFile(
-      TEST_CONFIG_FILE,
-      `GROQ_API_KEY=gsk_test1234567890abcdefghijk\nTIMEOUT=1\nMODEL=${testModel}\n`,
-      "utf8",
-    );
-
-    const model = await config.get("MODEL");
-    expect(model).toBe(testModel);
-
-    const commits: GitCommit[] = [
-      {
-        hash: "stu901",
-        shortHash: "stu901",
-        author: "Test User",
-        date: "2024-01-01",
-        message: "Test model config",
-      },
-    ];
-
-    try {
-      await generatePullRequest("feature/model-test", commits);
-    } catch (error: any) {
-      expect(error).toBeDefined();
-    }
-  });
-
-  test("should use MAX_RETRIES from config", async () => {
-    await writeFile(
-      TEST_CONFIG_FILE,
-      "GROQ_API_KEY=gsk_test1234567890abcdefghijk\nMAX_RETRIES=5\nTIMEOUT=1\nMODEL=openai/gpt-oss-20b\n",
-      "utf8",
-    );
-
-    const maxRetries = await config.get("MAX_RETRIES");
-    expect(maxRetries).toBe("5");
-
-    const commits: GitCommit[] = [
-      {
-        hash: "vwx234",
-        shortHash: "vwx234",
-        author: "Test User",
-        date: "2024-01-01",
-        message: "Test retries",
-      },
-    ];
-
-    try {
-      await generatePullRequest("feature/retry-test", commits);
-    } catch (error: any) {
-      expect(error).toBeDefined();
-    }
-  });
-
-  test("should use TIMEOUT from config", async () => {
-    await writeFile(
-      TEST_CONFIG_FILE,
-      "GROQ_API_KEY=gsk_test1234567890abcdefghijk\nTIMEOUT=1\nMODEL=openai/gpt-oss-20b\n",
-      "utf8",
-    );
-
-    const timeout = await config.get("TIMEOUT");
-    expect(timeout).toBe("1");
-
-    const commits: GitCommit[] = [
-      {
-        hash: "yz1567",
-        shortHash: "yz1567",
-        author: "Test User",
-        date: "2024-01-01",
-        message: "Test timeout",
-      },
-    ];
-
-    try {
-      await generatePullRequest("feature/timeout-test", commits);
-    } catch (error: any) {
-      expect(error).toBeDefined();
-    }
-  });
-
-  test("should throw error when GROQ_API_KEY is missing", async () => {
-    // Create config without API key
-    await writeFile(TEST_CONFIG_FILE, "MODEL=openai/gpt-oss-20b\n", "utf8");
-
-    const commits: GitCommit[] = [
-      {
-        hash: "abc890",
-        shortHash: "abc890",
-        author: "Test User",
-        date: "2024-01-01",
-        message: "Test missing key",
-      },
-    ];
-
-    try {
-      await generatePullRequest("feature/test", commits);
-      expect(true).toBe(false); // Should not reach here
-    } catch (error: any) {
-      expect(error).toBeDefined();
-      // Should fail during config validation
-    }
+  test("resolves even when OPENAI_API_KEY is missing (openai key is optional)", async () => {
+    await writeFile(TEST_CONFIG_FILE, "PROVIDER=openai\n", "utf8");
+    await expect(validateProviderApiKey()).resolves.toBeUndefined();
   });
 });
 
-describe("generatePullRequest - Input Processing", () => {
-  test("should handle single commit", async () => {
-    await writeFile(
-      TEST_CONFIG_FILE,
-      "GROQ_API_KEY=gsk_test1234567890abcdefghijk\nTIMEOUT=1\nMODEL=openai/gpt-oss-20b\n",
-      "utf8",
+// ---------------------------------------------------------------------------
+// generatePullRequest — local error paths (no network)
+// ---------------------------------------------------------------------------
+
+describe("generatePullRequest - Local Error Paths", () => {
+  test("rejects when GROQ_API_KEY is missing for groq provider", async () => {
+    await writeFile(TEST_CONFIG_FILE, "PROVIDER=groq\n", "utf8");
+
+    await expect(generatePullRequest("feature/test", SAMPLE_COMMITS)).rejects.toThrow(
+      "GROQ_API_KEY is required",
     );
-
-    const commits: GitCommit[] = [
-      {
-        hash: "single1",
-        shortHash: "single1",
-        author: "Test User",
-        date: "2024-01-01",
-        message: "Single commit message",
-      },
-    ];
-
-    try {
-      const result = await generatePullRequest("feature/single", commits);
-      expect(result).toBeDefined();
-    } catch (error: any) {
-      expect(error).toBeDefined();
-    }
   });
 
-  test("should handle multiple commits", async () => {
-    await writeFile(
-      TEST_CONFIG_FILE,
-      "GROQ_API_KEY=gsk_test1234567890abcdefghijk\nTIMEOUT=1\nMODEL=openai/gpt-oss-20b\n",
-      "utf8",
+  test("rejects when CEREBRAS_API_KEY is missing for cerebras provider", async () => {
+    await writeFile(TEST_CONFIG_FILE, "PROVIDER=cerebras\n", "utf8");
+
+    await expect(generatePullRequest("feature/test", SAMPLE_COMMITS)).rejects.toThrow(
+      "CEREBRAS_API_KEY is required",
     );
-
-    const commits: GitCommit[] = [
-      {
-        hash: "multi1",
-        shortHash: "multi1",
-        author: "Test User",
-        date: "2024-01-01",
-        message: "First commit",
-      },
-      {
-        hash: "multi2",
-        shortHash: "multi2",
-        author: "Test User",
-        date: "2024-01-02",
-        message: "Second commit",
-      },
-      {
-        hash: "multi3",
-        shortHash: "multi3",
-        author: "Test User",
-        date: "2024-01-03",
-        message: "Third commit",
-      },
-    ];
-
-    try {
-      const result = await generatePullRequest("feature/multi", commits);
-      expect(result).toBeDefined();
-    } catch (error: any) {
-      expect(error).toBeDefined();
-    }
   });
 
-  test("should handle commits with special characters", async () => {
-    await writeFile(
-      TEST_CONFIG_FILE,
-      "GROQ_API_KEY=gsk_test1234567890abcdefghijk\nTIMEOUT=1\nMODEL=openai/gpt-oss-20b\n",
-      "utf8",
+  test("rejects when GOOGLE_GENERATIVE_AI_API_KEY is missing for google provider", async () => {
+    await writeFile(TEST_CONFIG_FILE, "PROVIDER=google\n", "utf8");
+
+    await expect(generatePullRequest("feature/test", SAMPLE_COMMITS)).rejects.toThrow(
+      "GOOGLE_GENERATIVE_AI_API_KEY is required",
     );
-
-    const commits: GitCommit[] = [
-      {
-        hash: "special1",
-        shortHash: "special1",
-        author: "Test User",
-        date: "2024-01-01",
-        message: "Fix: bug with @mentions",
-      },
-      {
-        hash: "special2",
-        shortHash: "special2",
-        author: "Test User",
-        date: "2024-01-02",
-        message: 'Add "quotes" in message',
-      },
-      {
-        hash: "special3",
-        shortHash: "special3",
-        author: "Test User",
-        date: "2024-01-03",
-        message: "Handle newlines\nand tabs\there",
-      },
-    ];
-
-    try {
-      const result = await generatePullRequest("bugfix/special-chars", commits);
-      expect(result).toBeDefined();
-    } catch (error: any) {
-      expect(error).toBeDefined();
-    }
   });
 
-  test("should handle different branch name patterns", async () => {
-    await writeFile(
-      TEST_CONFIG_FILE,
-      "GROQ_API_KEY=gsk_test1234567890abcdefghijk\nTIMEOUT=1\nMODEL=openai/gpt-oss-20b\n",
-      "utf8",
-    );
+  test("resolves even when OPENAI_API_KEY is missing (openai is optional)", async () => {
+    await writeFile(TEST_CONFIG_FILE, "PROVIDER=openai\n", "utf8");
 
-    const commits: GitCommit[] = [
-      {
-        hash: "branch1",
-        shortHash: "branch1",
-        author: "Test User",
-        date: "2024-01-01",
-        message: "Test commit",
-      },
-    ];
-
-    const branchNames = [
-      "feature/new-feature",
-      "bugfix/fix-bug",
-      "hotfix/critical-fix",
-      "chore/update-deps",
-      "docs/update-readme",
-      "test/add-tests",
-    ];
-
-    for (const branchName of branchNames) {
-      try {
-        const result = await generatePullRequest(branchName, commits);
-        expect(result).toBeDefined();
-      } catch (error: any) {
-        expect(error).toBeDefined();
-      }
-    }
+    const result = await generatePullRequest("feature/test", SAMPLE_COMMITS);
+    expect(result.object.title).toBeDefined();
   });
 
-  test("should handle empty commit messages", async () => {
-    await writeFile(
-      TEST_CONFIG_FILE,
-      "GROQ_API_KEY=gsk_test1234567890abcdefghijk\nTIMEOUT=1\nMODEL=openai/gpt-oss-20b\n",
-      "utf8",
+  test("rejects when provider name is not one of the known providers", async () => {
+    // Config validation rejects unknown provider values before generatePullRequest
+    // even reaches the isProviderType check.
+    await writeFile(TEST_CONFIG_FILE, "PROVIDER=unknown-provider\n", "utf8");
+
+    await expect(generatePullRequest("feature/test", SAMPLE_COMMITS)).rejects.toThrow(
+      "PROVIDER must be one of",
     );
-
-    const commits: GitCommit[] = [
-      {
-        hash: "empty1",
-        shortHash: "empty1",
-        author: "Test User",
-        date: "2024-01-01",
-        message: "",
-      },
-    ];
-
-    try {
-      const result = await generatePullRequest("feature/empty", commits);
-      expect(result).toBeDefined();
-    } catch (error: any) {
-      expect(error).toBeDefined();
-    }
-  });
-
-  test("should handle very long commit messages", async () => {
-    await writeFile(
-      TEST_CONFIG_FILE,
-      "GROQ_API_KEY=gsk_test1234567890abcdefghijk\nTIMEOUT=1\nMODEL=openai/gpt-oss-20b\n",
-      "utf8",
-    );
-
-    const longMessage = "A".repeat(1000);
-    const commits: GitCommit[] = [
-      {
-        hash: "long1",
-        shortHash: "long1",
-        author: "Test User",
-        date: "2024-01-01",
-        message: longMessage,
-      },
-    ];
-
-    try {
-      const result = await generatePullRequest("feature/long-message", commits);
-      expect(result).toBeDefined();
-    } catch (error: any) {
-      expect(error).toBeDefined();
-    }
   });
 });
 
-describe("generatePullRequest - Error Handling", () => {
-  test("should handle timeout errors", async () => {
-    await writeFile(
-      TEST_CONFIG_FILE,
-      "GROQ_API_KEY=gsk_test1234567890abcdefghijk\nTIMEOUT=1\nMODEL=openai/gpt-oss-20b\n",
-      "utf8",
-    );
+// ---------------------------------------------------------------------------
+// Config schema — MODEL validation
+// ---------------------------------------------------------------------------
 
-    const commits: GitCommit[] = [
-      {
-        hash: "timeout1",
-        shortHash: "timeout1",
-        author: "Test User",
-        date: "2024-01-01",
-        message: "This should timeout",
-      },
-    ];
+describe("Config - MODEL validation", () => {
+  test("empty MODEL value fails config validation", async () => {
+    await writeFile(TEST_CONFIG_FILE, `GROQ_API_KEY=${GROQ_TEST_KEY}\n`, "utf8");
 
-    try {
-      await generatePullRequest("feature/timeout", commits);
-      expect(true).toBe(false); // Should timeout
-    } catch (error: any) {
-      expect(error).toBeDefined();
-      // Error should be related to timeout or API call failure
-    }
+    // Setting MODEL to an empty string via config.set should throw.
+    await expect(config.set("MODEL", "")).rejects.toThrow();
   });
 
-  test("should handle invalid model names gracefully", async () => {
-    await writeFile(
-      TEST_CONFIG_FILE,
-      "GROQ_API_KEY=gsk_test1234567890abcdefghijk\nTIMEOUT=1\nMODEL=invalid-model-name\n",
-      "utf8",
-    );
+  test("any non-empty MODEL string is accepted (no allowlist)", async () => {
+    await writeFile(TEST_CONFIG_FILE, `GROQ_API_KEY=${GROQ_TEST_KEY}\n`, "utf8");
 
-    const _commits: GitCommit[] = [
-      {
-        hash: "invalid1",
-        shortHash: "invalid1",
-        author: "Test User",
-        date: "2024-01-01",
-        message: "Test invalid model",
-      },
-    ];
-
-    try {
-      await config.get("MODEL");
-      expect(true).toBe(false); // Should fail validation
-    } catch (error: any) {
-      expect(error).toBeDefined();
-    }
-  });
-
-  test("should handle network errors", async () => {
-    await writeFile(
-      TEST_CONFIG_FILE,
-      "GROQ_API_KEY=gsk_definitelyinvalidkey123\nTIMEOUT=1\nMODEL=openai/gpt-oss-20b\n",
-      "utf8",
-    );
-
-    const commits: GitCommit[] = [
-      {
-        hash: "network1",
-        shortHash: "network1",
-        author: "Test User",
-        date: "2024-01-01",
-        message: "Test network error",
-      },
-    ];
-
-    try {
-      await generatePullRequest("feature/network-error", commits);
-      expect(true).toBe(false); // Should fail with invalid API key
-    } catch (error: any) {
-      expect(error).toBeDefined();
-    }
-  });
-});
-
-describe("generatePullRequest - Return Type", () => {
-  test("should return object with correct structure", async () => {
-    await writeFile(
-      TEST_CONFIG_FILE,
-      "GROQ_API_KEY=gsk_test1234567890abcdefghijk\nTIMEOUT=1\nMODEL=openai/gpt-oss-20b\n",
-      "utf8",
-    );
-
-    const commits: GitCommit[] = [
-      {
-        hash: "struct1",
-        shortHash: "struct1",
-        author: "Test User",
-        date: "2024-01-01",
-        message: "Test structure",
-      },
-    ];
-
-    try {
-      const result = await generatePullRequest("feature/structure", commits);
-
-      // Verify it's an object
-      expect(typeof result).toBe("object");
-      expect(result).not.toBeNull();
-
-      // Verify result has object and usage
-      expect(result).toHaveProperty("object");
-      expect(result).toHaveProperty("usage");
-
-      // Verify properties exist and are strings
-      expect(typeof result.object.title).toBe("string");
-      expect(typeof result.object.description).toBe("string");
-      expect(Array.isArray(result.object.labels)).toBe(true);
-
-      // Verify object properties
-      const keys = Object.keys(result.object);
-      expect(keys).toContain("title");
-      expect(keys).toContain("description");
-      expect(keys).toContain("labels");
-    } catch (error: any) {
-      expect(error).toBeDefined();
-    }
-  });
-
-  test("should return strings (not other types)", async () => {
-    await writeFile(
-      TEST_CONFIG_FILE,
-      "GROQ_API_KEY=gsk_test1234567890abcdefghijk\nTIMEOUT=1\nMODEL=openai/gpt-oss-20b\n",
-      "utf8",
-    );
-
-    const commits: GitCommit[] = [
-      {
-        hash: "types1",
-        shortHash: "types1",
-        author: "Test User",
-        date: "2024-01-01",
-        message: "Test types",
-      },
-    ];
-
-    try {
-      const result = await generatePullRequest("feature/types", commits);
-
-      // Ensure title is a string, not number, boolean, etc.
-      expect(result.object.title).not.toBeNull();
-      expect(result.object.title).not.toBeUndefined();
-      expect(Array.isArray(result.object.title)).toBe(false);
-
-      // Ensure description is a string
-      expect(result.object.description).not.toBeNull();
-      expect(result.object.description).not.toBeUndefined();
-      expect(Array.isArray(result.object.description)).toBe(false);
-
-      // Ensure labels is an array
-      expect(result.object.labels).not.toBeNull();
-      expect(result.object.labels).not.toBeUndefined();
-      expect(Array.isArray(result.object.labels)).toBe(true);
-    } catch (error: any) {
-      expect(error).toBeDefined();
-    }
-  });
-});
-
-describe("generatePullRequest - Labels", () => {
-  test("should return object with labels property", async () => {
-    await writeFile(
-      TEST_CONFIG_FILE,
-      "GROQ_API_KEY=gsk_test1234567890abcdefghijk\nTIMEOUT=1\nMODEL=openai/gpt-oss-20b\n",
-      "utf8",
-    );
-
-    const commits: GitCommit[] = [
-      {
-        hash: "label1",
-        shortHash: "label1",
-        author: "Test User",
-        date: "2024-01-01",
-        message: "Add new feature",
-      },
-    ];
-
-    try {
-      const result = await generatePullRequest("feature/labels", commits);
-
-      // Verify labels property exists
-      expect(result.object).toHaveProperty("labels");
-      expect(Array.isArray(result.object.labels)).toBe(true);
-    } catch (error: any) {
-      expect(error).toBeDefined();
-    }
-  });
-
-  test("should validate labels are valid enum values", async () => {
-    await writeFile(
-      TEST_CONFIG_FILE,
-      "GROQ_API_KEY=gsk_test1234567890abcdefghijk\nTIMEOUT=1\nMODEL=openai/gpt-oss-20b\n",
-      "utf8",
-    );
-
-    const commits: GitCommit[] = [
-      {
-        hash: "label2",
-        shortHash: "label2",
-        author: "Test User",
-        date: "2024-01-01",
-        message: "Fix critical bug in authentication",
-      },
-    ];
-
-    try {
-      const result = await generatePullRequest("bugfix/auth", commits);
-
-      // Verify labels are from valid enum values
-      const validLabels = ["enhancement", "bug", "documentation"];
-      result.object.labels.forEach((label: string) => {
-        expect(validLabels).toContain(label);
-      });
-    } catch (error: any) {
-      expect(error).toBeDefined();
-    }
-  });
-
-  test("should handle empty labels array", async () => {
-    await writeFile(
-      TEST_CONFIG_FILE,
-      "GROQ_API_KEY=gsk_test1234567890abcdefghijk\nTIMEOUT=1\nMODEL=openai/gpt-oss-20b\n",
-      "utf8",
-    );
-
-    const commits: GitCommit[] = [
-      {
-        hash: "label3",
-        shortHash: "label3",
-        author: "Test User",
-        date: "2024-01-01",
-        message: "Refactor code structure",
-      },
-    ];
-
-    try {
-      const result = await generatePullRequest("refactor/structure", commits);
-
-      // Verify labels is an array (can be empty)
-      expect(Array.isArray(result.object.labels)).toBe(true);
-      expect(result.object.labels.length).toBeGreaterThanOrEqual(0);
-    } catch (error: any) {
-      expect(error).toBeDefined();
-    }
-  });
-
-  test("should return complete object structure with labels, title, and description", async () => {
-    await writeFile(
-      TEST_CONFIG_FILE,
-      "GROQ_API_KEY=gsk_test1234567890abcdefghijk\nTIMEOUT=1\nMODEL=openai/gpt-oss-20b\n",
-      "utf8",
-    );
-
-    const commits: GitCommit[] = [
-      {
-        hash: "complete1",
-        shortHash: "complete1",
-        author: "Test User",
-        date: "2024-01-01",
-        message: "Update documentation for API endpoints",
-      },
-    ];
-
-    try {
-      const result = await generatePullRequest("docs/api", commits);
-
-      // Verify complete structure
-      expect(result.object).toHaveProperty("title");
-      expect(result.object).toHaveProperty("description");
-      expect(result.object).toHaveProperty("labels");
-
-      expect(typeof result.object.title).toBe("string");
-      expect(typeof result.object.description).toBe("string");
-      expect(Array.isArray(result.object.labels)).toBe(true);
-    } catch (error: any) {
-      expect(error).toBeDefined();
-    }
-  });
-
-  test("should return usage information alongside the object", async () => {
-    await writeFile(
-      TEST_CONFIG_FILE,
-      "GROQ_API_KEY=gsk_test1234567890abcdefghijk\nTIMEOUT=1\nMODEL=openai/gpt-oss-20b\n",
-      "utf8",
-    );
-
-    const commits: GitCommit[] = [
-      {
-        hash: "usage1",
-        shortHash: "usage1",
-        author: "Test User",
-        date: "2024-01-01",
-        message: "Add user authentication",
-      },
-    ];
-
-    try {
-      const result = await generatePullRequest("feature/auth", commits);
-
-      // Verify result has both object and usage
-      expect(result).toHaveProperty("object");
-      expect(result).toHaveProperty("usage");
-
-      // Verify object structure
-      expect(result.object).toHaveProperty("title");
-      expect(result.object).toHaveProperty("description");
-      expect(result.object).toHaveProperty("labels");
-    } catch (error: any) {
-      expect(error).toBeDefined();
-    }
+    // Arbitrary model names are valid — custom and local providers support them.
+    await config.set("MODEL", "custom-local-model-v2");
+    const loaded = await config.get("MODEL");
+    expect(loaded).toBe("custom-local-model-v2");
   });
 });
