@@ -3,7 +3,7 @@
 [![test status](https://img.shields.io/github/actions/workflow/status/r4ultv/lazypr/test.yml)](https://github.com/r4ultv/lazypr/actions/workflows/test.yml)
 [![version](https://img.shields.io/npm/v/lazypr.svg)](https://www.npmjs.com/package/lazypr)
 [![license](https://img.shields.io/github/license/r4ultv/lazypr.svg)](https://github.com/r4ultv/lazypr/blob/main/LICENSE)
-[![node](https://img.shields.io/badge/node-%3E%3D20.0-43853d?logo=node.js&logoColor=white)](https://nodejs.org)
+[![node](https://img.shields.io/badge/node-%3E%3D22.0-43853d?logo=node.js&logoColor=white)](https://nodejs.org)
 
 Generate clean, consistent PRs from commits - powered by AI and your git history.
 
@@ -24,7 +24,7 @@ Generate clean, consistent PRs from commits - powered by AI and your git history
 npm install -g lazypr
 ```
 
-Requires Node.js >= 21. **[See installation guide →](https://lazypr.raulcarini.dev/docs/installation)**
+Requires Node.js >= 22. **[See installation guide →](https://lazypr.raulcarini.dev/docs/installation)**
 
 ## Quick start ⚡
 
@@ -97,7 +97,7 @@ bun test         # Run tests
 bun run build    # Build for production
 ```
 
-Uses Bun for development, Node.js >= 21 for runtime.
+Uses Bun for development, Node.js >= 22 for runtime.
 
 ## Contributing 🤝
 
