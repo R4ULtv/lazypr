@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, test } from "bun:test";
-import { readFile, unlink, writeFile } from "node:fs/promises";
+import { readFile, stat, unlink, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { CONFIG_FILE, CONFIG_SCHEMA, config } from "../../utils/config";
@@ -724,6 +724,19 @@ LOCALE=es
 
       const fileContent = await readFile(TEST_CONFIG_FILE, "utf8");
       expect(fileContent).toContain("GROQ_API_KEY=gsk_1234567890abcdefghij");
+    });
+  });
+
+  describe("file permissions", () => {
+    test("should write config file with owner-only permissions on POSIX platforms", async () => {
+      await config.set("GROQ_API_KEY", "gsk_1234567890abcdefghij");
+
+      if (process.platform !== "win32") {
+        const fileStat = await stat(TEST_CONFIG_FILE);
+        // Extract the permission bits (lower 9 bits of mode)
+        const permBits = fileStat.mode & 0o777;
+        expect(permBits).toBe(0o600);
+      }
     });
   });
 });

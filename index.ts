@@ -22,6 +22,15 @@ const program = new Command();
 
 const isConfigKey = (value: string): value is ConfigKey => value in CONFIG_SCHEMA;
 
+// Returns true for config keys that hold sensitive secrets (API keys)
+const isSensitiveConfigKey = (key: string): boolean => key.endsWith("_API_KEY");
+
+// Masks the value for sensitive keys; returns raw value for non-sensitive keys
+const maskConfigValue = (key: string, value: string): string => {
+  if (!isSensitiveConfigKey(key)) return value;
+  return value.length > 4 ? `${"*".repeat(value.length - 4)}${value.slice(-4)}` : "****";
+};
+
 // Simple error handler
 const exitWithError = (message: string): never => {
   cancel(message);
@@ -395,18 +404,8 @@ program
         let status: string;
 
         if (currentValue !== undefined && currentValue !== "") {
-          // Mask sensitive values (API keys)
-          if (key.endsWith("_API_KEY")) {
-            const masked =
-              currentValue.length > 4
-                ? `${"*".repeat(currentValue.length - 4)}${currentValue.slice(-4)}`
-                : "****";
-            displayValue = masked;
-            status = colorize("green", "✓");
-          } else {
-            displayValue = currentValue;
-            status = colorize("green", "✓");
-          }
+          displayValue = maskConfigValue(key, currentValue);
+          status = colorize("green", "✓");
         } else if (defaultValue !== undefined) {
           displayValue = `${defaultValue} ${colorize("dim", "(default)")}`;
           status = colorize("yellow", "○");
@@ -463,7 +462,7 @@ program
         );
         process.exit(1);
       }
-      log.info(`Setting config: ${trimmedKey} = ${value}`);
+      log.info(`Setting config: ${trimmedKey} = ${maskConfigValue(trimmedKey, value)}`);
       try {
         await config.set(trimmedKey, value);
       } catch (error) {
@@ -488,7 +487,7 @@ program
       const value = await config.get(key).catch(() => undefined);
 
       if (value !== undefined) {
-        log.warn(`${key} = ${value}`);
+        log.warn(`${key} = ${maskConfigValue(key, value)}`);
       } else {
         log.warn(`Key '${key}' not found in config`);
       }

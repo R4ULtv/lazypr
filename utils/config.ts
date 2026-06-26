@@ -276,7 +276,7 @@ export class Config {
       .map(([key, value]) => `${key}=${value}`)
       .join("\n");
 
-    await writeFile(this.filePath, content, "utf8");
+    await writeFile(this.filePath, content, { encoding: "utf8", mode: 0o600 });
   }
 
   // Get a config value with validation and defaults
