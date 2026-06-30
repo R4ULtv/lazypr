@@ -4,6 +4,16 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/) and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## [1.6.1] - 2026-06-30
+
+### Added
+
+- **CEREBRAS MODEL:** Added `gemma-4-31b` to the curated Cerebras provider/model catalog for interactive configuration.
+
+### Fixed
+
+- **CEREBRAS STRUCTURED OUTPUT:** Removed provider-facing string length constraints from the structured output schema to avoid Cerebras rejecting `minLength` / `maxLength`, while preserving strict local validation after generation.
+
 ## [1.6.0] - 2026-06-26
 
 ### Added
