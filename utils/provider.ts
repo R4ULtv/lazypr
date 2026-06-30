@@ -157,7 +157,16 @@ export async function generatePullRequest(
 
   const languageModel = providerConfig.createModel(apiKey, model, baseURL);
 
-  // Build schema with dynamic labels
+  // Build a loose schema for provider-side structured output. Some providers
+  // reject JSON Schema string constraints such as minLength/maxLength, so keep
+  // provider-facing schema broadly compatible and enforce stricter validation
+  // locally after generation.
+  const generationSchema = z.object({
+    title: z.string(),
+    description: z.string(),
+    labels: z.array(z.string()),
+  });
+
   const pullRequestSchema = z.object({
     title: z.string().min(MIN_TITLE_LENGTH).max(MAX_TITLE_LENGTH),
     description: z.string().min(MIN_DESCRIPTION_LENGTH),
@@ -166,11 +175,12 @@ export async function generatePullRequest(
 
   const { output, usage, finishReason } = await generateText({
     model: languageModel,
-    output: Output.object({ schema: pullRequestSchema }),
+    output: Output.object({ schema: generationSchema }),
     maxRetries: Number.parseInt(await config.get("MAX_RETRIES"), 10),
     abortSignal: AbortSignal.timeout(Number.parseInt(await config.get("TIMEOUT"), 10)),
     instructions: getSystemPrompt(),
     prompt: buildPrompt(locale, currentBranch, context, availableLabels, commitsString, template),
   });
-  return { object: output, usage, finishReason };
+
+  return { object: pullRequestSchema.parse(output), usage, finishReason };
 }

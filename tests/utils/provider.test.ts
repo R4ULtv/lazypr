@@ -406,6 +406,31 @@ describe("generatePullRequest - generateText Options", () => {
     expect(instructions).toContain("JSON");
   });
 
+  test("provider-facing schema omits string length constraints for Cerebras compatibility", async () => {
+    await writeFile(
+      TEST_CONFIG_FILE,
+      `PROVIDER=cerebras\nCEREBRAS_API_KEY=${CEREBRAS_TEST_KEY}\n`,
+      "utf8",
+    );
+
+    await generatePullRequest("feature/test", SAMPLE_COMMITS);
+
+    const outputConfig = lastGenerateTextArgs.output as {
+      __outputSchema: {
+        schema: { safeParse: (value: unknown) => { success: boolean } };
+      };
+    };
+    const providerSchema = outputConfig.__outputSchema.schema;
+
+    expect(
+      providerSchema.safeParse({
+        title: "x",
+        description: "short",
+        labels: ["enhancement"],
+      }).success,
+    ).toBe(true);
+  });
+
   test("user prompt is passed to generateText", async () => {
     await writeFile(TEST_CONFIG_FILE, `GROQ_API_KEY=${GROQ_TEST_KEY}\n`, "utf8");
 
