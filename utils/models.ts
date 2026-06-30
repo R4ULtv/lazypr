@@ -76,6 +76,12 @@ export const MODEL_COMBOS: ModelCombo[] = [
   },
   {
     provider: "cerebras",
+    model: "gemma-4-31b",
+    label: "Cerebras — Gemma 4 31B",
+    hint: "fast inference",
+  },
+  {
+    provider: "cerebras",
     model: CUSTOM_MODEL_SENTINEL,
     label: "Cerebras — Custom / local model…",
     hint: "enter any model id",
@@ -230,6 +236,9 @@ export function validateConfigValue(
     const normalized = CONFIG_SCHEMA[key].validate(value ?? "");
     return { valid: true, normalized };
   } catch (err) {
-    return { valid: false, error: err instanceof Error ? err.message : "Invalid value" };
+    return {
+      valid: false,
+      error: err instanceof Error ? err.message : "Invalid value",
+    };
   }
 }
