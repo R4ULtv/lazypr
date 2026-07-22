@@ -1,4 +1,4 @@
-[![lazypr](https://lazypr.raulcarini.dev/config.webp)](https://lazypr.raulcarini.dev)
+![lazypr](../assets/config.webp)
 
 Practical examples for using `lazypr` in different scenarios - from CLI usage to GitHub Actions automation.
 
@@ -23,9 +23,8 @@ lazypr develop
 lazypr --template feature
 
 # Different AI provider
-lazypr --provider cerebras
-# Or switch to Google Gemini in config
-lazypr config set PROVIDER=google
+lazypr config set PROVIDER=cerebras
+lazypr config set MODEL=gpt-oss-120b
 
 # Add context
 lazypr --context "Security fix - review carefully"
@@ -164,7 +163,7 @@ lazypr --gh               # Get gh pr create command
 
 ## Prerequisites
 
-- Node.js >= 21
+- Node.js >= 22
 - Git repository
 - API key for Groq, Cerebras, Google Gemini, or OpenAI-compatible providers
 

@@ -1,154 +1,343 @@
-[![lazypr](https://lazypr.raulcarini.dev/og-image.webp)](https://lazypr.raulcarini.dev)
+![lazypr](./assets/og-image.webp)
 
-[![test status](https://img.shields.io/github/actions/workflow/status/r4ultv/lazypr/test.yml)](https://github.com/r4ultv/lazypr/actions/workflows/test.yml)
-[![version](https://img.shields.io/npm/v/lazypr.svg)](https://www.npmjs.com/package/lazypr)
-[![license](https://img.shields.io/github/license/r4ultv/lazypr.svg)](https://github.com/r4ultv/lazypr/blob/main/LICENSE)
+[![test status](https://img.shields.io/github/actions/workflow/status/R4ULtv/lazypr/test.yml?branch=main)](https://github.com/R4ULtv/lazypr/actions/workflows/test.yml)
+[![npm version](https://img.shields.io/npm/v/lazypr.svg)](https://www.npmjs.com/package/lazypr)
+[![license](https://img.shields.io/github/license/R4ULtv/lazypr.svg)](./LICENSE)
 [![node](https://img.shields.io/badge/node-%3E%3D22.0-43853d?logo=node.js&logoColor=white)](https://nodejs.org)
 
-Generate clean, consistent PRs from commits - powered by AI and your git history.
+Generate clean, consistent pull request titles and descriptions from your Git history with AI.
 
-> 📖 **[Full Documentation](https://lazypr.raulcarini.dev/docs/what-is-lazypr)**
+lazypr reads the commits on your current branch, compares them with a target branch, and generates a ready-to-review PR title, description, and labels. It supports several AI providers, existing GitHub PR templates, multiple output languages, and a short `lzp` command alias.
 
-## Features ✨
+## Contents
 
-- **Multi-provider AI:** [Groq, Cerebras, Google Gemini, and OpenAI-compatible APIs](https://lazypr.raulcarini.dev/docs/config/providers)
-- **Smart commit filtering:** [Excludes noise commits](https://lazypr.raulcarini.dev/docs/advanced/commit-filtering)
-- **PR template support:** [Use your existing templates](https://lazypr.raulcarini.dev/docs/usage/templates)
-- **GitHub CLI integration:** [Generate `gh pr create` commands](https://lazypr.raulcarini.dev/docs/usage/github-integration)
-- **Multilingual:** [12+ languages supported](https://lazypr.raulcarini.dev/docs/advanced/multilingual)
-- **Custom context:** [Guide AI generation style](https://lazypr.raulcarini.dev/docs/advanced/context-guidance)
+- [Features](#features)
+- [Requirements](#requirements)
+- [Installation](#installation)
+- [Quick start](#quick-start)
+- [How it works](#how-it-works)
+- [CLI reference](#cli-reference)
+- [Configuration](#configuration)
+- [AI providers](#ai-providers)
+- [PR templates](#pr-templates)
+- [Commit filtering](#commit-filtering)
+- [GitHub CLI integration](#github-cli-integration)
+- [Troubleshooting](#troubleshooting)
+- [Development](#development)
 
-## Installation 📦
+## Features
+
+- Groq, Cerebras, Google Gemini, OpenAI, and OpenAI-compatible APIs
+- Interactive configuration with masked API-key input
+- Smart filtering for merge, dependency-update, and formatting-only commits
+- Support for existing GitHub pull request templates
+- Output in 13 languages
+- Custom context and label guidance
+- Optional token-usage details
+- Generation of a ready-to-run `gh pr create` command
+- `lazypr` and `lzp` command names
+
+## Requirements
+
+- [Node.js](https://nodejs.org) 22 or newer
+- Git
+- A repository with at least one commit on the current branch that is not on the target branch
+- An API key for the selected hosted AI provider; local OpenAI-compatible endpoints may not require one
+
+The GitHub CLI is only required when using the `--gh` option.
+
+## Installation
+
+Install lazypr globally with npm:
 
 ```bash
 npm install -g lazypr
 ```
 
-Requires Node.js >= 22. **[See installation guide →](https://lazypr.raulcarini.dev/docs/installation)**
+Then verify the installation:
 
-## Quick start ⚡
+```bash
+lazypr --version
+# or use the short alias
+lzp --version
+```
 
-1. **Configure interactively (recommended for first-time setup):**
+## Quick start
+
+1. Open the interactive configuration menu:
 
    ```bash
    lazypr config
    ```
 
-   This opens a guided menu where you can pick provider + model together and enter your API key with masked input (never echoed to terminal or shell history).
+2. Choose a provider and model, then add the provider's API key. API keys entered through the interactive menu are masked and do not appear in your shell history.
 
-   **Or use scriptable commands for CI/dotfiles:**
+3. From a feature branch, generate a PR against `main`:
 
    ```bash
-   lazypr config set GROQ_API_KEY=<your-key>
+   lazypr
    ```
 
-2. **Generate a PR:**
+   To compare against a different branch, pass it as the first argument:
+
    ```bash
-   lazypr              # compares against main
-   lzp                 # short alias
-   lazypr develop      # compare against different branch
+   lazypr develop
    ```
 
-**[Complete quick start guide →](https://lazypr.raulcarini.dev/docs/quick-start)** | **[Usage examples →](https://lazypr.raulcarini.dev/docs/examples/cli-usage)**
+4. Review the generated content. lazypr can copy the title and description to your clipboard, but AI output should always be checked before publishing.
 
-## Configuration ⚙️
+## How it works
 
-lazypr supports two configuration flows that work alongside each other:
+For a command such as `lazypr main`, lazypr:
 
-### Interactive (recommended for setup)
+1. Finds commits in `main..HEAD`.
+2. Removes common noise commits unless filtering is disabled.
+3. Loads an optional PR template and any configured generation context.
+4. Sends the commit messages and guidance to the selected AI model.
+5. Validates and displays the generated title, description, and suggested labels.
+6. Offers to copy the result, or a `gh pr create` command when `--gh` is used.
 
-```bash
-lazypr config          # opens a Clack-powered interactive menu
+Only the current branch name, commit messages, configuration guidance, and the contents of a selected PR template are used to generate the prompt. lazypr does not analyze the repository's source files.
+
+## CLI reference
+
+```text
+lazypr [target] [options]
 ```
 
-The interactive menu lets you:
+`target` is the branch the current branch will be merged into. It defaults to `DEFAULT_BRANCH`, which is `main` unless changed.
 
-- **Pick provider + model together** with a combined selector (Groq, Cerebras, Google, OpenAI, or custom/local)
-- **Enter API keys with masked input** — keys are never echoed to the terminal or shell history
-- Configure locale, default branch, context, commit filtering, custom labels, retries, and timeout
-- View the current config with secrets masked
+| Option                    | Description                                                                         |
+| ------------------------- | ----------------------------------------------------------------------------------- |
+| `-t, --template [name]`   | Use a discovered PR template. Omit the name to select interactively.                |
+| `-u, --usage`             | Display input, output, and total token usage.                                       |
+| `-l, --locale <language>` | Override the configured output language for this run.                               |
+| `--no-filter`             | Include commits normally removed by smart filtering.                                |
+| `--gh`                    | Generate a `gh pr create` command instead of copying the title and body separately. |
+| `-c, --context <text>`    | Add guidance for this run, overriding configured context.                           |
+| `-h, --help`              | Show command help.                                                                  |
+| `-V, --version`           | Show the installed version.                                                         |
 
-### Scriptable (CI and dotfiles)
+Examples:
 
 ```bash
-lazypr config set KEY=VALUE    # Set configuration
-lazypr config get KEY          # Get configuration
-lazypr config remove KEY       # Remove configuration key
-lazypr config list             # Show all settings
+# Compare the current branch with main
+lazypr
+
+# Compare with develop and include every commit
+lazypr develop --no-filter
+
+# Generate in Italian with extra guidance
+lazypr --locale it --context "Focus on the user-facing changes"
+
+# Select a template interactively
+lazypr --template
+
+# Use a named template and show token usage
+lazypr --template bug_fix --usage
+
+# Generate a GitHub CLI command
+lazypr main --gh
 ```
 
-**Examples:**
+## Configuration
+
+Run `lazypr config` for the recommended interactive setup. The menu lets you edit the provider and model together, enter a masked API key, change general settings, and inspect the current configuration.
+
+For scripts and dotfiles, use the configuration subcommands:
 
 ```bash
-# Set API keys (key is visible in shell history — use interactive flow to avoid this)
-lazypr config set GROQ_API_KEY=<key>
+lazypr config list
+lazypr config get PROVIDER
+lazypr config set LOCALE=it
+lazypr config remove CONTEXT
+```
 
-# Switch provider and model
-lazypr config set PROVIDER=google
-lazypr config set MODEL=gemini-3.5-flash
+The `set` command requires `KEY=VALUE` as one argument. Quote the whole argument when the value contains spaces:
 
-# Use a local/custom model with OpenAI-compatible API
+```bash
+lazypr config set "CONTEXT=Keep the description concise and mention breaking changes"
+```
+
+> API keys passed to `lazypr config set` can remain in shell history. Prefer `lazypr config` for secret entry.
+
+Configuration is stored in `~/.lazypr` (for example, `C:\Users\YourName\.lazypr` on Windows). The file uses one `KEY=value` entry per line and is created with owner-only permissions on supported systems.
+
+### Settings reference
+
+| Key                            | Default              | Description                                            |
+| ------------------------------ | -------------------- | ------------------------------------------------------ |
+| `PROVIDER`                     | `groq`               | `groq`, `cerebras`, `google`, or `openai`              |
+| `MODEL`                        | `openai/gpt-oss-20b` | Model ID sent to the selected provider                 |
+| `GROQ_API_KEY`                 | empty                | API key used by Groq                                   |
+| `CEREBRAS_API_KEY`             | empty                | API key used by Cerebras                               |
+| `GOOGLE_GENERATIVE_AI_API_KEY` | empty                | API key used by Google Gemini                          |
+| `OPENAI_API_KEY`               | empty                | API key used by OpenAI or a compatible endpoint        |
+| `OPENAI_BASE_URL`              | empty                | Base URL for an OpenAI-compatible API                  |
+| `DEFAULT_BRANCH`               | `main`               | Target branch used when no target argument is provided |
+| `LOCALE`                       | `en`                 | Language used for generated PR content                 |
+| `FILTER_COMMITS`               | `true`               | Whether smart commit filtering is enabled              |
+| `CONTEXT`                      | empty                | Persistent generation guidance, up to 200 characters   |
+| `CUSTOM_LABELS`                | empty                | Comma-separated labels the model may suggest           |
+| `MAX_RETRIES`                  | `2`                  | Number of model request retries; may be `0`            |
+| `TIMEOUT`                      | `10000`              | Request timeout in milliseconds                        |
+
+Supported locale codes are `en`, `es`, `pt`, `fr`, `de`, `it`, `ja`, `ko`, `zh`, `ru`, `nl`, `pl`, and `tr`.
+
+Custom labels must start with a letter and may contain letters, numbers, hyphens, and underscores. Up to 17 custom labels can be added.
+
+## AI providers
+
+| Provider      | `PROVIDER` | API-key setting                | Get a key                                                  |
+| ------------- | ---------- | ------------------------------ | ---------------------------------------------------------- |
+| Groq          | `groq`     | `GROQ_API_KEY`                 | [Groq Console](https://console.groq.com/keys)              |
+| Cerebras      | `cerebras` | `CEREBRAS_API_KEY`             | [Cerebras Cloud](https://cloud.cerebras.ai/)               |
+| Google Gemini | `google`   | `GOOGLE_GENERATIVE_AI_API_KEY` | [Google AI Studio](https://aistudio.google.com/app/apikey) |
+| OpenAI        | `openai`   | `OPENAI_API_KEY`               | [OpenAI API keys](https://platform.openai.com/api-keys)    |
+
+The interactive menu includes a small curated model list and a custom model option. Model catalogs change, so any non-empty model ID can also be configured directly:
+
+```bash
+lazypr config set PROVIDER=cerebras
+lazypr config set MODEL=gpt-oss-120b
+```
+
+### OpenAI-compatible and local APIs
+
+Services such as Ollama, LM Studio, and other OpenAI-compatible APIs can be used through the `openai` provider:
+
+```bash
 lazypr config set PROVIDER=openai
 lazypr config set OPENAI_BASE_URL=http://localhost:11434/v1
 lazypr config set MODEL=llama3.2
+```
 
-# View config
+`OPENAI_API_KEY` is optional for the `openai` provider so local endpoints that do not authenticate can work. Set it if your endpoint requires authentication.
+
+The selected model must support structured object output. If a custom model repeatedly returns invalid output, try a model with reliable JSON or structured-output support.
+
+## PR templates
+
+lazypr discovers Markdown templates in these locations, using either lowercase or uppercase filenames where shown:
+
+```text
+.github/pull_request_template.md
+.github/PULL_REQUEST_TEMPLATE.md
+.github/pull_request_template/*.md
+.github/PULL_REQUEST_TEMPLATE/*.md
+docs/pull_request_template.md
+docs/PULL_REQUEST_TEMPLATE.md
+```
+
+Use `--template` without a value to choose from discovered templates, or pass a template name or path:
+
+```bash
+lazypr --template
+lazypr --template feature
+lazypr --template .github/PULL_REQUEST_TEMPLATE/bug_fix.md
+```
+
+The model is instructed to preserve the template's headings, sections, checkboxes, and formatting. YAML frontmatter between `---` markers at the top of a template is ignored.
+
+## Commit filtering
+
+Smart filtering is enabled by default. It excludes commits whose messages look like:
+
+- merge commits, such as `Merge pull request #42`
+- dependency updates, including common Dependabot and Renovate messages
+- formatting- or lint-only changes
+
+Disable filtering for one run:
+
+```bash
+lazypr --no-filter
+```
+
+Or disable it persistently:
+
+```bash
+lazypr config set FILTER_COMMITS=false
+```
+
+Filtering is based on commit-message patterns. Use `--no-filter` if meaningful work was excluded because its message matched one of those patterns.
+
+## GitHub CLI integration
+
+With [GitHub CLI](https://cli.github.com/) installed and authenticated, `--gh` builds a shell-safe command containing the generated base branch, title, description, and labels:
+
+```bash
+lazypr main --gh
+```
+
+lazypr asks whether to copy the generated command. Review it, then paste it into a POSIX-compatible shell to create the pull request. The command is generated but not executed automatically.
+
+## Troubleshooting
+
+### No commits found
+
+lazypr reads `target..HEAD`. Make sure you are on the feature branch, the target branch exists locally or as a listed remote branch, and the current branch has commits not present on the target.
+
+If the message says every commit was filtered, retry with:
+
+```bash
+lazypr --no-filter
+```
+
+### The target branch is wrong or missing
+
+Pass the branch explicitly or update the default:
+
+```bash
+lazypr develop
+lazypr config set DEFAULT_BRANCH=develop
+```
+
+When the configured target is missing or matches the current branch, lazypr offers an interactive branch selector.
+
+### An API key is missing
+
+Open `lazypr config`, choose **API key**, and enter the key for the active provider. You can confirm the active provider and masked configuration with:
+
+```bash
 lazypr config list
 ```
 
-**Common settings:**
+### Requests time out or fail repeatedly
 
-- `PROVIDER` - AI provider (`groq`, `cerebras`, `google`, or `openai`)
-- `GROQ_API_KEY` / `CEREBRAS_API_KEY` / `GOOGLE_GENERATIVE_AI_API_KEY` / `OPENAI_API_KEY` - API keys
-- `LOCALE` - Output language (`en`, `es`, `pt`, `fr`, etc.)
-- `MODEL` - AI model to use (any non-empty string; custom/local model IDs supported)
-- `FILTER_COMMITS` - Smart commit filtering (`true` or `false`)
-- `CONTEXT` - Custom guidance for AI generation
-- `OPENAI_BASE_URL` - Custom endpoint for OpenAI-compatible APIs (Ollama, LM Studio, etc.)
-
-**[View all settings →](https://lazypr.raulcarini.dev/docs/config/settings)** | **[Configuration examples →](https://lazypr.raulcarini.dev/docs/examples/configuration)**
-
-## Advanced Features
-
-- **[Smart Commit Filtering](https://lazypr.raulcarini.dev/docs/advanced/commit-filtering)** - Automatically excludes merge commits, dependency updates, and formatting changes
-- **[PR Templates](https://lazypr.raulcarini.dev/docs/usage/templates)** - Use your existing `.github` templates
-- **[GitHub CLI Integration](https://lazypr.raulcarini.dev/docs/usage/github-integration)** - Generate `gh pr create` commands
-- **[Multilingual Support](https://lazypr.raulcarini.dev/docs/advanced/multilingual)** - 12+ languages available
-- **[Context Guidance](https://lazypr.raulcarini.dev/docs/advanced/context-guidance)** - Customize AI generation style
-- **[GitHub Actions](https://lazypr.raulcarini.dev/docs/examples/github-actions)** - Automate PR generation in CI/CD
-- **[OpenAI-Compatible APIs](https://lazypr.raulcarini.dev/docs/config/providers)** - Use local providers (Ollama, LM Studio) or third-party services
-
-## CLI Reference
+Increase the timeout or retry count, then confirm that the configured provider, model, endpoint, and API key belong together:
 
 ```bash
-lazypr [target] [options]
-
-Options:
-  -t, --template [name]      Use a PR template
-  -l, --locale <language>    Output language
-  -c, --context <text>       Custom AI guidance
-  --gh                       Generate gh pr create command
-  --no-filter                Disable smart filtering
-  -u, --usage                Show token usage
-  -h, --help                 Display help
+lazypr config set TIMEOUT=30000
+lazypr config set MAX_RETRIES=4
 ```
 
-**[View complete CLI reference →](https://lazypr.raulcarini.dev/docs/usage/basic-commands)**
+For local endpoints, also confirm that the server is running and that `OPENAI_BASE_URL` includes the expected `/v1` path.
+
+### Clipboard access fails
+
+The generated title and description remain visible in the terminal and can be copied manually. Clipboard access may not be available in headless or remote environments.
+
+For bugs and feature requests, [open a GitHub issue](https://github.com/R4ULtv/lazypr/issues).
 
 ## Development
 
+This repository uses [Bun](https://bun.sh/) for development:
+
 ```bash
-bun install      # Install dependencies
-bun test         # Run tests
-bun run build    # Build for production
+bun install
+bun run dev --help
+bun test
+bun run lint
+bun run format
+bun run build
 ```
 
-Uses Bun for development, Node.js >= 22 for runtime.
+The published CLI targets Node.js 22 or newer.
 
-## Contributing 🤝
+## Contributing
 
-Issues and PRs are welcome. Open one on the repository’s Issues page.
+Issues and pull requests are welcome. Please keep changes focused, add or update tests when behavior changes, and run the development checks before opening a PR. All contributors must follow the [Code of Conduct](./CODE_OF_CONDUCT.md).
 
-## License 📄
+## License
 
-MIT © Raul Carini. See the `LICENSE` file for details.
+[MIT](./LICENSE) © Raul Carini
