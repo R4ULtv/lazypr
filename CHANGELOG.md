@@ -4,6 +4,19 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/) and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## [1.6.2] - 2026-07-22
+
+### Added
+
+- **PROMPT TEST COVERAGE:** Added regression tests for the PR-generation prompt's output contract, grounding rules, locale and label handling, template behavior, and size limit.
+
+### Changed
+
+- **MODEL CATALOG:** Updated the curated OpenAI models to the GPT-5.6 Luna, Terra, and Sol family, moved Google to Gemini 3.6 Flash, and removed outdated Groq and Cerebras entries.
+- **PR GENERATION:** Reworked the system prompt to be more compact and explicit about valid JSON output, evidence-based content, untrusted input, locale and label boundaries, and faithful PR-template handling without invented details.
+- **DOCUMENTATION AND BRANDING:** Rewrote the README as a self-contained guide, refreshed CLI examples and requirements, added local project artwork, and pointed package metadata to the GitHub repository.
+- **DEPENDENCIES:** Upgraded the AI SDK provider packages, `ai`, `@clack/prompts`, and the oxlint/oxfmt toolchain.
+
 ## [1.6.1] - 2026-06-30
 
 ### Added
