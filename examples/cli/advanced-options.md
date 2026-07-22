@@ -101,8 +101,6 @@ Available Groq models (all support structured output):
 
 - `openai/gpt-oss-20b` (default)
 - `openai/gpt-oss-120b`
-- `openai/gpt-oss-safeguard-20b`
-- `meta-llama/llama-4-scout-17b-16e-instruct`
 
 ### Cerebras Models
 
@@ -110,8 +108,9 @@ Available Groq models (all support structured output):
 # Use Cerebras with specific model
 lazypr --provider cerebras --model gpt-oss-120b
 
-# High-quality model
-lazypr --provider cerebras --model zai-glm-4.7
+# Use Gemma 4 31B
+lazypr config set PROVIDER=cerebras
+lazypr config set MODEL=gemma-4-31b
 ```
 
 ### Google Gemini Models

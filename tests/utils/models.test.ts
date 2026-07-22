@@ -97,6 +97,14 @@ describe("MODEL_COMBOS catalog", () => {
     expect(typeof CUSTOM_MODEL_SENTINEL).toBe("string");
     expect(CUSTOM_MODEL_SENTINEL.length).toBeGreaterThan(0);
   });
+
+  test("offers the current GPT-5.6 family for OpenAI", () => {
+    const openAIModels = MODEL_COMBOS.filter(
+      (combo) => combo.provider === "openai" && !combo.isCustom,
+    ).map((combo) => combo.model);
+
+    expect(openAIModels).toEqual(["gpt-5.6-luna", "gpt-5.6-terra", "gpt-5.6-sol"]);
+  });
 });
 
 // ---------------------------------------------------------------------------

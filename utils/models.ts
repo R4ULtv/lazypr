@@ -27,7 +27,6 @@ export const CUSTOM_MODEL_SENTINEL = "__custom__";
 
 export const MODEL_COMBOS: ModelCombo[] = [
   // --- Groq ---
-  // Only models that support structured output (generateObject) are listed.
   {
     provider: "groq",
     model: "openai/gpt-oss-20b",
@@ -42,18 +41,6 @@ export const MODEL_COMBOS: ModelCombo[] = [
   },
   {
     provider: "groq",
-    model: "openai/gpt-oss-safeguard-20b",
-    label: "Groq — Safety GPT-OSS 20B",
-    hint: "safety-tuned",
-  },
-  {
-    provider: "groq",
-    model: "meta-llama/llama-4-scout-17b-16e-instruct",
-    label: "Groq — Llama 4 Scout 17B",
-    hint: "multimodal",
-  },
-  {
-    provider: "groq",
     model: CUSTOM_MODEL_SENTINEL,
     label: "Groq — Custom / local model…",
     hint: "enter any model id",
@@ -61,18 +48,11 @@ export const MODEL_COMBOS: ModelCombo[] = [
   },
 
   // --- Cerebras ---
-  // Only models that support structured output (generateObject) are listed.
   {
     provider: "cerebras",
     model: "gpt-oss-120b",
     label: "Cerebras — GPT-OSS 120B",
     hint: "fast inference",
-  },
-  {
-    provider: "cerebras",
-    model: "zai-glm-4.7",
-    label: "Cerebras — GLM 4.7",
-    hint: "high quality",
   },
   {
     provider: "cerebras",
@@ -91,8 +71,8 @@ export const MODEL_COMBOS: ModelCombo[] = [
   // --- Google ---
   {
     provider: "google",
-    model: "gemini-3.5-flash",
-    label: "Google — Gemini 3.5 Flash",
+    model: "gemini-3.6-flash",
+    label: "Google — Gemini 3.6 Flash",
     hint: "fast, recommended",
   },
   {
@@ -112,20 +92,20 @@ export const MODEL_COMBOS: ModelCombo[] = [
   // --- OpenAI / OpenAI-compatible ---
   {
     provider: "openai",
-    model: "gpt-5.4-nano-2026-03-17",
-    label: "OpenAI — GPT-5.4 Nano",
+    model: "gpt-5.6-luna",
+    label: "OpenAI — GPT-5.6 Luna",
     hint: "fastest, cheapest",
   },
   {
     provider: "openai",
-    model: "gpt-5.4-mini-2026-03-17",
-    label: "OpenAI — GPT-5.4 Mini",
+    model: "gpt-5.6-terra",
+    label: "OpenAI — GPT-5.6 Terra",
     hint: "balanced",
   },
   {
     provider: "openai",
-    model: "gpt-5.5-2026-04-23",
-    label: "OpenAI — GPT-5.5",
+    model: "gpt-5.6-sol",
+    label: "OpenAI — GPT-5.6 Sol",
     hint: "flagship, highest quality",
   },
   {
