@@ -17,7 +17,15 @@ import {
 import { writeText } from "tinyclip";
 import { Command } from "commander";
 import { displayConfigBadge } from "./utils/badge";
-import { CONFIG_FILE, CONFIG_KEYS, CONFIG_SCHEMA, type ConfigKey, config } from "./utils/config";
+import {
+  CONFIG_FILE,
+  CONFIG_KEYS,
+  CONFIG_SCHEMA,
+  LOCALE_OPTIONS,
+  type ConfigKey,
+  config,
+  validateConfigValue,
+} from "./utils/config";
 import { colorize } from "./utils/colors";
 import {
   getAllBranches,
@@ -28,16 +36,14 @@ import {
 import { pkg } from "./utils/info";
 import { formatLabels } from "./utils/labels";
 import {
-  CUSTOM_MODEL_SENTINEL,
-  LOCALE_OPTIONS,
-  MODEL_COMBOS,
-  applyProviderModel,
+  MODEL_NAME,
+  PROVIDER_OPTIONS,
+  generatePullRequest,
   getApiKeyConfigKey,
   getApiKeyLink,
   isProviderType,
-  validateConfigValue,
-} from "./utils/models";
-import { generatePullRequest, validateProviderApiKey } from "./utils/provider";
+  validateProviderApiKey,
+} from "./utils/provider";
 import { buildGhPrCommand } from "./utils/shell";
 import { findPRTemplates, getPRTemplate } from "./utils/template";
 
@@ -268,17 +274,20 @@ const createPullRequest = async (
     const { content: templateContent, name: templateName } = await selectTemplate(options.template);
 
     // Load config values in parallel
-    const [configLocale, configContext, filterCommitsConfig, provider, model] = await Promise.all([
+    const [configLocale, configContext, filterCommitsConfig, provider] = await Promise.all([
       config.get("LOCALE"),
       config.get("CONTEXT"),
       config.get("FILTER_COMMITS"),
       config.get("PROVIDER"),
-      config.get("MODEL"),
     ]);
 
     const currentLocale = options.locale || configLocale;
     const currentContext = options.context || configContext;
     const filterEnabled = options.filter !== false && filterCommitsConfig === "true";
+
+    if (!isProviderType(provider)) {
+      return exitWithError(`Unknown provider: ${provider}`);
+    }
 
     displayConfigBadge({
       provider,
@@ -287,7 +296,6 @@ const createPullRequest = async (
       template: templateName,
       usage: options.usage || false,
       ghCli: options.gh || false,
-      model,
       context: currentContext,
     });
 
@@ -302,6 +310,7 @@ const createPullRequest = async (
     try {
       const result = await generatePullRequest(
         currentBranch,
+        targetBranch,
         commits,
         templateContent,
         options.locale,
@@ -446,17 +455,16 @@ const renderConfigList = async (): Promise<void> => {
   note(locationLines.join("\n"), "Config File");
 };
 
-// Interactive provider+model picker (Step 5)
-const interactiveProviderModelPicker = async (): Promise<void> => {
-  const comboOptions = MODEL_COMBOS.map((combo) => ({
-    value: `${combo.provider}::${combo.model}`,
-    label: combo.label,
-    hint: combo.hint,
-  }));
-
+// Interactive provider picker
+const interactiveProviderPicker = async (): Promise<void> => {
+  const currentProvider = await config.get("PROVIDER");
   const selected = await select({
-    message: "Select a provider and model:",
-    options: comboOptions,
+    message: `Select a provider for ${MODEL_NAME}:`,
+    options: PROVIDER_OPTIONS.map((provider) => ({
+      ...provider,
+      hint: currentProvider === provider.value ? "current" : provider.hint,
+    })),
+    initialValue: currentProvider,
   });
 
   if (isCancel(selected)) {
@@ -464,88 +472,23 @@ const interactiveProviderModelPicker = async (): Promise<void> => {
     process.exit(0);
   }
 
-  const [providerPart, modelPart] = selected.split("::");
-  const providerStr = providerPart ?? "";
-  let model: string = modelPart ?? "";
-
-  // Validate provider is a known ProviderType using the type guard
-  if (!isProviderType(providerStr)) {
-    return exitWithError(`Unknown provider: ${providerStr}`);
-  }
-  const provider = providerStr;
-
-  // Custom model escape hatch
-  if (model === CUSTOM_MODEL_SENTINEL) {
-    const customModel = await text({
-      message: `Enter a custom model id for ${provider}:`,
-      placeholder: "e.g. llama-3.1-8b-instant",
-      validate: (v) => {
-        const result = validateConfigValue("MODEL", v);
-        return result.valid ? undefined : result.error;
-      },
-    });
-
-    if (isCancel(customModel)) {
-      cancel("Cancelled");
-      process.exit(0);
-    }
-
-    model = customModel;
+  if (!isProviderType(selected)) {
+    return exitWithError(`Unknown provider: ${selected}`);
   }
 
-  // If provider is openai, optionally ask for a base URL
-  if (provider === "openai") {
-    const currentBaseUrl = await config.get("OPENAI_BASE_URL");
-    const baseUrlPrompt = await text({
-      message: "Enter OpenAI-compatible base URL (leave empty to keep current):",
-      placeholder: "e.g. http://localhost:11434/v1",
-      initialValue: currentBaseUrl,
-      validate: (v) => {
-        if (!v || !v.trim()) return undefined; // empty is fine (optional)
-        const result = validateConfigValue("OPENAI_BASE_URL", v);
-        return result.valid ? undefined : result.error;
-      },
-    });
-
-    if (isCancel(baseUrlPrompt)) {
-      cancel("Cancelled");
-      process.exit(0);
-    }
-
-    const baseUrl = baseUrlPrompt.trim();
-    if (baseUrl) {
-      await config.set("OPENAI_BASE_URL", baseUrl);
-      log.success(`Base URL set to: ${baseUrl}`);
-    }
-  }
-
-  const normalized = await applyProviderModel({ provider, model });
-  log.success(`Provider set to: ${normalized.provider}`);
-  log.success(`Model set to: ${normalized.model}`);
+  await config.set("PROVIDER", selected);
+  log.success(`Provider set to: ${selected}`);
+  log.info(`Model: ${MODEL_NAME}`);
 };
 
 // Interactive masked API-key entry (Step 6)
 const interactiveApiKeyEntry = async (): Promise<void> => {
   // Determine which provider is active (let user pick if they want)
   const currentProvider = await config.get("PROVIDER");
-  const providerChoices = [
-    { value: "groq", label: "Groq", hint: currentProvider === "groq" ? "current" : undefined },
-    {
-      value: "cerebras",
-      label: "Cerebras",
-      hint: currentProvider === "cerebras" ? "current" : undefined,
-    },
-    {
-      value: "google",
-      label: "Google",
-      hint: currentProvider === "google" ? "current" : undefined,
-    },
-    {
-      value: "openai",
-      label: "OpenAI / local",
-      hint: currentProvider === "openai" ? "current" : undefined,
-    },
-  ];
+  const providerChoices = PROVIDER_OPTIONS.map((provider) => ({
+    ...provider,
+    hint: currentProvider === provider.value ? "current" : provider.hint,
+  }));
 
   const chosenProvider = await select({
     message: "Which provider's API key do you want to set?",
@@ -682,16 +625,16 @@ const interactiveGeneralSettings = async (): Promise<void> => {
 const runInteractiveConfig = async (): Promise<void> => {
   intro(colorize(["bgWhite", "black"], " lazypr config "));
 
-  type MenuChoice = "provider_model" | "api_key" | "general_settings" | "view_config" | "exit";
+  type MenuChoice = "provider" | "api_key" | "general_settings" | "view_config" | "exit";
 
   while (true) {
     const action = await select<MenuChoice>({
       message: "What would you like to configure?",
       options: [
         {
-          value: "provider_model",
-          label: "Provider & model",
-          hint: "pick AI provider and model together",
+          value: "provider",
+          label: "Provider",
+          hint: `choose where ${MODEL_NAME} runs`,
         },
         { value: "api_key", label: "API key", hint: "enter masked API key for a provider" },
         {
@@ -712,8 +655,8 @@ const runInteractiveConfig = async (): Promise<void> => {
       break;
     }
 
-    if (action === "provider_model") {
-      await interactiveProviderModelPicker();
+    if (action === "provider") {
+      await interactiveProviderPicker();
     } else if (action === "api_key") {
       await interactiveApiKeyEntry();
     } else if (action === "general_settings") {
