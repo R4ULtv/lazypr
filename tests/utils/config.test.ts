@@ -2,7 +2,14 @@ import { afterEach, beforeEach, describe, expect, test } from "bun:test";
 import { readFile, stat, unlink, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { CONFIG_FILE, CONFIG_SCHEMA, config } from "../../utils/config";
+import {
+  CONFIG_FILE,
+  CONFIG_SCHEMA,
+  LOCALE_OPTIONS,
+  SUPPORTED_PROVIDERS,
+  config,
+  validateConfigValue,
+} from "../../utils/config";
 
 const TEST_CONFIG_FILE = join(tmpdir(), "lazypr-config-test.conf");
 
@@ -81,84 +88,11 @@ describe("CONFIG_SCHEMA", () => {
     });
   });
 
-  describe("GOOGLE_GENERATIVE_AI_API_KEY validation", () => {
-    test("should accept any non-empty API key", () => {
-      const result = CONFIG_SCHEMA.GOOGLE_GENERATIVE_AI_API_KEY.validate("AIzaSyTestKey123");
-      expect(result).toBe("AIzaSyTestKey123");
-    });
-
-    test("should return empty string for empty API key", () => {
-      const result = CONFIG_SCHEMA.GOOGLE_GENERATIVE_AI_API_KEY.validate("");
-      expect(result).toBe("");
-    });
-
-    test("should return empty string for whitespace-only API key", () => {
-      const result = CONFIG_SCHEMA.GOOGLE_GENERATIVE_AI_API_KEY.validate("   ");
-      expect(result).toBe("");
-    });
-
-    test("should trim whitespace from API key", () => {
-      const result = CONFIG_SCHEMA.GOOGLE_GENERATIVE_AI_API_KEY.validate("  AIzaSyTestKey123  ");
-      expect(result).toBe("AIzaSyTestKey123");
-    });
-  });
-
-  describe("OPENAI_API_KEY validation", () => {
-    test("should accept any non-empty API key", () => {
-      const result = CONFIG_SCHEMA.OPENAI_API_KEY.validate("sk-any-key-format");
-      expect(result).toBe("sk-any-key-format");
-    });
-
-    test("should return empty string for empty API key", () => {
-      const result = CONFIG_SCHEMA.OPENAI_API_KEY.validate("");
-      expect(result).toBe("");
-    });
-
-    test("should return empty string for whitespace-only API key", () => {
-      const result = CONFIG_SCHEMA.OPENAI_API_KEY.validate("   ");
-      expect(result).toBe("");
-    });
-
-    test("should trim whitespace from API key", () => {
-      const result = CONFIG_SCHEMA.OPENAI_API_KEY.validate("  sk-test-key  ");
-      expect(result).toBe("sk-test-key");
-    });
-  });
-
-  describe("OPENAI_BASE_URL validation", () => {
-    test("should accept valid URL", () => {
-      const result = CONFIG_SCHEMA.OPENAI_BASE_URL.validate("http://localhost:11434/v1");
-      expect(result).toBe("http://localhost:11434/v1");
-    });
-
-    test("should accept HTTPS URL", () => {
-      const result = CONFIG_SCHEMA.OPENAI_BASE_URL.validate("https://api.together.xyz/v1");
-      expect(result).toBe("https://api.together.xyz/v1");
-    });
-
-    test("should return empty string for empty URL", () => {
-      const result = CONFIG_SCHEMA.OPENAI_BASE_URL.validate("");
-      expect(result).toBe("");
-    });
-
-    test("should return empty string for whitespace-only URL", () => {
-      const result = CONFIG_SCHEMA.OPENAI_BASE_URL.validate("   ");
-      expect(result).toBe("");
-    });
-
-    test("should throw error for invalid URL format", () => {
-      expect(() => CONFIG_SCHEMA.OPENAI_BASE_URL.validate("not-a-valid-url")).toThrow(
-        "Invalid OPENAI_BASE_URL format",
-      );
-    });
-
-    test("should trim whitespace from URL", () => {
-      const result = CONFIG_SCHEMA.OPENAI_BASE_URL.validate("  http://localhost:1234/v1  ");
-      expect(result).toBe("http://localhost:1234/v1");
-    });
-  });
-
   describe("PROVIDER validation", () => {
+    test("keeps the supported provider list intentionally small", () => {
+      expect(SUPPORTED_PROVIDERS).toEqual(["groq", "cerebras"]);
+    });
+
     test("should accept 'groq' as valid provider", () => {
       const result = CONFIG_SCHEMA.PROVIDER.validate("groq");
       expect(result).toBe("groq");
@@ -169,16 +103,6 @@ describe("CONFIG_SCHEMA", () => {
       expect(result).toBe("cerebras");
     });
 
-    test("should accept 'openai' as valid provider", () => {
-      const result = CONFIG_SCHEMA.PROVIDER.validate("openai");
-      expect(result).toBe("openai");
-    });
-
-    test("should accept 'google' as valid provider", () => {
-      const result = CONFIG_SCHEMA.PROVIDER.validate("google");
-      expect(result).toBe("google");
-    });
-
     test("should default to 'groq' for empty value", () => {
       const result = CONFIG_SCHEMA.PROVIDER.validate("");
       expect(result).toBe("groq");
@@ -187,12 +111,19 @@ describe("CONFIG_SCHEMA", () => {
     test("should normalize provider to lowercase", () => {
       expect(CONFIG_SCHEMA.PROVIDER.validate("GROQ")).toBe("groq");
       expect(CONFIG_SCHEMA.PROVIDER.validate("CEREBRAS")).toBe("cerebras");
-      expect(CONFIG_SCHEMA.PROVIDER.validate("GOOGLE")).toBe("google");
-      expect(CONFIG_SCHEMA.PROVIDER.validate("OPENAI")).toBe("openai");
     });
 
     test("should throw error for invalid provider", () => {
       expect(() => CONFIG_SCHEMA.PROVIDER.validate("invalid")).toThrow("PROVIDER must be one of:");
+    });
+
+    test("should reject removed providers", () => {
+      expect(() => CONFIG_SCHEMA.PROVIDER.validate("google")).toThrow(
+        "PROVIDER must be one of: groq, cerebras",
+      );
+      expect(() => CONFIG_SCHEMA.PROVIDER.validate("openai")).toThrow(
+        "PROVIDER must be one of: groq, cerebras",
+      );
     });
   });
 
@@ -291,26 +222,6 @@ describe("CONFIG_SCHEMA", () => {
     test("should trim whitespace", () => {
       const result = CONFIG_SCHEMA.DEFAULT_BRANCH.validate("  develop  ");
       expect(result).toBe("develop");
-    });
-  });
-
-  describe("MODEL validation", () => {
-    test("should accept any model name", () => {
-      const models = ["llama-3.3-70b", "gpt-4", "claude-3-sonnet", "custom/model-name"];
-
-      models.forEach((model) => {
-        expect(() => CONFIG_SCHEMA.MODEL.validate(model)).not.toThrow();
-        expect(CONFIG_SCHEMA.MODEL.validate(model)).toBe(model);
-      });
-    });
-
-    test("should throw error for empty model", () => {
-      expect(() => CONFIG_SCHEMA.MODEL.validate("")).toThrow("MODEL cannot be empty");
-    });
-
-    test("should trim whitespace", () => {
-      const result = CONFIG_SCHEMA.MODEL.validate("  llama-3.3-70b  ");
-      expect(result).toBe("llama-3.3-70b");
     });
   });
 
@@ -471,6 +382,19 @@ describe("CONFIG_SCHEMA", () => {
   });
 });
 
+describe("validateConfigValue", () => {
+  test("returns normalized values and friendly validation errors", () => {
+    expect(validateConfigValue("LOCALE", "ES")).toEqual({ valid: true, normalized: "es" });
+    expect(validateConfigValue("LOCALE", "invalid").error).toContain("LOCALE must be one of");
+  });
+
+  test("accepts every locale exposed by the interactive picker", () => {
+    for (const locale of LOCALE_OPTIONS) {
+      expect(validateConfigValue("LOCALE", locale).valid).toBe(true);
+    }
+  });
+});
+
 describe("Config class", () => {
   describe("get()", () => {
     test("should return default value when key not in config", async () => {
@@ -589,7 +513,7 @@ LOCALE=es`;
       expect(allConfig.MAX_RETRIES).toBe("2");
       expect(allConfig.TIMEOUT).toBe("10000");
       expect(allConfig.DEFAULT_BRANCH).toBe("main");
-      expect(allConfig.MODEL).toBe("openai/gpt-oss-20b");
+      expect(allConfig.PROVIDER).toBe("groq");
     });
 
     test("should return empty string for GROQ_API_KEY when missing", async () => {

@@ -17,6 +17,24 @@ type ConfigSchemaValue = {
   validate: (v: string) => string;
 };
 
+export const SUPPORTED_PROVIDERS = ["groq", "cerebras"] as const;
+export type ProviderType = (typeof SUPPORTED_PROVIDERS)[number];
+export const LOCALE_OPTIONS = [
+  "en",
+  "es",
+  "pt",
+  "fr",
+  "de",
+  "it",
+  "ja",
+  "ko",
+  "zh",
+  "ru",
+  "nl",
+  "pl",
+  "tr",
+] as const;
+
 function isErrnoException(error: unknown): error is NodeJS.ErrnoException {
   return error instanceof Error && "code" in error;
 }
@@ -42,9 +60,8 @@ export const CONFIG_SCHEMA = {
     default: "groq",
     validate: (v: string) => {
       const provider = v?.trim().toLowerCase() || "groq";
-      const allowed = ["groq", "cerebras", "google", "openai"];
-      if (!allowed.includes(provider)) {
-        throw new Error(`PROVIDER must be one of: ${allowed.join(", ")}`);
+      if (!SUPPORTED_PROVIDERS.some((supported) => supported === provider)) {
+        throw new Error(`PROVIDER must be one of: ${SUPPORTED_PROVIDERS.join(", ")}`);
       }
       return provider;
     },
@@ -67,56 +84,12 @@ export const CONFIG_SCHEMA = {
       return v.trim();
     },
   },
-  GOOGLE_GENERATIVE_AI_API_KEY: {
-    required: false,
-    validate: (v: string) => {
-      if (!v?.trim()) return "";
-      return v.trim();
-    },
-  },
-  OPENAI_API_KEY: {
-    required: false,
-    validate: (v: string) => {
-      if (!v?.trim()) return "";
-      // Allow any non-empty string for API keys (local providers may use custom formats)
-      return v.trim();
-    },
-  },
-  OPENAI_BASE_URL: {
-    required: false,
-    validate: (v: string) => {
-      if (!v?.trim()) return "";
-      const url = v.trim();
-      // Validate URL format
-      if (!URL.canParse(url)) {
-        throw new Error(
-          "Invalid OPENAI_BASE_URL format. Must be a valid URL (e.g., http://localhost:11434/v1)",
-        );
-      }
-      return url;
-    },
-  },
   LOCALE: {
     default: "en",
     validate: (v: string) => {
       const locale = v?.trim().toLowerCase() || "en";
-      const allowed = [
-        "en",
-        "es",
-        "pt",
-        "fr",
-        "de",
-        "it",
-        "ja",
-        "ko",
-        "zh",
-        "ru",
-        "nl",
-        "pl",
-        "tr",
-      ];
-      if (!allowed.includes(locale)) {
-        throw new Error(`LOCALE must be one of: ${allowed.join(", ")}`);
+      if (!LOCALE_OPTIONS.some((supported) => supported === locale)) {
+        throw new Error(`LOCALE must be one of: ${LOCALE_OPTIONS.join(", ")}`);
       }
       return locale;
     },
@@ -143,14 +116,6 @@ export const CONFIG_SCHEMA = {
     validate: (v: string) => {
       const branch = v?.trim() || "main";
       return branch;
-    },
-  },
-  MODEL: {
-    default: "openai/gpt-oss-20b",
-    validate: (v: string) => {
-      const model = v?.trim();
-      if (!model) throw new Error("MODEL cannot be empty");
-      return model;
     },
   },
   FILTER_COMMITS: {
@@ -205,18 +170,30 @@ export const CONFIG_SCHEMA = {
 } as const satisfies Record<string, ConfigSchemaValue>;
 
 export type ConfigKey = keyof typeof CONFIG_SCHEMA;
+
+export function validateConfigValue(
+  key: ConfigKey,
+  value: string | undefined,
+): { valid: boolean; error?: string; normalized?: string } {
+  try {
+    const normalized = CONFIG_SCHEMA[key].validate(value ?? "");
+    return { valid: true, normalized };
+  } catch (error) {
+    return {
+      valid: false,
+      error: error instanceof Error ? error.message : "Invalid value",
+    };
+  }
+}
+
 export const CONFIG_KEYS = [
   "PROVIDER",
   "GROQ_API_KEY",
   "CEREBRAS_API_KEY",
-  "GOOGLE_GENERATIVE_AI_API_KEY",
-  "OPENAI_API_KEY",
-  "OPENAI_BASE_URL",
   "LOCALE",
   "MAX_RETRIES",
   "TIMEOUT",
   "DEFAULT_BRANCH",
-  "MODEL",
   "FILTER_COMMITS",
   "CONTEXT",
   "CUSTOM_LABELS",
