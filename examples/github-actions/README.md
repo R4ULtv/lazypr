@@ -10,7 +10,7 @@ Go to your repository **Settings** → **Secrets and variables** → **Actions**
 
 Add: `GROQ_API_KEY` with your API key from [console.groq.com](https://console.groq.com/keys)
 
-You can also use `GOOGLE_GENERATIVE_AI_API_KEY` from [Google AI Studio](https://aistudio.google.com/app/apikey) or `CEREBRAS_API_KEY` from [Cerebras](https://cloud.cerebras.ai/).
+You can instead use `CEREBRAS_API_KEY` from [Cerebras](https://cloud.cerebras.ai/).
 
 ### 2. Choose a Workflow
 
@@ -59,7 +59,7 @@ git push
 
 ---
 
-### Multi-Provider Fallback ([multi-provider-fallback.yml](./multi-provider-fallback.yml))
+### Provider Fallback ([provider-fallback.yml](./provider-fallback.yml))
 
 **What it does:** Tries Groq first, falls back to Cerebras if it fails.
 
@@ -70,7 +70,7 @@ git push
 
 **Extra setup:** Also add `CEREBRAS_API_KEY` to repository secrets.
 
-**Copy to:** `.github/workflows/multi-provider-fallback.yml`
+**Copy to:** `.github/workflows/provider-fallback.yml`
 
 ---
 
@@ -99,24 +99,15 @@ lazypr main # Change to your branch
 
 ### Use Different Provider
 
-Change `--provider` flag:
+Write the selected provider and its key to the runner's config:
 
 ```yaml
 env:
   CEREBRAS_API_KEY: ${{ secrets.CEREBRAS_API_KEY }}
-run: lazypr --provider cerebras
-```
-
-Or with Google Gemini:
-
-```yaml
-env:
-  GOOGLE_GENERATIVE_AI_API_KEY: ${{ secrets.GOOGLE_GENERATIVE_AI_API_KEY }}
 run: |
   cat <<EOF > ~/.lazypr
-  GOOGLE_GENERATIVE_AI_API_KEY=${GOOGLE_GENERATIVE_AI_API_KEY}
-  PROVIDER=google
-  MODEL=gemini-3.5-flash
+  CEREBRAS_API_KEY=${CEREBRAS_API_KEY}
+  PROVIDER=cerebras
   EOF
   lazypr
 ```
@@ -219,7 +210,7 @@ Then run from **Actions** tab → Select workflow → **Run workflow**
 
 1. **Start simple** - Begin with `auto-update-pr.yml`
 2. **Test first** - Try in a test repository before production
-3. **Use fallback** - Add `multi-provider-fallback.yml` for reliability
+3. **Use fallback** - Add `provider-fallback.yml` for reliability
 4. **Monitor costs** - Check your API usage regularly
 5. **Cache when possible** - Avoid regenerating if commits haven't changed
 

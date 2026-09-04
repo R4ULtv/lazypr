@@ -7,7 +7,12 @@
 
 Generate clean, consistent pull request titles and descriptions from your Git history with AI.
 
-lazypr reads the commits on your current branch, compares them with a target branch, and generates a ready-to-review PR title, description, and labels. It supports several AI providers, existing GitHub PR templates, multiple output languages, and a short `lzp` command alias.
+> [!IMPORTANT]
+> **lazypr 2.0 is a breaking release.** OpenAI, Google Gemini, custom endpoints, and custom models are no longer supported. lazypr now focuses exclusively on Qwen 3.8 27B, served as [`qwen/qwen3.8-27b`](https://console.groq.com/docs/model/qwen/qwen3.8-27b) by Groq and [`qwen-3.8-27b`](https://inference-docs.cerebras.ai/models/qwen-3.8-27b) by Cerebras. Keeping one model lets the project tune and validate its output consistently instead of maintaining provider-specific behavior.
+>
+> If you need the previous broader provider selection or custom-model behavior, install the latest legacy release with `npm install -g lazypr@1`. The v1 release line is no longer maintained and will not receive further updates.
+
+lazypr reads the commits on your current branch, compares them with a target branch, and generates a ready-to-review PR title, description, and labels. It uses Qwen 3.8 27B through Groq or Cerebras, and supports existing GitHub PR templates, multiple output languages, and a short `lzp` command alias.
 
 ## Contents
 
@@ -27,7 +32,9 @@ lazypr reads the commits on your current branch, compares them with a target bra
 
 ## Features
 
-- Groq, Cerebras, Google Gemini, OpenAI, and OpenAI-compatible APIs
+- One carefully tuned model: Qwen 3.8 27B
+- Direct Groq and Cerebras API support
+- Qwen-focused prompting with strict structured output and local Zod validation
 - Interactive configuration with masked API-key input
 - Smart filtering for merge, dependency-update, and formatting-only commits
 - Support for existing GitHub pull request templates
@@ -42,7 +49,7 @@ lazypr reads the commits on your current branch, compares them with a target bra
 - [Node.js](https://nodejs.org) 22 or newer
 - Git
 - A repository with at least one commit on the current branch that is not on the target branch
-- An API key for the selected hosted AI provider; local OpenAI-compatible endpoints may not require one
+- An API key for Groq or Cerebras
 
 The GitHub CLI is only required when using the `--gh` option.
 
@@ -70,7 +77,7 @@ lzp --version
    lazypr config
    ```
 
-2. Choose a provider and model, then add the provider's API key. API keys entered through the interactive menu are masked and do not appear in your shell history.
+2. Choose Groq or Cerebras, then add the provider's API key. API keys entered through the interactive menu are masked and do not appear in your shell history.
 
 3. From a feature branch, generate a PR against `main`:
 
@@ -93,7 +100,7 @@ For a command such as `lazypr main`, lazypr:
 1. Finds commits in `main..HEAD`.
 2. Removes common noise commits unless filtering is disabled.
 3. Loads an optional PR template and any configured generation context.
-4. Sends the commit messages and guidance to the selected AI model.
+4. Sends the commit messages and guidance to Qwen 3.8 27B through the selected provider.
 5. Validates and displays the generated title, description, and suggested labels.
 6. Offers to copy the result, or a `gh pr create` command when `--gh` is used.
 
@@ -142,7 +149,7 @@ lazypr main --gh
 
 ## Configuration
 
-Run `lazypr config` for the recommended interactive setup. The menu lets you edit the provider and model together, enter a masked API key, change general settings, and inspect the current configuration.
+Run `lazypr config` for the recommended interactive setup. The menu lets you choose the provider, enter a masked API key, change general settings, and inspect the current configuration.
 
 For scripts and dotfiles, use the configuration subcommands:
 
@@ -165,22 +172,18 @@ Configuration is stored in `~/.lazypr` (for example, `C:\Users\YourName\.lazypr`
 
 ### Settings reference
 
-| Key                            | Default              | Description                                            |
-| ------------------------------ | -------------------- | ------------------------------------------------------ |
-| `PROVIDER`                     | `groq`               | `groq`, `cerebras`, `google`, or `openai`              |
-| `MODEL`                        | `openai/gpt-oss-20b` | Model ID sent to the selected provider                 |
-| `GROQ_API_KEY`                 | empty                | API key used by Groq                                   |
-| `CEREBRAS_API_KEY`             | empty                | API key used by Cerebras                               |
-| `GOOGLE_GENERATIVE_AI_API_KEY` | empty                | API key used by Google Gemini                          |
-| `OPENAI_API_KEY`               | empty                | API key used by OpenAI or a compatible endpoint        |
-| `OPENAI_BASE_URL`              | empty                | Base URL for an OpenAI-compatible API                  |
-| `DEFAULT_BRANCH`               | `main`               | Target branch used when no target argument is provided |
-| `LOCALE`                       | `en`                 | Language used for generated PR content                 |
-| `FILTER_COMMITS`               | `true`               | Whether smart commit filtering is enabled              |
-| `CONTEXT`                      | empty                | Persistent generation guidance, up to 200 characters   |
-| `CUSTOM_LABELS`                | empty                | Comma-separated labels the model may suggest           |
-| `MAX_RETRIES`                  | `2`                  | Number of model request retries; may be `0`            |
-| `TIMEOUT`                      | `10000`              | Request timeout in milliseconds                        |
+| Key                | Default | Description                                            |
+| ------------------ | ------- | ------------------------------------------------------ |
+| `PROVIDER`         | `groq`  | `groq` or `cerebras`                                   |
+| `GROQ_API_KEY`     | empty   | API key used by Groq                                   |
+| `CEREBRAS_API_KEY` | empty   | API key used by Cerebras                               |
+| `DEFAULT_BRANCH`   | `main`  | Target branch used when no target argument is provided |
+| `LOCALE`           | `en`    | Language used for generated PR content                 |
+| `FILTER_COMMITS`   | `true`  | Whether smart commit filtering is enabled              |
+| `CONTEXT`          | empty   | Persistent generation guidance, up to 200 characters   |
+| `CUSTOM_LABELS`    | empty   | Comma-separated labels the model may suggest           |
+| `MAX_RETRIES`      | `2`     | Number of request retries; may be `0`                  |
+| `TIMEOUT`          | `10000` | Per-request timeout in milliseconds                    |
 
 Supported locale codes are `en`, `es`, `pt`, `fr`, `de`, `it`, `ja`, `ko`, `zh`, `ru`, `nl`, `pl`, and `tr`.
 
@@ -188,33 +191,20 @@ Custom labels must start with a letter and may contain letters, numbers, hyphens
 
 ## AI providers
 
-| Provider      | `PROVIDER` | API-key setting                | Get a key                                                  |
-| ------------- | ---------- | ------------------------------ | ---------------------------------------------------------- |
-| Groq          | `groq`     | `GROQ_API_KEY`                 | [Groq Console](https://console.groq.com/keys)              |
-| Cerebras      | `cerebras` | `CEREBRAS_API_KEY`             | [Cerebras Cloud](https://cloud.cerebras.ai/)               |
-| Google Gemini | `google`   | `GOOGLE_GENERATIVE_AI_API_KEY` | [Google AI Studio](https://aistudio.google.com/app/apikey) |
-| OpenAI        | `openai`   | `OPENAI_API_KEY`               | [OpenAI API keys](https://platform.openai.com/api-keys)    |
+| Provider | `PROVIDER` | API model ID       | Advertised throughput | API-key setting    | Get a key                                     |
+| -------- | ---------- | ------------------ | --------------------- | ------------------ | --------------------------------------------- |
+| Groq     | `groq`     | `qwen/qwen3.8-27b` | ~450+ tokens/s        | `GROQ_API_KEY`     | [Groq Console](https://console.groq.com/keys) |
+| Cerebras | `cerebras` | `qwen-3.8-27b`     | ~1,500 tokens/s       | `CEREBRAS_API_KEY` | [Cerebras Cloud](https://cloud.cerebras.ai/)  |
 
-The interactive menu includes a small curated model list and a custom model option. Model catalogs change, so any non-empty model ID can also be configured directly:
+Both providers run Qwen 3.8 27B. Their API model IDs differ, so lazypr maps the selected provider to the correct ID internally while keeping generation behavior and prompt tuning consistent.
+
+Throughput figures are approximate provider claims, not lazypr benchmarks. Groq publishes ~450+ tokens/s for this model, while Cerebras publishes ~1,500 tokens/s. Actual speed depends on workload, service load, and network latency.
+
+To switch providers:
 
 ```bash
 lazypr config set PROVIDER=cerebras
-lazypr config set MODEL=gpt-oss-120b
 ```
-
-### OpenAI-compatible and local APIs
-
-Services such as Ollama, LM Studio, and other OpenAI-compatible APIs can be used through the `openai` provider:
-
-```bash
-lazypr config set PROVIDER=openai
-lazypr config set OPENAI_BASE_URL=http://localhost:11434/v1
-lazypr config set MODEL=llama3.2
-```
-
-`OPENAI_API_KEY` is optional for the `openai` provider so local endpoints that do not authenticate can work. Set it if your endpoint requires authentication.
-
-The selected model must support structured object output. If a custom model repeatedly returns invalid output, try a model with reliable JSON or structured-output support.
 
 ## PR templates
 
@@ -304,14 +294,12 @@ lazypr config list
 
 ### Requests time out or fail repeatedly
 
-Increase the timeout or retry count, then confirm that the configured provider, model, endpoint, and API key belong together:
+Increase the timeout or retry count, then confirm that the selected provider and API key belong together:
 
 ```bash
 lazypr config set TIMEOUT=30000
 lazypr config set MAX_RETRIES=4
 ```
-
-For local endpoints, also confirm that the server is running and that `OPENAI_BASE_URL` includes the expected `/v1` path.
 
 ### Clipboard access fails
 

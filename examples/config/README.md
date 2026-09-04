@@ -1,447 +1,75 @@
 # Configuration Examples
 
-This directory contains example configuration files for lazypr.
+lazypr stores configuration in `~/.lazypr` as `KEY=value` lines. Use `lazypr config` for guided setup; it masks API-key input and keeps secrets out of shell history.
 
-## Configuration File Location
+## Included examples
 
-LazyPR reads configuration from `~/.lazypr` in your home directory.
+- [`minimal.conf`](./minimal.conf): the smallest Groq setup
+- [`team.conf`](./team.conf): shared generation settings for a team
+- [`provider-fallback.conf`](./provider-fallback.conf): Groq and Cerebras keys ready for manual fallback
 
-```bash
-# View your config file location
-echo ~/.lazypr
-
-# Linux/macOS
-~/.lazypr
-
-# Windows
-C:\Users\YourUsername\.lazypr
-```
-
-## Available Configurations
-
-### 1. Minimal Configuration ([minimal.conf](./minimal.conf))
-
-The simplest setup to get started.
-
-**Contains:**
-
-- API key only
-- Uses all default settings
-
-**Best for:**
-
-- First-time users
-- Quick setup
-- Personal projects
-
-**Setup:**
+Copy an example to your home directory, then replace placeholder API keys:
 
 ```bash
 cp examples/config/minimal.conf ~/.lazypr
-# Edit ~/.lazypr and add your API key
-```
-
-### 2. Team Configuration ([team.conf](./team.conf))
-
-Standardized configuration for team environments.
-
-**Contains:**
-
-- Groq, Cerebras, and Google API keys
-- Team defaults (branch, locale, filtering)
-- Standard context message
-- Reliability settings (retries, timeout)
-
-**Best for:**
-
-- Team environments
-- Consistent PR standards
-- Shared conventions
-
-**Setup:**
-
-```bash
-cp examples/config/team.conf ~/.lazypr
-# Edit ~/.lazypr and add your API keys
-# Share this config template with your team
-```
-
-### 3. Multi-Provider Configuration ([multi-provider.conf](./multi-provider.conf))
-
-Configuration supporting multiple AI providers with easy switching.
-
-**Contains:**
-
-- Multiple provider API keys
-- Provider-specific model settings
-- Usage notes for switching
-- Fallback strategy guidance
-
-**Best for:**
-
-- Production environments
-- High-availability requirements
-- Cost optimization
-- Rate limit management
-
-**Setup:**
-
-```bash
-cp examples/config/multi-provider.conf ~/.lazypr
-# Edit ~/.lazypr and add your API keys
-```
-
-## Configuration Management
-
-### Interactive flow (recommended for setup)
-
-```bash
-# Open the interactive config menu
-lazypr config
-```
-
-The interactive menu lets you configure everything without touching the command line directly:
-
-- **Provider & model** — pick both with a single combined selector; a "Custom / local model…" escape hatch keeps free-form model IDs supported
-- **API key** — entered with masked input so secrets never appear in terminal output or shell history
-- **General settings** — locale, default branch, context, commit filtering, custom labels, retries, timeout
-- **View current config** — shows all settings with secrets masked
-
-### Scriptable commands (CI and dotfiles)
-
-```bash
-# View all configuration
-lazypr config list
-
-# Set a value
-lazypr config set PROVIDER=cerebras
-
-# Get a specific value
-lazypr config get PROVIDER
-
-# Remove a value (revert to default)
-lazypr config remove PROVIDER
-```
-
-> **Note:** `lazypr config set` shows API keys in shell history. Use the interactive flow (`lazypr config`) for masked key entry.
-
-### Manually Editing
-
-```bash
-# Open config file in your editor
-vim ~/.lazypr
-nano ~/.lazypr
-code ~/.lazypr
-```
-
-Config file format:
-
-```
-KEY=value
-ANOTHER_KEY=another value
-```
-
-## Configuration Keys
-
-### Required
-
-| Key                                                                   | Description             | Example   |
-| --------------------------------------------------------------------- | ----------------------- | --------- |
-| `GROQ_API_KEY`, `CEREBRAS_API_KEY`, or `GOOGLE_GENERATIVE_AI_API_KEY` | API key for AI provider | `gsk_...` |
-
-### Provider Settings
-
-| Key        | Default              | Description        | Example                                |
-| ---------- | -------------------- | ------------------ | -------------------------------------- |
-| `PROVIDER` | `groq`               | AI provider to use | `groq`, `cerebras`, `google`, `openai` |
-| `MODEL`    | `openai/gpt-oss-20b` | Model to use       | `openai/gpt-oss-120b`                  |
-
-### Git Settings
-
-| Key              | Default  | Description           | Example                     |
-| ---------------- | -------- | --------------------- | --------------------------- |
-| `DEFAULT_BRANCH` | `master` | Default target branch | `main`, `develop`, `master` |
-
-### Generation Settings
-
-| Key              | Default   | Description                 | Example                |
-| ---------------- | --------- | --------------------------- | ---------------------- |
-| `LOCALE`         | `en`      | Language for PR description | `en`, `es`, `fr`, `ja` |
-| `FILTER_COMMITS` | `true`    | Filter out noise commits    | `true`, `false`        |
-| `CONTEXT`        | _(empty)_ | Additional context for AI   | `Security fix`         |
-
-### Advanced Settings
-
-| Key           | Default | Description              | Example |
-| ------------- | ------- | ------------------------ | ------- |
-| `MAX_RETRIES` | `3`     | Number of retry attempts | `5`     |
-| `TIMEOUT`     | `30000` | Timeout in milliseconds  | `60000` |
-
-## Configuration Validation
-
-LazyPR validates configuration values when you set them:
-
-```bash
-# Valid
-lazypr config set PROVIDER groq
-# ✓ Set PROVIDER=groq
-
-# Invalid
-lazypr config set PROVIDER invalid
-# ✗ Error: PROVIDER must be one of: groq, cerebras, google, openai
-```
-
-### Validation Rules
-
-- `PROVIDER`: Must be `groq`, `cerebras`, `google`, or `openai`
-- `MODEL`: Any string (provider-specific validation)
-- `DEFAULT_BRANCH`: Any string
-- `LOCALE`: Any string (2-letter codes recommended)
-- `FILTER_COMMITS`: Must be `true` or `false`
-- `CONTEXT`: Any string
-- `MAX_RETRIES`: Must be a positive number
-- `TIMEOUT`: Must be a positive number (milliseconds)
-
-## Environment Variables
-
-You can override config values with environment variables:
-
-```bash
-# Override provider
-GROQ_API_KEY=xxx lazypr
-
-# Override multiple values
-PROVIDER=cerebras MODEL=gpt-oss-120b lazypr
-```
-
-Environment variables take precedence over config file values.
-
-## Team Configuration Best Practices
-
-### 1. Share Configuration Template
-
-Create a team config template in your repository:
-
-```bash
-# In your repo
-mkdir -p .github/lazypr
-cp ~/.lazypr .github/lazypr/team-config.example
-
-# Remove sensitive data
-sed -i 's/API_KEY=.*/API_KEY=your-api-key-here/g' .github/lazypr/team-config.example
-
-# Commit to repo
-git add .github/lazypr/team-config.example
-git commit -m "Add lazypr team configuration template"
-```
-
-### 2. Document Team Standards
-
-Create a team document explaining:
-
-- Which provider to use (Groq/Cerebras/Google/OpenAI-compatible)
-- Default branch naming convention
-- Commit filtering preferences
-- When to use different models
-
-Example `LAZYPR.md`:
-
-```markdown
-# Team LazyPR Standards
-
-## Configuration
-
-- Provider: Groq (free tier)
-- Model: openai/gpt-oss-20b
-- Default branch: main
-- Filtering: Enabled
-
-## When to Use
-
-- All PRs should have AI-generated descriptions
-- Run `lazypr` before creating PR
-- Update PR description when adding significant commits
-
-## Setup
-
-1. Copy team config: `cp .github/lazypr/team-config.example ~/.lazypr`
-2. Add your API key: `lazypr config set GROQ_API_KEY "your-key"`
-3. Verify: `lazypr config list`
-```
-
-### 3. Use CI/CD for Consistency
-
-Add GitHub Actions to auto-generate PR descriptions:
-
-- See [github-actions examples](../github-actions/)
-- Ensures all PRs have consistent descriptions
-- Reduces manual work
-
-### 4. Personal Overrides
-
-Team members can override settings locally:
-
-```bash
-# Team uses English, but I prefer Spanish
-lazypr config set LOCALE es
-
-# Team uses Groq, but I prefer Cerebras
-lazypr config set PROVIDER cerebras
-```
-
-## Configuration Migrations
-
-### From v1.x to v2.x
-
-If configuration format changes in future versions:
-
-```bash
-# Backup old config
-cp ~/.lazypr ~/.lazypr.backup
-
-# Update to new format (example)
-# Old: API_KEY=xxx
-# New: GROQ_API_KEY=xxx
-sed -i 's/API_KEY=/GROQ_API_KEY=/g' ~/.lazypr
-```
-
-## Troubleshooting
-
-### Config Not Found
-
-```bash
-# Check if config file exists
-ls -la ~/.lazypr
-
-# Create if missing
-touch ~/.lazypr
-lazypr config set GROQ_API_KEY "your-key"
-```
-
-### Invalid Configuration
-
-```bash
-# Validate all settings
-lazypr config list
-
-# Reset to defaults
-rm ~/.lazypr
-lazypr config set GROQ_API_KEY "your-key"
-```
-
-### Permissions Issues
-
-```bash
-# Fix permissions (Unix/Linux/macOS)
-chmod 600 ~/.lazypr  # Read/write for owner only
-```
-
-### Config Not Loading
-
-```bash
-# Check config file format
-cat ~/.lazypr
-
-# Ensure proper format (KEY=value)
-# No quotes needed:
-PROVIDER=groq  # ✓
-PROVIDER="groq"  # ✓ (but quotes are kept in value)
-
-# Check for BOM or encoding issues
-file ~/.lazypr
-# Should be: ASCII text or UTF-8 text
-```
-
-## Advanced Patterns
-
-### Per-Project Configuration
-
-Use environment variables in your project:
-
-```bash
-# .env file in your project
-GROQ_API_KEY=project-specific-key
-PROVIDER=cerebras
-MODEL=gpt-oss-120b
-
-# Load and run
-source .env && lazypr
-```
-
-### Conditional Configuration
-
-```bash
-# Different config based on branch
-if [[ $(git branch --show-current) == "main" ]]; then
-  lazypr --context "Production release"
-else
-  lazypr --context "Development changes"
-fi
-```
-
-### Configuration Scripts
-
-```bash
-#!/bin/bash
-# setup-lazypr.sh
-
-echo "Setting up lazypr configuration..."
-
-# Prompt for API key
-read -p "Enter your Groq API key: " api_key
-
-# Write config
-cat > ~/.lazypr << EOF
-GROQ_API_KEY=$api_key
-PROVIDER=groq
-MODEL=openai/gpt-oss-20b
-DEFAULT_BRANCH=main
-FILTER_COMMITS=true
-EOF
-
-echo "✓ Configuration saved to ~/.lazypr"
-lazypr config list
-```
-
-## Security Considerations
-
-### Protect Your API Keys
-
-```bash
-# Secure config file permissions
 chmod 600 ~/.lazypr
-
-# Never commit config with API keys
-echo ".lazypr" >> .gitignore
-
-# Use environment variables in CI/CD
-# Don't store API keys in config files in repos
 ```
 
-### Rotate API Keys
+## Commands
 
 ```bash
-# Update API key
-lazypr config set GROQ_API_KEY "new-key"
-
-# Or edit directly
-vim ~/.lazypr
-```
-
-### Audit Configuration
-
-```bash
-# Review current config
+lazypr config
 lazypr config list
-
-# Check for leaked keys
-grep -r "GROQ_API_KEY" ~/.bash_history  # Should return nothing
+lazypr config get PROVIDER
+lazypr config set PROVIDER=cerebras
+lazypr config remove CONTEXT
 ```
 
-## Getting Help
+The `set` command expects one `KEY=VALUE` argument. Quote values containing spaces:
 
-For configuration issues:
+```bash
+lazypr config set "CONTEXT=Keep the description concise"
+```
 
-- Check main [README.md](../../README.md)
-- Run `lazypr config --help`
-- See [CLI examples](../cli/)
+## Supported settings
+
+| Key                | Default | Purpose                                     |
+| ------------------ | ------- | ------------------------------------------- |
+| `PROVIDER`         | `groq`  | `groq` or `cerebras`                        |
+| `GROQ_API_KEY`     | empty   | Groq authentication                         |
+| `CEREBRAS_API_KEY` | empty   | Cerebras authentication                     |
+| `DEFAULT_BRANCH`   | `main`  | Default comparison target                   |
+| `LOCALE`           | `en`    | Generated title and description language    |
+| `FILTER_COMMITS`   | `true`  | Remove common noise commits                 |
+| `CONTEXT`          | empty   | Persistent guidance, at most 200 characters |
+| `CUSTOM_LABELS`    | empty   | Extra comma-separated labels                |
+| `MAX_RETRIES`      | `2`     | Additional request attempts                 |
+| `TIMEOUT`          | `10000` | Per-request timeout in milliseconds         |
+
+The model is not configurable: both providers use Qwen 3.8 27B. lazypr maps it to `qwen/qwen3.8-27b` on Groq and `qwen-3.8-27b` on Cerebras.
+
+## Switching providers
+
+Store both keys once:
+
+```bash
+lazypr config set GROQ_API_KEY=your-groq-key
+lazypr config set CEREBRAS_API_KEY=your-cerebras-key
+```
+
+Then switch without changing prompts or model settings:
+
+```bash
+lazypr config set PROVIDER=groq
+lazypr config set PROVIDER=cerebras
+```
+
+## Validation
+
+- `PROVIDER` accepts only `groq` or `cerebras`.
+- `FILTER_COMMITS` accepts only `true` or `false`.
+- `MAX_RETRIES` and `TIMEOUT` accept non-negative integers.
+- `LOCALE` accepts `en`, `es`, `pt`, `fr`, `de`, `it`, `ja`, `ko`, `zh`, `ru`, `nl`, `pl`, or `tr`.
+- Custom labels must begin with a letter and contain only letters, numbers, hyphens, or underscores.
+
+Run `lazypr config list` to inspect normalized values. API keys are masked in the output.

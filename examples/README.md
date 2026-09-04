@@ -24,7 +24,6 @@ lazypr --template feature
 
 # Different AI provider
 lazypr config set PROVIDER=cerebras
-lazypr config set MODEL=gpt-oss-120b
 
 # Add context
 lazypr --context "Security fix - review carefully"
@@ -55,7 +54,7 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          node-version: "20"
+          node-version: "22"
 
       - run: npm install -g lazypr
 
@@ -78,27 +77,27 @@ See [github-actions/](./github-actions/) for more workflows.
 
 ### CLI Examples
 
-| Example                                       | Description                               |
-| --------------------------------------------- | ----------------------------------------- |
-| [Basic Usage](./cli/basic-usage.md)           | Simple commands and common patterns       |
-| [Advanced Options](./cli/advanced-options.md) | Filters, templates, providers, and models |
+| Example                                       | Description                                            |
+| --------------------------------------------- | ------------------------------------------------------ |
+| [Basic Usage](./cli/basic-usage.md)           | Simple commands and common patterns                    |
+| [Advanced Options](./cli/advanced-options.md) | Filters, templates, provider, and reliability settings |
 
 ### GitHub Actions Examples
 
-| Workflow                                                                | Description                                |
-| ----------------------------------------------------------------------- | ------------------------------------------ |
-| [Auto-Update PR](./github-actions/auto-update-pr.yml)                   | Update PR on new commits                   |
-| [Auto-Create PR](./github-actions/auto-create-pr.yml)                   | Create PR when pushing to feature branches |
-| [Multi-Provider Fallback](./github-actions/multi-provider-fallback.yml) | Groq with Cerebras fallback                |
-| [PR Validation](./github-actions/pr-validation.yml)                     | Validate and suggest improvements          |
+| Workflow                                                    | Description                                   |
+| ----------------------------------------------------------- | --------------------------------------------- |
+| [Auto-Update PR](./github-actions/auto-update-pr.yml)       | Update PR on new commits                      |
+| [Auto-Create PR](./github-actions/auto-create-pr.yml)       | Create PR when pushing to feature branches    |
+| [Provider Fallback](./github-actions/provider-fallback.yml) | Run the fixed model through a backup provider |
+| [PR Validation](./github-actions/pr-validation.yml)         | Validate and suggest improvements             |
 
 ### Configuration Examples
 
-| Config                                         | Description                 |
-| ---------------------------------------------- | --------------------------- |
-| [Minimal](./config/minimal.conf)               | Bare minimum to get started |
-| [Team](./config/team.conf)                     | Shared team standards       |
-| [Multi-Provider](./config/multi-provider.conf) | Multiple AI provider setup  |
+| Config                                               | Description                      |
+| ---------------------------------------------------- | -------------------------------- |
+| [Minimal](./config/minimal.conf)                     | Bare minimum to get started      |
+| [Team](./config/team.conf)                           | Shared team standards            |
+| [Provider Fallback](./config/provider-fallback.conf) | Groq and Cerebras fallback setup |
 
 ## Getting started
 
@@ -114,7 +113,6 @@ Sign up for a free API key:
 
 - **Groq:** [console.groq.com](https://console.groq.com/keys)
 - **Cerebras:** [cloud.cerebras.ai](https://cloud.cerebras.ai)
-- **Google Gemini:** [aistudio.google.com/app/apikey](https://aistudio.google.com/app/apikey)
 
 ### 3. Configure
 
@@ -159,13 +157,13 @@ lazypr --gh               # Get gh pr create command
 
 **Automated PR creation:** Use [auto-create workflow](./github-actions/auto-create-pr.yml) for feature branches
 
-**Multi-provider reliability:** Implement [fallback strategy](./github-actions/multi-provider-fallback.yml) for production
+**Provider reliability:** Implement the [fallback strategy](./github-actions/provider-fallback.yml) for production
 
 ## Prerequisites
 
 - Node.js >= 22
 - Git repository
-- API key for Groq, Cerebras, Google Gemini, or OpenAI-compatible providers
+- API key for Groq or Cerebras
 
 ## Need help?
 

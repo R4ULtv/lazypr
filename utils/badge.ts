@@ -1,14 +1,14 @@
 import { note } from "@clack/prompts";
 import { colorize } from "./colors";
+import { MODEL_NAME, type ProviderType } from "./provider";
 
 interface BadgeConfig {
-  provider: string;
+  provider: ProviderType;
   smartFilter: boolean;
   locale: string;
   template?: string;
   usage: boolean;
   ghCli: boolean;
-  model: string;
   context?: string;
 }
 
@@ -31,8 +31,9 @@ function formatBadgeItem(label: string, value: string | boolean): string {
 export function displayConfigBadge(config: BadgeConfig): void {
   const items: string[] = [];
 
-  // Provider + Model (always shown)
-  items.push(formatBadgeItem("Model", `${config.provider}/${config.model}`));
+  // Provider and fixed model (always shown)
+  items.push(formatBadgeItem("Provider", config.provider));
+  items.push(formatBadgeItem("Model", MODEL_NAME));
 
   // Locale (always shown)
   items.push(formatBadgeItem("Locale", config.locale.toUpperCase()));

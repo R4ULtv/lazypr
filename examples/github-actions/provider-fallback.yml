@@ -1,11 +1,11 @@
-# Multi-Provider Fallback
+# Provider Fallback
 #
-# Tries Groq first, falls back to Cerebras if it fails.
+# Tries the fixed Qwen model through Groq first, then Cerebras if Groq fails.
 #
 # Setup:
 # 1. Add GROQ_API_KEY to repository secrets
 # 2. Add CEREBRAS_API_KEY to repository secrets
-# 3. Copy this file to .github/workflows/multi-provider-fallback.yml
+# 3. Copy this file to .github/workflows/provider-fallback.yml
 
 name: Update PR with Fallback
 
@@ -27,7 +27,7 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          node-version: "20"
+          node-version: "22"
 
       - run: npm install -g lazypr
 
