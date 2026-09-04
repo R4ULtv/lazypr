@@ -1,234 +1,86 @@
-# Basic CLI Usage Examples
+# Basic CLI Usage
 
-## Simple PR Generation
+## Configure lazypr
 
-Generate a PR from your current branch to main:
+Open the guided configuration menu:
+
+```bash
+lazypr config
+```
+
+Or configure Groq directly:
+
+```bash
+lazypr config set GROQ_API_KEY=your-key
+lazypr config set PROVIDER=groq
+```
+
+lazypr always uses Qwen 3.8 27B. To run it through Cerebras instead:
+
+```bash
+lazypr config set CEREBRAS_API_KEY=your-key
+lazypr config set PROVIDER=cerebras
+```
+
+## Generate a pull request
+
+Generate against the default `main` branch:
 
 ```bash
 lazypr
 ```
 
-This will:
-
-1. Analyze commits between your current branch and main
-2. Generate a professional PR title and description
-3. Offer to copy the result to clipboard
-
-## Targeting Different Branches
-
-Generate PR for merging into develop branch:
+Target another branch:
 
 ```bash
 lazypr develop
 ```
 
-Generate PR for merging into production:
+lazypr reads the commits in `target..HEAD`, generates a title, Markdown description, and labels, then offers to copy the result.
+
+## Common options
 
 ```bash
-lazypr production
-```
-
-## Using Different AI Providers
-
-### Using Groq (default)
-
-```bash
-# Make sure GROQ_API_KEY is set
-export GROQ_API_KEY="your-api-key"
-lazypr
-```
-
-### Using Cerebras
-
-```bash
-# Set Cerebras API key
-export CEREBRAS_API_KEY="your-api-key"
-lazypr --provider cerebras
-```
-
-### Using Google Gemini
-
-```bash
-# Set Google Gemini in config
-lazypr config set GOOGLE_GENERATIVE_AI_API_KEY=your-api-key
-lazypr config set PROVIDER=google
-lazypr config set MODEL=gemini-3.5-flash
-lazypr
-```
-
-## Using PR Templates
-
-If you have PR templates in your repository:
-
-```bash
-# Use a specific template
+# Choose a repository template
+lazypr --template
 lazypr --template feature
 
-# List available templates
-ls .github/PULL_REQUEST_TEMPLATE/
+# Generate in another language
+lazypr --locale it
+
+# Add one-run guidance
+lazypr --context "Focus on the user-facing changes"
+
+# Include commits normally removed as noise
+lazypr --no-filter
+
+# Show token usage
+lazypr --usage
+
+# Build a gh pr create command
+lazypr --gh
 ```
 
-Template locations searched:
-
-- `.github/pull_request_template.md`
-- `.github/PULL_REQUEST_TEMPLATE/*.md`
-- `docs/pull_request_template.md`
-- `docs/PULL_REQUEST_TEMPLATE/*.md`
-
-## Output Examples
-
-### Example Output (Default)
-
-```markdown
-# Fix authentication bug in login flow
-
-## Description
-
-This PR addresses a critical authentication issue where users were unable to log in after password reset. The fix includes:
-
-- Added proper session validation in the auth middleware
-- Fixed token refresh logic to handle expired tokens
-- Updated error messages for better user feedback
-- Added comprehensive tests for the login flow
-
-## Changes
-
-- `src/middleware/auth.ts`: Enhanced session validation
-- `src/services/token.ts`: Fixed token refresh mechanism
-- `tests/auth.test.ts`: Added new test cases
-
-## Labels
-
-- bug
-```
-
-### Example Output (With Template)
-
-If you have a template like:
-
-```markdown
-## What does this PR do?
-
-<!-- Describe your changes -->
-
-## Why are we doing this?
-
-<!-- Explain the motivation -->
-
-## Testing
-
-<!-- How was this tested? -->
-```
-
-LazyPR will fill it in:
-
-```markdown
-## What does this PR do?
-
-This PR fixes the authentication bug in the login flow by improving session validation and token refresh logic.
-
-## Why are we doing this?
-
-Users reported being unable to log in after resetting their passwords. Investigation revealed issues with token expiration handling and session validation.
-
-## Testing
-
-- Added unit tests for auth middleware
-- Added integration tests for login flow
-- Manually tested password reset flow
-- All existing tests pass
-```
-
-## Common Patterns
-
-### Quick Workflow
+## Typical workflow
 
 ```bash
-# 1. Create feature branch
-git checkout -b feature/add-dark-mode
-
-# 2. Make commits
-git commit -m "Add dark mode toggle component"
-git commit -m "Update theme context for dark mode"
-git commit -m "Add dark mode styles"
-
-# 3. Generate PR
-lazypr
-
-# 4. Copy to clipboard (prompted)
-# 5. Create PR on GitHub and paste
+git switch -c feature/add-dark-mode
+# Make and commit changes.
+lazypr main
 ```
 
-### Multi-Step Review
-
-```bash
-# Generate without copying (for review)
-lazypr > pr-draft.md
-
-# Review the generated content
-cat pr-draft.md
-
-# Edit if needed
-vim pr-draft.md
-
-# Copy manually when ready
-pbcopy < pr-draft.md  # macOS
-xclip -selection clipboard < pr-draft.md  # Linux
-```
-
-### Using with Git Aliases
-
-Add to your `~/.gitconfig`:
-
-```ini
-[alias]
-    pr = !lazypr
-    pr-dev = !lazypr develop
-```
-
-Then use:
-
-```bash
-git pr
-git pr-dev
-```
+Review the generated content before publishing it; commit messages are the source of truth, so vague commits produce less specific PR descriptions.
 
 ## Troubleshooting
 
-### "Not a git repository"
-
-Make sure you're in a git repository:
+If lazypr cannot find commits, inspect the same range directly:
 
 ```bash
-git status  # Verify you're in a repo
-cd /path/to/your/repo
-lazypr
+git log main..HEAD --oneline
 ```
 
-### "No commits found"
-
-Your branch might be up to date with the target:
+If every commit was filtered, retry with `lazypr --no-filter`. If a request times out, increase `TIMEOUT`:
 
 ```bash
-git log main..HEAD  # Check if there are commits to analyze
-git commit --allow-empty -m "Test commit"  # Add a commit if needed
+lazypr config set TIMEOUT=30000
 ```
-
-### "API key not found"
-
-Set your API key:
-
-```bash
-export GROQ_API_KEY="your-key-here"
-# Or
-lazypr config set GROQ_API_KEY "your-key-here"
-```
-
-### Rate Limiting
-
-If you hit rate limits, try:
-
-- Using a different provider: `lazypr --provider cerebras`
-- Using Google Gemini: `lazypr config set PROVIDER=google`
-- Waiting a few minutes
-- Checking your API quota
