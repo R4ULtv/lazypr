@@ -4,6 +4,23 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/) and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## [2.0.0] - 2026-09-03
+
+### Changed
+
+- **SINGLE MODEL:** Fixed PR generation to Qwen 3.8 27B so prompts and validation can be tuned for one model instead of a provider-specific catalog. Groq uses `qwen/qwen3.8-27b`; Cerebras uses `qwen-3.8-27b`.
+- **DIRECT PROVIDER REQUESTS:** Replaced the AI SDK and its Groq, Cerebras, Google, and OpenAI adapters with direct structured chat-completion requests to Groq and Cerebras.
+- **SIMPLER CONFIGURATION:** Removed `MODEL`, Google, OpenAI, and custom-endpoint settings; provider selection now accepts only `groq` or `cerebras`.
+- **QWEN GENERATION PROFILE:** Uses low reasoning with moderate sampling and a reduced presence penalty for grounded but natural PR writing. Groq uses `reasoning_format: hidden`; Cerebras omits that unsupported field. The unsupported `top_k` and `min_p` fields are intentionally omitted.
+- **V2 CLEANUP:** Consolidated provider metadata, removed configurable-model assumptions from the CLI badge and tests, and aligned examples and contributor guidance with the one-model architecture.
+- **PROVIDER SPEED GUIDANCE:** Documented Groq's advertised ~450+ tokens/s throughput and Cerebras's advertised ~1,500 tokens/s as approximate, provider-reported figures.
+- **QWEN-FOCUSED PROMPTING:** Replaced the generic prompts and unrelated few-shot example with a short invariant system prompt plus a zero-shot Qwen task prompt, a focused analysis checklist, explicit evidence boundaries, correct source/target branch context, and untrusted JSON input framing.
+
+### Removed
+
+- **AI SDK DEPENDENCIES:** Removed `ai` and every `@ai-sdk/*` package.
+- **OPENAI AND GOOGLE SUPPORT:** Removed the OpenAI, OpenAI-compatible, and Google Gemini providers to focus generation quality on one model.
+
 ## [1.6.2] - 2026-07-22
 
 ### Added
